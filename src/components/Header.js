@@ -3,14 +3,11 @@ import { useFonts } from 'expo-font';
 import { Image, StyleSheet, Text, View } from 'react-native'
 
 export default function Header() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded = true] = useFonts({
     'MinhaFonte': require('../../assets/fonts/Epilogue-Medium.ttf')
   });
 
-  if (!fontsLoaded) {
-    return null; 
-  }
-
+ 
   return (
     <View style={styles.header}>
       <View style={styles.linha}>
