@@ -23,7 +23,7 @@ export default function Login() {
                 <View style={styles.form}>
                     <TextInput
                         style={styles.input}
-                        value="email"
+                        placeholder="email"
                     />
                 </View>
             </View>
