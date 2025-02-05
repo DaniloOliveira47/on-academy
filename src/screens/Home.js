@@ -1,14 +1,18 @@
 import React from 'react';
-import { StyleSheet, View, Text, Image } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView } from 'react-native';
 import Header from '../components/Header';
 import GraficoMedia from '../components/graficoMedia';
 import CardNota from '../components/cardNota';
 
 export default function Home() {
   return (
+   
+
+   
     <View style={styles.tela}>
+
       <Header />
-      
+
       <View style={styles.subtela}>
         <View style={styles.infoContainer}>
           <View style={styles.textContainer}>
@@ -25,19 +29,39 @@ export default function Home() {
 
         <GraficoMedia />
       </View>
+
       <View style={styles.containerNotas}>
-      <Text style={styles.tituloNotas}>
-        Notas
-      </Text>
-      <CardNota/>
+        <Text style={styles.tituloNotas}>Notas</Text>
+
+
+        <CardNota
+          title="Português"
+          subtitle="Arthur"
+          imageSource={require('../assets/image/português.png')}
+          percentage={75}
+        />
+        <CardNota
+          title="Matemática"
+          subtitle="Giovanni"
+          imageSource={require('../assets/image/matematica.png')}
+          percentage={85}
+        />
+        <CardNota
+          title="História"
+          subtitle="Samuel"
+          imageSource={require('../assets/image/ingles.png')}
+          percentage={90}
+        />
       </View>
+    
     </View>
+    
   );
 }
 
 const styles = StyleSheet.create({
   tela: {
-    backgroundColor: '#DCE8F5',
+    backgroundColor: '#F0F7FF',
     width: '100%',
     height: '100%',
   },
@@ -54,8 +78,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   textContainer: {
-    flex: 1, 
-    zIndex: 2, 
+    flex: 1,
+    zIndex: 2,
   },
   titulo: {
     color: '#fff',
@@ -71,8 +95,8 @@ const styles = StyleSheet.create({
   },
   infoImage: {
     position: 'absolute',
-    right: -25, 
-    bottom: -10, 
+    right: -25,
+    bottom: -10,
     width: 200,
     height: 150,
     resizeMode: 'contain',

@@ -7,7 +7,7 @@ export default function Header() {
     'MinhaFonte': require('../../assets/fonts/Epilogue-Medium.ttf'),
   });
 
-  
+
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
@@ -24,7 +24,7 @@ export default function Header() {
 
   const menuTranslateX = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [-Dimensions.get('window').width, 0], 
+    outputRange: [-Dimensions.get('window').width, 0],
   });
 
   return (
@@ -37,10 +37,13 @@ export default function Header() {
             <View style={styles.menuLine} />
           </TouchableOpacity>
 
-          <Text style={styles.titulo}>Home</Text>
 
-          <Image source={require('../assets/image/Toggle.png')} />
-          <Image style={styles.notification} source={require('../assets/image/Notification3.png')} />
+          
+
+          <View style={styles.subLinha}>
+            <Image source={require('../assets/image/Toggle.png')} />
+            <Image style={styles.notification} source={require('../assets/image/Notification3.png')} />
+          </View>
         </View>
       </View>
 
@@ -94,21 +97,22 @@ const styles = StyleSheet.create({
   },
   notification: {
     width: 25,
-    height: 25, // Defina um tamanho fixo para garantir que apareça corretamente
-    resizeMode: 'contain', // Mantém a proporção correta
+    height: 25,
+    resizeMode: 'contain',
   },
   header: {
-    backgroundColor: '#E0DFEE',
-    borderWidth: 1,
-    borderColor: '#0077FF',
-    borderRadius: 20,
+    backgroundColor: '#F0F7FF',
     overflow: 'hidden',
+  },
+  subLinha: {
+    flexDirection: 'row',
+    gap: 20
   },
   menuOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: Dimensions.get('window').width * 0.8, 
+    width: Dimensions.get('window').width * 0.8,
     height: '100%',
     backgroundColor: '#E0DFEE',
     padding: 20,

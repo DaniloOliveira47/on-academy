@@ -85,7 +85,7 @@ export default function GraficoMedia() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FCF9F9',
     width: 360,
     padding: 10,
     borderRadius: 12,
