@@ -36,12 +36,13 @@ export default function Navigation() {
             default:
               iconName = 'help-circle';
           }
-          return <Icon name={iconName} size={24} color={color} />;
+          return <Icon name={iconName} size={30} color={color} />;
         },
         tabBarShowLabel: false,
         tabBarStyle: {
+          alignItems: 'center',
           backgroundColor: '#F7F9FC',
-          height: 70,
+          height: 50,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           position: 'absolute',

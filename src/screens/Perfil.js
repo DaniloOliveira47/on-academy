@@ -1,6 +1,7 @@
 import React from 'react'
 import { Image, StyleSheet, Text, TextInput, View } from 'react-native'
 import HeaderSimples from '../components/HeaderSimples'
+import Campo from '../components/Campo'
 
 
 export default function Perfil() {
@@ -27,13 +28,28 @@ export default function Perfil() {
                         </Text>
                     </View>
                 </View>
-                <View style={styles.campo}>
-                <Text style={styles.label}>
-                    Nome Completo
-                </Text>
-                <TextInput style={styles.input}/>
+                <Campo
+                    label="Nome Completo"
+                    text="Renata Vieira de Souza"
+                />
+                <Campo
+                    label="Email"
+                    text="revieira@gmail.com"
+                />
+                <Campo
+                    label="Nº Matrícula"
+                    text="1106434448-1"
+                />
+                <View style={styles.doubleCampo}>
+                    <Campo 
+                    label = "Telefone"
+                    text = "(11) 95312-8203"
+                    />
+                    <Campo
+                    label="Data de Nascimento" 
+                    text="23/01/2006"
+                    />
                 </View>
-               
             </View>
         </View>
     )
@@ -49,7 +65,7 @@ const styles = StyleSheet.create({
     conText: {
         alignItems: 'center',
         textAlign: 'center',
-        marginTop: 70
+        marginTop: 40
     },
     titulo: {
         fontWeight: 'bold',
@@ -86,12 +102,9 @@ const styles = StyleSheet.create({
         color: '#786D6D',
         fontSize: 15
     },
-    input: {
-        backgroundColor: '#F0F7FF',
-        borderRadius: 30,
-        marginTop: 10
-    },
-    campo: {
-        marginTop: 30
+    doubleCampo: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
     }
+
 })

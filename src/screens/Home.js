@@ -6,56 +6,53 @@ import CardNota from '../components/cardNota';
 
 export default function Home() {
   return (
-   
 
-   
     <View style={styles.tela}>
-
-      <Header />
-
-      <View style={styles.subtela}>
-        <View style={styles.infoContainer}>
-          <View style={styles.textContainer}>
-            <Text style={styles.titulo}>Seja bem-vinda, Livia 👋</Text>
-            <Text style={styles.subtitulo}>
-              O sucesso é a soma de pequenos esforços repetidos dia após dia.
-            </Text>
+      <ScrollView>
+        <Header />
+        <View style={styles.subtela}>
+          <View style={styles.infoContainer}>
+            <View style={styles.textContainer}>
+              <Text style={styles.titulo}>Seja bem-vinda, Livia 👋</Text>
+              <Text style={styles.subtitulo}>
+                O sucesso é a soma de pequenos esforços repetidos dia após dia.
+              </Text>
+            </View>
+            <Image
+              source={require('../assets/image/mulher.png')}
+              style={styles.infoImage}
+            />
           </View>
-          <Image
-            source={require('../assets/image/mulher.png')}
-            style={styles.infoImage}
-          />
+
+          <GraficoMedia />
         </View>
 
-        <GraficoMedia />
-      </View>
-
-      <View style={styles.containerNotas}>
-        <Text style={styles.tituloNotas}>Notas</Text>
+        <View style={styles.containerNotas}>
+          <Text style={styles.tituloNotas}>Notas</Text>
 
 
-        <CardNota
-          title="Português"
-          subtitle="Arthur"
-          imageSource={require('../assets/image/português.png')}
-          percentage={75}
-        />
-        <CardNota
-          title="Matemática"
-          subtitle="Giovanni"
-          imageSource={require('../assets/image/matematica.png')}
-          percentage={85}
-        />
-        <CardNota
-          title="História"
-          subtitle="Samuel"
-          imageSource={require('../assets/image/ingles.png')}
-          percentage={90}
-        />
-      </View>
-    
+          <CardNota
+            title="Português"
+            subtitle="Arthur"
+            imageSource={require('../assets/image/português.png')}
+            percentage={75}
+          />
+          <CardNota
+            title="Matemática"
+            subtitle="Giovanni"
+            imageSource={require('../assets/image/matematica.png')}
+            percentage={85}
+          />
+          <CardNota
+            title="História"
+            subtitle="Samuel"
+            imageSource={require('../assets/image/ingles.png')}
+            percentage={90}
+          />
+        </View>
+      </ScrollView>
     </View>
-    
+
   );
 }
 
@@ -64,6 +61,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F7FF',
     width: '100%',
     height: '100%',
+    paddingBottom: '40'
   },
   subtela: {
     paddingTop: 20,

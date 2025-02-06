@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFonts } from 'expo-font';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import CustomCalendar from './Calendario';
 
 export default function Header() {
   const [fontsLoaded] = useFonts({
@@ -31,17 +32,19 @@ export default function Header() {
     <>
       <View style={styles.header}>
         <View style={styles.linha}>
+
           <TouchableOpacity style={styles.menuContainer} onPress={toggleMenu}>
             <View style={styles.menuLine} />
             <View style={styles.menuLine} />
             <View style={styles.menuLine} />
           </TouchableOpacity>
-
-
-          
-
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Image style={{ width: 25, height: 30 }} source={require('../assets/image/logo.png')} />
+            <Text style={{ color: '#0077FF', fontWeight: 'bold', fontSize: 18 }}>ONA</Text>
+          </View>
           <View style={styles.subLinha}>
-            <Image source={require('../assets/image/Toggle.png')} />
+
+            <Image style={{ width: 110, height: 25 }} source={require('../assets/image/Toggle.png')} />
             <Image style={styles.notification} source={require('../assets/image/Notification3.png')} />
           </View>
         </View>
@@ -53,29 +56,74 @@ export default function Header() {
 
       <Animated.View style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }] }]}>
         <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
-          <Text style={styles.closeText}>×</Text>
+          <Text style={styles.closeText}>x</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Opção 1</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Opção 2</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Opção 3</Text>
-        </TouchableOpacity>
+        <View style={styles.menuItem}>
+          <View style={styles.perfil}>
+            <View style={{ flexDirection: 'row', gap: 20 }}>
+              <Image style={styles.imgPerfil} source={require('../assets/image/perfil4x4.png')} />
+              <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold' }} >
+                Roberta
+              </Text>
+            </View>
+            <Image source={require('../assets/image/Option.png')} style={styles.options} />
+          </View>
+        </View>
+        <View style={styles.menuItem}>
+          <CustomCalendar />
+        </View>
+        <View style={styles.menuItem}>
+          <View style={styles.contEventos}>
+            <Text style={{fontWeight: 'bold'}}>
+              Próximos Eventos
+            </Text>
+            <View>
+              
+            </View>
+          </View>
+        </View>
       </Animated.View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  contEventos: {
+    backgroundColor: '#FFF',
+    width: '100%',
+    height: 100,
+    borderRadius: 16,
+    padding: 20
+  },
+
   menuContainer: {
     width: 30,
     height: 30,
     justifyContent: 'space-between',
     paddingVertical: 5,
+  },
+  options: {
+    width: 20,
+    height: 10,
+    marginTop: 10
+  },
+  imgPerfil: {
+    width: 60,
+    height: 50,
+    borderRadius: 13
+  },
+  perfil: {
+    width: '100%',
+    height: 'auto',
+    backgroundColor: '#F0F7FF',
+    borderRadius: 16,
+    padding: 8,
+    paddingLeft: 0,
+    paddingRight: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around'
   },
   menuLine: {
     width: '100%',
@@ -84,7 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   linha: {
-    marginTop: 20,
+    marginTop: 10,
     flexDirection: 'row',
     padding: 25,
     justifyContent: 'space-between',
@@ -114,7 +162,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: Dimensions.get('window').width * 0.8,
     height: '100%',
-    backgroundColor: '#E0DFEE',
+    backgroundColor: '#0077FF',
     padding: 20,
     zIndex: 10,
     elevation: 5,
@@ -142,12 +190,12 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 20,
+    top: 0,
     right: 20,
     zIndex: 20,
   },
   closeText: {
-    fontSize: 24,
-    color: '#0077FF',
+    fontSize: 18,
+    color: '#FFF',
   },
 });
