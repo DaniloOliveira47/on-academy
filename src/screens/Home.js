@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Image, ScrollView } from 'react-native';
 import Header from '../components/Header';
 import GraficoMedia from '../components/graficoMedia';
 import CardNota from '../components/cardNota';
+import ProximosEventos from '../components/proximosEventos';
 
 export default function Home() {
   return (
@@ -23,7 +24,7 @@ export default function Home() {
               style={styles.infoImage}
             />
           </View>
-
+   
           <GraficoMedia />
         </View>
 
