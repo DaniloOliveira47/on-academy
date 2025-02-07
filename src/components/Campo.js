@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-export default function Campo({label, text}) {
+export default function Campo({ label, text }) {
     return (
         <View style={styles.campo}>
             <Text style={styles.label}>

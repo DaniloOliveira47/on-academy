@@ -19,7 +19,7 @@ const CardNota = ({ title, subtitle, imageSource, percentage }) => {
       </View>
       <View style={styles.progressContainer}>
         <Svg width={60} height={60} viewBox="0 0 60 60">
-      
+
           <Circle
             cx="30"
             cy="30"
@@ -28,7 +28,7 @@ const CardNota = ({ title, subtitle, imageSource, percentage }) => {
             strokeWidth={strokeWidth}
             fill="none"
           />
-        
+
           <Circle
             cx="30"
             cy="30"

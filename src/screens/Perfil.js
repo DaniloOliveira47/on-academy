@@ -41,13 +41,13 @@ export default function Perfil() {
                     text="1106434448-1"
                 />
                 <View style={styles.doubleCampo}>
-                    <Campo 
-                    label = "Telefone"
-                    text = "(11) 95312-8203"
+                    <Campo
+                        label="Telefone"
+                        text="(11) 95312-8203"
                     />
                     <Campo
-                    label="Data de Nascimento" 
-                    text="23/01/2006"
+                        label="Data de Nascimento"
+                        text="23/01/2006"
                     />
                 </View>
             </View>

@@ -5,7 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 
 export default function GraficoMedia() {
   const total = 100;
-  const valorAtual = 50; 
+  const valorAtual = 50;
   const angulo = (valorAtual / total) * 180;
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -17,7 +17,7 @@ export default function GraficoMedia() {
     const radians = (Math.PI * (angulo - 180)) / 180;
     const x = 80 * Math.cos(radians);
     const y = 80 * Math.sin(radians);
-    
+
     return `M -80 0 A 80 80 0 ${angulo > 180 ? 1 : 0} 1 ${x} ${y}`;
   };
 
@@ -26,7 +26,7 @@ export default function GraficoMedia() {
       <View style={styles.header}>
         <Text style={styles.title}>Frequência</Text>
 
-      
+
         <TouchableOpacity style={styles.mediaContainer} onPress={() => setModalVisible(true)}>
           <Text style={styles.mediaText}>{materiaSelecionada}</Text>
           <FontAwesome name="caret-down" size={20} color="#888" />
@@ -57,7 +57,7 @@ export default function GraficoMedia() {
         <Text style={styles.valor}>{valorAtual},0</Text>
       </View>
 
-      
+
       <Modal visible={modalVisible} transparent animationType="fade">
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
           <View style={styles.modalContainer}>
@@ -65,8 +65,8 @@ export default function GraficoMedia() {
               data={materias}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem} 
+                <TouchableOpacity
+                  style={styles.modalItem}
                   onPress={() => {
                     setMateriaSelecionada(item);
                     setModalVisible(false);
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 
-  
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

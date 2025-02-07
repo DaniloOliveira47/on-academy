@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
 
   },
-  
+
   subTitulo: {
     color: '#8A8A8A',
     fontWeight: 'bold',

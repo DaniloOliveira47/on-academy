@@ -7,10 +7,9 @@ import Navigation from './Navigation';
 
 export default function App() {
   return (
-    
-      <NavigationContainer>
-        <Navigation/>
-      </NavigationContainer>
+   <NavigationContainer>
+    <Navigation/>
+   </NavigationContainer>
   );
 }
 

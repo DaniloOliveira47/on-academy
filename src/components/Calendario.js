@@ -11,7 +11,7 @@ const CustomCalendar = () => {
           selectedDayBackgroundColor: '#007bff',
           selectedDayTextColor: '#fff',
           arrowColor: '#007bff',
-          
+
         }}
         markedDates={{
           '2025-02-08': { selected: true, selectedColor: '#0077FF' },
@@ -26,9 +26,9 @@ const CustomCalendar = () => {
 
 const styles = StyleSheet.create({
   calendar: {
-    borderRadius: 15, 
-    elevation: 5, 
-    shadowColor: '#000', 
+    borderRadius: 15,
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

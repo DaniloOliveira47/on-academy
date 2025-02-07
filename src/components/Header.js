@@ -5,6 +5,8 @@ import CustomCalendar from './Calendario';
 import ProximosEventos from './proximosEventos';
 
 export default function Header() {
+
+
   const [fontsLoaded] = useFonts({
     'MinhaFonte': require('../../assets/fonts/Epilogue-Medium.ttf'),
   });
@@ -79,38 +81,37 @@ export default function Header() {
             <Text style={{ fontWeight: 'bold' }}>
               Próximos Eventos
             </Text>
-            <ScrollView>
-              <View>
-                <ProximosEventos
-                  data="8"
-                  titulo="Inicio das Aulas"
-                  subData="8 - FEV 2025"
-                  periodo="8 A.M - 9 A.M"
-                  color= '#0077FF'
-                />
-                <ProximosEventos
-                  data="13"
-                  titulo="Clube do Livro"
-                  subData="8 - FEV 2025"
-                  periodo="8 A.M - 9 A.M"
-                  color='#FF1D86'
-                />
-                <ProximosEventos
-                  data="18"
-                  titulo="Entrega das Apostilas"
-                  subData="8 - FEV 2025"
-                  periodo="8 A.M - 9 A.M"
-                  color='#16D03B'
-                />
-                <ProximosEventos
-                  data="23"
-                  titulo="Feira Cultural"
-                  subData="8 - FEV 2025"
-                  periodo="8 A.M - 9 A.M"
-                  color='#FF7E3E'
-                />
-              </View>
-            </ScrollView>
+            <View>
+              <ProximosEventos
+                data="8"
+                titulo="Inicio das Aulas"
+                subData="8 - FEV 2025"
+                periodo="8 A.M - 9 A.M"
+                color='#0077FF'
+              />
+              <ProximosEventos
+                data="13"
+                titulo="Clube do Livro"
+                subData="8 - FEV 2025"
+                periodo="8 A.M - 9 A.M"
+                color='#FF1D86'
+              />
+              <ProximosEventos
+                data="18"
+                titulo="Entrega das Apostilas"
+                subData="8 - FEV 2025"
+                periodo="8 A.M - 9 A.M"
+                color='#16D03B'
+              />
+              <ProximosEventos
+                data="23"
+                titulo="Feira Cultural"
+                subData="8 - FEV 2025"
+                periodo="8 A.M - 9 A.M"
+                color='#FF7E3E'
+              />
+            </View>
+
           </View>
         </View>
       </Animated.View>

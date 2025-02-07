@@ -24,7 +24,7 @@ export default function Home() {
               style={styles.infoImage}
             />
           </View>
-   
+
           <GraficoMedia />
         </View>
 

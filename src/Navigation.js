@@ -4,9 +4,10 @@ import Icon from 'react-native-vector-icons/Feather';
 
 import HomeScreen from './screens/Home';
 import PerfilScreen from './screens/Perfil';
-import Screen2 from './screens/Home';
+import BoletimScreen from './screens/Boletim';
 import Screen3 from './screens/Home';
 import Screen4 from './screens/Home';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +25,7 @@ export default function Navigation() {
             case 'Perfil':
               iconName = 'users';
               break;
-            case 'Screen2':
+            case 'Boletim':
               iconName = 'file-text';
               break;
             case 'Screen3':
@@ -60,8 +61,8 @@ export default function Navigation() {
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="Screen2"
-        component={Screen2}
+        name="Boletim"
+        component={BoletimScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen
