@@ -2,38 +2,29 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-const CardNota = ({ title, subtitle, imageSource, percentage }) => {
+const CardNota = ({ title, subtitle, imageSource, percentage, isDarkMode }) => {
   const radius = 25;
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
   const progress = (percentage / 100) * circumference;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: isDarkMode ? '#121212' : '#FCF9F9' }]}>
       <View style={styles.imageBack}>
         <Image style={styles.image} source={imageSource} />
       </View>
       <View style={styles.info}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#000' }]}>{title}</Text>
+        <Text style={[styles.subtitle, { color: isDarkMode ? '#BBB' : '#8A8A8A' }]}>{subtitle}</Text>
       </View>
       <View style={styles.progressContainer}>
         <Svg width={60} height={60} viewBox="0 0 60 60">
-
+          <Circle cx="30" cy="30" r={radius} stroke="#EAEAEA" strokeWidth={strokeWidth} fill="none" />
           <Circle
             cx="30"
             cy="30"
             r={radius}
-            stroke="#EAEAEA"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-
-          <Circle
-            cx="30"
-            cy="30"
-            r={radius}
-            stroke="#0077FF"
+            stroke={isDarkMode ? '#4A90E2' : '#0077FF'}
             strokeWidth={strokeWidth}
             fill="none"
             strokeLinecap="round"
@@ -42,7 +33,7 @@ const CardNota = ({ title, subtitle, imageSource, percentage }) => {
             transform="rotate(-90 30 30)"
           />
         </Svg>
-        <Text style={styles.progressText}>{`${percentage},0`}</Text>
+        <Text style={[styles.progressText, { color: isDarkMode ? '#FFF' : '#000' }]}>{`${percentage},0`}</Text>
       </View>
     </View>
   );
@@ -62,7 +53,6 @@ const styles = StyleSheet.create({
     height: 47,
   },
   card: {
-    backgroundColor: '#FCF9F9',
     padding: 10,
     borderRadius: 10,
     shadowColor: '#000',
@@ -72,13 +62,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 20
+    marginTop: 20,
   },
   title: {
     fontSize: 18,
   },
   subtitle: {
-    color: '#8A8A8A',
+    fontSize: 14,
   },
   info: {
     marginTop: 5,

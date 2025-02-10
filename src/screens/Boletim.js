@@ -1,11 +1,16 @@
-import React from 'react';
-import { Image, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
 import HeaderSimples from '../components/HeaderSimples';
 import CardMateria from '../components/CardMateria';
 import Nota from '../components/Nota';
 import BarraAzul from '../components/barraAzul';
+import { useTheme } from '../path/ThemeContext';
 
 export default function Boletim() {
+    const [modalVisible, setModalVisible] = useState(false);
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(" 1º Bim.");
+
+    const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
     const notas = [
         { materia: 'Português', nota: 98.5 },
         { materia: 'Matemática', nota: 75.6 },
@@ -13,14 +18,18 @@ export default function Boletim() {
         { materia: 'Ciências', nota: 60.2 },
         { materia: 'Artes', nota: 85.3 },
     ];
+    const { isDarkMode } = useTheme();
+    const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
 
     return (
-        <View style={styles.tela}>
-            <HeaderSimples />
+        <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
+            <HeaderSimples
+                titulo="BOLETIM"
+            />
             <View style={{ alignItems: 'center', marginTop: 90 }}>
                 <View style={styles.botao}>
                     <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
                         <View style={{
                             backgroundColor: '#0077FF',
                             padding: 10,
@@ -43,7 +52,7 @@ export default function Boletim() {
                     </View>
                     <View style={styles.containers}>
                         <Text style={styles.contText}>
-                            1º Bim.
+                            {bimestreSelecionado}
                         </Text>
                     </View>
                 </View>
@@ -65,6 +74,27 @@ export default function Boletim() {
                     </View>
                 </View>
             </View>
+            <Modal visible={modalVisible} transparent animationType="fade">
+                <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
+                        <FlatList
+                            data={bimestres}
+                            keyExtractor={(item) => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.modalItem}
+                                    onPress={() => {
+                                        setBimestreSelecionado(item);
+                                        setModalVisible(false);
+                                    }}
+                                >
+                                    <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
@@ -120,5 +150,27 @@ const styles = StyleSheet.create({
         width: 20,
         height: 12,
         marginTop: 0
-    }
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      modalContainer: {
+        width: '80%',
+        borderRadius: 10,
+        padding: 15,
+        alignItems: 'center',
+      },
+      modalItem: {
+        paddingVertical: 15,
+        width: '100%',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+      },
+      modalText: {
+        fontSize: 18,
+      },
 })

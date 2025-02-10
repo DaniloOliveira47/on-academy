@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
-import Login from './screens/Login';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native'; 
 import Navigation from './Navigation';
+import { ThemeProvider } from './path/ThemeContext';
 
 export default function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false); 
+
+  
+  const theme = isDarkMode ? DarkTheme : DefaultTheme; 
+
   return (
-   <NavigationContainer>
-    <Navigation/>
-   </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer theme={theme}>
+        <Navigation isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }
 

@@ -26,7 +26,8 @@ const CustomCalendar = () => {
 
 const styles = StyleSheet.create({
   calendar: {
-    borderRadius: 15,
+    borderEndLeftRadius: 15 ,
+    borderEndRightRadius: 15 ,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

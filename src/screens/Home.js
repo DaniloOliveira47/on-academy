@@ -1,68 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView } from 'react-native';
 import Header from '../components/Header';
 import GraficoMedia from '../components/graficoMedia';
 import CardNota from '../components/cardNota';
-import ProximosEventos from '../components/proximosEventos';
+import { useTheme } from '../path/ThemeContext';
 
 export default function Home() {
-  return (
+ const { isDarkMode } = useTheme();
 
-    <View style={styles.tela}>
+  return (
+    <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
       <ScrollView>
-        <Header />
+        <Header isDarkMode={isDarkMode}  />
+        
         <View style={styles.subtela}>
-          <View style={styles.infoContainer}>
+          <View style={[styles.infoContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1E6BE6' }]}>
             <View style={styles.textContainer}>
-              <Text style={styles.titulo}>Seja bem-vinda, Livia 👋</Text>
-              <Text style={styles.subtitulo}>
+              <Text style={[styles.titulo, { color: isDarkMode ? '#FFF' : '#fff' }]}>
+                Seja bem-vinda, Livia 👋
+              </Text>
+              <Text style={[styles.subtitulo, { color: isDarkMode ? '#BBB' : '#fff' }]}>
                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
               </Text>
             </View>
-            <Image
-              source={require('../assets/image/mulher.png')}
-              style={styles.infoImage}
-            />
+            <Image source={require('../assets/image/mulher.png')} style={styles.infoImage} />
           </View>
 
-          <GraficoMedia />
+          <GraficoMedia isDarkMode={isDarkMode} />
         </View>
 
         <View style={styles.containerNotas}>
-          <Text style={styles.tituloNotas}>Notas</Text>
-
+          <Text style={[styles.tituloNotas, { color: isDarkMode ? '#FFF' : '#000' }]}>Notas</Text>
 
           <CardNota
             title="Português"
             subtitle="Arthur"
             imageSource={require('../assets/image/português.png')}
             percentage={75}
+            isDarkMode={isDarkMode}
           />
           <CardNota
             title="Matemática"
             subtitle="Giovanni"
             imageSource={require('../assets/image/matematica.png')}
             percentage={85}
+            isDarkMode={isDarkMode}
           />
           <CardNota
             title="História"
             subtitle="Samuel"
             imageSource={require('../assets/image/ingles.png')}
             percentage={90}
+            isDarkMode={isDarkMode}
           />
         </View>
       </ScrollView>
     </View>
-
   );
 }
 
 const styles = StyleSheet.create({
   tela: {
-    backgroundColor: '#F0F7FF',
     width: '100%',
     height: '100%',
-    paddingBottom: '40'
   },
   subtela: {
     paddingTop: 20,
@@ -70,7 +70,6 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1E6BE6',
     width: '90%',
     padding: 20,
     borderRadius: 20,
@@ -81,16 +80,14 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   titulo: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
-    width: 150
+    width: 150,
   },
   subtitulo: {
-    color: '#fff',
     fontSize: 14,
-    width: 190
+    width: 190,
   },
   infoImage: {
     position: 'absolute',
@@ -105,6 +102,7 @@ const styles = StyleSheet.create({
   },
   containerNotas: {
     padding: 30,
-    paddingTop: 10
-  }
+    paddingTop: 10,
+    marginBottom: 50
+  },
 });

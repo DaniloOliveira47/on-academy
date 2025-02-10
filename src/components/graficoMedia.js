@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList } from 'react
 import Svg, { Path, G } from 'react-native-svg';
 import { FontAwesome } from '@expo/vector-icons';
 
-export default function GraficoMedia() {
+export default function GraficoMedia({ isDarkMode }) {
   const total = 100;
   const valorAtual = 50;
   const angulo = (valorAtual / total) * 180;
@@ -22,28 +22,25 @@ export default function GraficoMedia() {
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: isDarkMode ? '#121212' : '#FCF9F9' }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Frequência</Text>
-
+        <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#222' }]}>Frequência</Text>
 
         <TouchableOpacity style={styles.mediaContainer} onPress={() => setModalVisible(true)}>
-          <Text style={styles.mediaText}>{materiaSelecionada}</Text>
-          <FontAwesome name="caret-down" size={20} color="#888" />
+          <Text style={[styles.mediaText, { color: isDarkMode ? '#BBB' : '#888' }]}>{materiaSelecionada}</Text>
+          <FontAwesome name="caret-down" size={20} color={isDarkMode ? '#BBB' : '#888'} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.graficoContainer}>
         <Svg height="300" width="300" viewBox="0 0 200 200">
           <G transform="translate(100, 100)">
-
             <Path
               d="M -80 0 A 80 80 0 1 1 80 0"
               fill="none"
               stroke="#8AB4F8"
               strokeWidth="12"
             />
-
             <Path
               d={calcularArco(angulo)}
               fill="none"
@@ -53,14 +50,13 @@ export default function GraficoMedia() {
             />
           </G>
         </Svg>
-        <Text style={styles.valorAtual}>Valor atual</Text>
-        <Text style={styles.valor}>{valorAtual},0</Text>
+        <Text style={[styles.valorAtual, { color: isDarkMode ? '#AAA' : '#666' }]}>Valor atual</Text>
+        <Text style={[styles.valor, { color: isDarkMode ? '#FFF' : '#333' }]}>{valorAtual},0</Text>
       </View>
-
 
       <Modal visible={modalVisible} transparent animationType="fade">
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContainer}>
+          <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
             <FlatList
               data={materias}
               keyExtractor={(item) => item}
@@ -72,7 +68,7 @@ export default function GraficoMedia() {
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={styles.modalText}>{item}</Text>
+                  <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -85,7 +81,6 @@ export default function GraficoMedia() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FCF9F9',
     width: 360,
     padding: 10,
     borderRadius: 12,
@@ -95,7 +90,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
     height: 200,
-    marginTop: 30
+    marginTop: 30,
   },
   header: {
     flexDirection: 'row',
@@ -105,7 +100,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#222',
   },
   mediaContainer: {
     flexDirection: 'row',
@@ -113,7 +107,6 @@ const styles = StyleSheet.create({
   },
   mediaText: {
     fontSize: 17,
-    color: '#888',
     marginRight: 4,
   },
   graficoContainer: {
@@ -125,17 +118,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '30%',
     fontSize: 15,
-    color: '#666',
   },
   valor: {
     position: 'absolute',
     top: '40%',
     fontSize: 25,
     fontWeight: 'bold',
-    color: '#333',
   },
-
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -143,7 +132,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#fff',
     width: '80%',
     borderRadius: 10,
     padding: 15,
@@ -158,6 +146,5 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 18,
-    color: '#333',
   },
 });

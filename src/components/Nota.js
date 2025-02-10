@@ -1,12 +1,17 @@
 import React from 'react'
 import { Text } from 'react-native';
 import { StyleSheet, View } from 'react-native'
-
+import { useTheme } from '../path/ThemeContext'; 
 
 export default function Nota({ nota }) {
+      const { isDarkMode } = useTheme();
+      const BackgroundColor = isDarkMode ? '#000' : '#F0F7FF';
+      const textColor = isDarkMode ? '#FFF' : '#000';
+
+
     return (
-        <View style={styles.container}>
-            <Text style={{ color: 'black', fontSize: 17, fontWeight: 'bold' }}>
+        <View style={[styles.container,{backgroundColor: BackgroundColor}]}>
+            <Text style={{ color: textColor, fontSize: 17, fontWeight: 'bold' }}>
                 {nota}
             </Text>
         </View>
@@ -15,7 +20,6 @@ export default function Nota({ nota }) {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFFFFF',
         width: 130,
         alignItems: 'center',
         padding: 16,

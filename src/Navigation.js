@@ -5,13 +5,15 @@ import Icon from 'react-native-vector-icons/Feather';
 import HomeScreen from './screens/Home';
 import PerfilScreen from './screens/Perfil';
 import BoletimScreen from './screens/Boletim';
-import Screen3 from './screens/Home';
+import EventosScreen from './screens/Eventos';
 import Screen4 from './screens/Home';
+import { useTheme } from './path/ThemeContext';
 
 
 const Tab = createBottomTabNavigator();
 
 export default function Navigation() {
+  const { isDarkMode } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -28,7 +30,7 @@ export default function Navigation() {
             case 'Boletim':
               iconName = 'file-text';
               break;
-            case 'Screen3':
+            case 'Eventos':
               iconName = 'calendar';
               break;
             case 'Screen4':
@@ -42,7 +44,7 @@ export default function Navigation() {
         tabBarShowLabel: false,
         tabBarStyle: {
           alignItems: 'center',
-          backgroundColor: '#F7F9FC',
+          backgroundColor: isDarkMode ? '#000' : '#F7F9FC',
           height: 50,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
@@ -66,8 +68,8 @@ export default function Navigation() {
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="Screen3"
-        component={Screen3}
+        name="Eventos"
+        component={EventosScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen

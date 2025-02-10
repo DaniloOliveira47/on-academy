@@ -1,10 +1,15 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useTheme } from '../path/ThemeContext'; 
 
 export default function Campo({ label, text }) {
+    const { isDarkMode } = useTheme();
+
+    const textColor = isDarkMode ? '#FFF' : '#000';
+    
     return (
         <View style={styles.campo}>
-            <Text style={styles.label}>
+            <Text style={[styles.label, {color: textColor }]}>
                 {label}
             </Text>
             <View style={styles.input}>
