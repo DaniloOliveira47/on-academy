@@ -1,24 +1,24 @@
 import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import Campo from '../components/Campo';
-import { useTheme } from '../path/ThemeContext'; 
+import { useTheme } from '../path/ThemeContext';
 import HeaderSimples from '../components/HeaderSimples';
 
 export default function Perfil() {
   const { isDarkMode } = useTheme();
 
- 
+
   const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
-  const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6'; 
+  const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
   const formBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
 
   return (
-   
+
     <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-         <HeaderSimples
-         titulo= "PERFIL"
-         />
+      <HeaderSimples
+        titulo="PERFIL"
+      />
       <View style={styles.conText}>
         <Text style={[styles.titulo, { color: textColor }]}>
           Bem-Vinda, Renata
@@ -27,7 +27,12 @@ export default function Perfil() {
       </View>
 
       <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../assets/image/barraAzul.png')} />
-      <View style={[styles.form, { backgroundColor: formBackgroundColor }]}>
+      <View style={[styles.form, {
+        backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }]}>
         <View style={styles.linhaUser}>
           <Image source={require('../assets/image/Perfill.png')} />
           <View style={styles.name}>
@@ -90,7 +95,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   barraAzul: {
-    width: 360,
+    width: 363,
     height: 60,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,

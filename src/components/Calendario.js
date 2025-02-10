@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 
 const CustomCalendar = () => {
   return (
-    <View style={styles.container}>
+      <View>
       <Calendar
         style={styles.calendar}
         theme={{
@@ -28,12 +28,9 @@ const styles = StyleSheet.create({
   calendar: {
     borderEndLeftRadius: 15 ,
     borderEndRightRadius: 15 ,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    height: 330
+    height: 'auto',
   },
 });
 

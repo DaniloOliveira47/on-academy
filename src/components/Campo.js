@@ -6,14 +6,16 @@ export default function Campo({ label, text }) {
     const { isDarkMode } = useTheme();
 
     const textColor = isDarkMode ? '#FFF' : '#000';
+    const fundoColor = isDarkMode ? '#33383E' : '#F0F7FF'
+    const textInput = isDarkMode ? '#FFF' : '#33383E';
     
     return (
         <View style={styles.campo}>
             <Text style={[styles.label, {color: textColor }]}>
                 {label}
             </Text>
-            <View style={styles.input}>
-                <Text style={styles.colorInput}>
+            <View style={[styles.input, {backgroundColor: fundoColor }]}>
+                <Text style={[styles.colorInput, {color: textInput}]}>
                     {text}
                 </Text>
             </View>
@@ -31,7 +33,6 @@ const styles = StyleSheet.create({
         marginTop: 15
     },
     colorInput: {
-        color: "#786D6D",
         fontSize: 17
     }
 })

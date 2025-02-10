@@ -1,9 +1,13 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useTheme } from '../path/ThemeContext';
 
 export default function ProximosEventos({ data, titulo, subData, periodo, color }) {
+  const { isDarkMode } = useTheme();
+  const containerColor = isDarkMode ? '#000' : '#F0F7FF';
+  const textColor = isDarkMode ? '#FFF' : '#000';
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, {backgroundColor: containerColor}]}>
       <View style={{
         backgroundColor: color,
         padding: 10,
@@ -16,7 +20,7 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
         </Text>
       </View>
       <View>
-        <Text style={{ fontWeight: 'bold', fontSize: 15 }}>
+        <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
           {titulo}
         </Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -37,7 +41,6 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
 const styles = StyleSheet.create({
   card: {
     marginTop: 15,
-    backgroundColor: '#F0F7FF',
     padding: 15,
     flexDirection: 'row',
     gap: 10,

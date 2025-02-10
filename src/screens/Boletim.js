@@ -156,21 +156,21 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-      },
-      modalContainer: {
+    },
+    modalContainer: {
         width: '80%',
         borderRadius: 10,
         padding: 15,
         alignItems: 'center',
-      },
-      modalItem: {
+    },
+    modalItem: {
         paddingVertical: 15,
         width: '100%',
         alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
-      },
-      modalText: {
+    },
+    modalText: {
         fontSize: 18,
-      },
+    },
 })

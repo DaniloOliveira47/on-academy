@@ -4,11 +4,19 @@ import HeaderSimples from '../components/HeaderSimples'
 import CustomCalendar from '../components/Calendario'
 import CardHorario from '../components/CardHorario'
 import ProximosEventos from '../components/proximosEventos'
+import { useTheme } from '../path/ThemeContext'
 
 export default function Eventos() {
+    const { isDarkMode } = useTheme();
+
+    const BackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
+    const textColor = isDarkMode ? '#FFF' : '#000';
+    const container = isDarkMode ? '#000' : '#FFF';
+
+
     return (
         <ScrollView>
-            <View style={styles.tela}>
+            <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
                 <HeaderSimples
                     titulo="EVENTOS"
                 />
@@ -16,14 +24,14 @@ export default function Eventos() {
                     <Image style={styles.barraAzul} source={require('../assets/image/barraAzul.png')} />
                     <CustomCalendar />
                 </View>
-                <Text style={{ fontSize: 30, fontWeight: 'bold', marginTop: 20, marginLeft: 20 }}>
+                <Text style={{ fontSize: 30, fontWeight: 'bold', marginTop: 20, marginLeft: 20, color: textColor }}>
                     Sobre o Evento
                 </Text>
-                <View style={styles.container}>
-                    <Text style={{ fontSize: 20 }}>
+                <View style={[styles.container, { backgroundColor: container }]}>
+                    <Text style={{ fontSize: 20, color: textColor }}>
                         Os eventos esportivos incentivam a prática de esportes e atividades físicas variadas. Costumam incluir a realização de provas, competições e jogos, geralmente com premiações no final aos vencedores.
                     </Text>
-                    <Text style={{ fontWeight: 'bold', fontSize: 24, marginTop: 25 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 24, marginTop: 25, color: textColor }}>
                         Horário
                     </Text>
                     <View style={{
@@ -38,13 +46,13 @@ export default function Eventos() {
                         <CardHorario hora="15:00 ás 17:00" />
                         <CardHorario hora="17:00 ás 19:00" />
                     </View>
-                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20 }}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, color: textColor }}>
                         Cotia SP, Senai Ricardo Lerner
                         06708-280
                     </Text>
                 </View>
-                <View style={styles.container}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 24 }}>
+                <View style={[styles.container, { backgroundColor: container }]}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 24, color: textColor }}>
                         Próximos Eventos
                     </Text>
                     <View>

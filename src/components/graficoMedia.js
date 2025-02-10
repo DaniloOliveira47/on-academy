@@ -22,7 +22,12 @@ export default function GraficoMedia({ isDarkMode }) {
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: isDarkMode ? '#121212' : '#FCF9F9' }]}>
+    <View style={[styles.card, {
+      backgroundColor: isDarkMode ? '#121212' : '#FCF9F9', shadowColor: isDarkMode ? '#FFF' : '#000',
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 5,
+    }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#222' }]}>Frequência</Text>
 
@@ -85,10 +90,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
     height: 200,
     marginTop: 30,
   },

@@ -6,15 +6,21 @@ import CardNota from '../components/cardNota';
 import { useTheme } from '../path/ThemeContext';
 
 export default function Home() {
- const { isDarkMode } = useTheme();
+  const { isDarkMode } = useTheme();
 
   return (
-    <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+    <View style={[styles.tela, { backgroundColor: isDarkMode ? '#241F1F' : '#F0F7FF' }]}>
       <ScrollView>
-        <Header isDarkMode={isDarkMode}  />
-        
+        <Header isDarkMode={isDarkMode} />
+
         <View style={styles.subtela}>
-          <View style={[styles.infoContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1E6BE6' }]}>
+          <View style={[styles.infoContainer, {
+            backgroundColor: isDarkMode ? '#1E6BE6' : '#1E6BE6',
+            shadowColor: isDarkMode ? '#FFF' : '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 5,
+          }]}>
             <View style={styles.textContainer}>
               <Text style={[styles.titulo, { color: isDarkMode ? '#FFF' : '#fff' }]}>
                 Seja bem-vinda, Livia 👋
@@ -44,6 +50,13 @@ export default function Home() {
             subtitle="Giovanni"
             imageSource={require('../assets/image/matematica.png')}
             percentage={85}
+            isDarkMode={isDarkMode}
+          />
+          <CardNota
+            title="História"
+            subtitle="Samuel"
+            imageSource={require('../assets/image/ingles.png')}
+            percentage={90}
             isDarkMode={isDarkMode}
           />
           <CardNota
@@ -103,6 +116,6 @@ const styles = StyleSheet.create({
   containerNotas: {
     padding: 30,
     paddingTop: 10,
-    marginBottom: 50
+    marginBottom: 70
   },
 });

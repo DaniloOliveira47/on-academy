@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useTheme } from '../path/ThemeContext'; 
+import { useTheme } from '../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import CustomCalendar from './Calendario';
 import ProximosEventos from './proximosEventos';
 
 export default function Header() {
-  const { isDarkMode, setIsDarkMode } = useTheme(); 
+  const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
 
@@ -20,7 +20,7 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode); 
+    setIsDarkMode(!isDarkMode);
   };
 
   const menuTranslateX = animation.interpolate({
@@ -31,9 +31,10 @@ export default function Header() {
   const headerBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const buttonBackgroundColor = isDarkMode ? '#0077FF' : '#0077FF';
-  const profileBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  const profileBackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
   const menuLineColor = isDarkMode ? '#FFF' : '#0077FF';
   const closeButtonColor = '#FFF';
+  const container = isDarkMode ? '#241F1F' : '#FFF';
 
   return (
     <>
@@ -69,7 +70,7 @@ export default function Header() {
           styles.menuOverlay,
           {
             transform: [{ translateX: menuTranslateX }],
-            backgroundColor: isDarkMode ? '#121212' : '#1E6BE6', // Cor preta para dark e azul para light
+            backgroundColor: isDarkMode ? '#000000' : '#1E6BE6',
           },
         ]}
       >
@@ -85,16 +86,16 @@ export default function Header() {
                 Roberta
               </Text>
             </View>
-            <Image source={require('../assets/image/Option.png')} style={styles.options} />
+            <Image source={isDarkMode ? require('../assets/image/OptionWhite.png') : require('../assets/image/Option.png')} style={styles.options} />
           </View>
         </View>
 
-        <View style={styles.menuItem}>
+        <View style={[styles.menuItem, { height: 'auto',  }]}>
           <CustomCalendar />
         </View>
 
         <View style={styles.menuItem}>
-          <View style={styles.contEventos}>
+          <View style={[styles.contEventos, {backgroundColor: container}]}>
             <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
             <View>
               <ProximosEventos
@@ -135,12 +136,12 @@ export default function Header() {
 
 const styles = StyleSheet.create({
   contEventos: {
-    backgroundColor: '#FFF',
     width: '100%',
     height: 'auto',
-    borderRadius: 16,
+    borderRadius: 15,
     padding: 20,
   },
+
   menuContainer: {
     width: 30,
     height: 30,
@@ -205,8 +206,7 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#0077FF',
+
   },
   overlay: {
     position: 'absolute',
