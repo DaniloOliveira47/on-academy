@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native'; 
 import Navigation from './Navigation';
 import { ThemeProvider } from './path/ThemeContext';
+import Login from './screens/Login'
 
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false); 
@@ -12,11 +13,11 @@ export default function App() {
   const theme = isDarkMode ? DarkTheme : DefaultTheme; 
 
   return (
-    <ThemeProvider>
-      <NavigationContainer theme={theme}>
-        <Navigation isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
-      </NavigationContainer>
-    </ThemeProvider>
+    <View style={styles.container}>
+
+    <Login />
+  </View>
+
   );
 }
 

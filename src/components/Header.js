@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import CustomCalendar from './Calendario';
@@ -8,6 +8,15 @@ export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [localTheme, setLocalTheme] = useState(isDarkMode);
+  
+  // Pré-carregar imagens do toggle para evitar atrasos na troca de tema
+  const toggleLight = require('../assets/image/Toggle.png');
+  const toggleDark = require('../assets/image/ToggleDark.png');
+
+  useEffect(() => {
+    setLocalTheme(isDarkMode);
+  }, [isDarkMode]);
 
   const toggleMenu = () => {
     const toValue = menuVisible ? 0 : 1;
@@ -20,7 +29,10 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+    setLocalTheme(!localTheme); // Atualiza rapidamente a interface
+    setTimeout(() => {
+      setIsDarkMode(!isDarkMode); // Atualiza o tema global após um pequeno delay
+    }, 10);
   };
 
   const menuTranslateX = animation.interpolate({
@@ -28,13 +40,13 @@ export default function Header() {
     outputRange: [-Dimensions.get('window').width, 0],
   });
 
-  const headerBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
-  const textColor = isDarkMode ? '#FFF' : '#000';
-  const buttonBackgroundColor = isDarkMode ? '#0077FF' : '#0077FF';
-  const profileBackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
-  const menuLineColor = isDarkMode ? '#FFF' : '#0077FF';
+  const headerBackgroundColor = localTheme ? '#121212' : '#F0F7FF';
+  const textColor = localTheme ? '#FFF' : '#000';
+  const buttonBackgroundColor = '#0077FF';
+  const profileBackgroundColor = localTheme ? '#241F1F' : '#F0F7FF';
+  const menuLineColor = localTheme ? '#FFF' : '#0077FF';
   const closeButtonColor = '#FFF';
-  const container = isDarkMode ? '#241F1F' : '#FFF';
+  const container = localTheme ? '#241F1F' : '#FFF';
 
   return (
     <>
@@ -53,10 +65,7 @@ export default function Header() {
 
           <View style={styles.subLinha}>
             <TouchableOpacity onPress={toggleTheme}>
-              <Image
-                style={{ width: 110, height: 25 }}
-                source={isDarkMode ? require('../assets/image/ToggleDark.png') : require('../assets/image/Toggle.png')}
-              />
+              <Image style={{ width: 110, height: 25 }} source={localTheme ? toggleDark : toggleLight} />
             </TouchableOpacity>
             <Image style={styles.notification} source={require('../assets/image/Notification3.png')} />
           </View>
@@ -70,7 +79,7 @@ export default function Header() {
           styles.menuOverlay,
           {
             transform: [{ translateX: menuTranslateX }],
-            backgroundColor: isDarkMode ? '#000000' : '#1E6BE6',
+            backgroundColor: localTheme ? '#000000' : '#1E6BE6',
           },
         ]}
       >
@@ -86,46 +95,22 @@ export default function Header() {
                 Roberta
               </Text>
             </View>
-            <Image source={isDarkMode ? require('../assets/image/OptionWhite.png') : require('../assets/image/Option.png')} style={styles.options} />
+            <Image source={localTheme ? require('../assets/image/OptionWhite.png') : require('../assets/image/Option.png')} style={styles.options} />
           </View>
         </View>
 
-        <View style={[styles.menuItem, { height: 'auto',  }]}>
+        <View style={[styles.menuItem, { height: 'auto' }]}>
           <CustomCalendar />
         </View>
 
         <View style={styles.menuItem}>
-          <View style={[styles.contEventos, {backgroundColor: container}]}>
+          <View style={[styles.contEventos, { backgroundColor: container }]}>
             <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
             <View>
-              <ProximosEventos
-                data="8"
-                titulo="Início das Aulas"
-                subData="8 - FEV 2025"
-                periodo="8 A.M - 9 A.M"
-                color='#0077FF'
-              />
-              <ProximosEventos
-                data="13"
-                titulo="Clube do Livro"
-                subData="13 - FEV 2025"
-                periodo="10 A.M - 11 A.M"
-                color='#FF1D86'
-              />
-              <ProximosEventos
-                data="18"
-                titulo="Entrega das Apostilas"
-                subData="18 - FEV 2025"
-                periodo="2 P.M - 3 P.M"
-                color='#16D03B'
-              />
-              <ProximosEventos
-                data="23"
-                titulo="Feira Cultural"
-                subData="23 - FEV 2025"
-                periodo="4 P.M - 5 P.M"
-                color='#FF7E3E'
-              />
+              <ProximosEventos data="8" titulo="Início das Aulas" subData="8 - FEV 2025" periodo="8 A.M - 9 A.M" color="#0077FF" />
+              <ProximosEventos data="13" titulo="Clube do Livro" subData="13 - FEV 2025" periodo="10 A.M - 11 A.M" color="#FF1D86" />
+              <ProximosEventos data="18" titulo="Entrega das Apostilas" subData="18 - FEV 2025" periodo="2 P.M - 3 P.M" color="#16D03B" />
+              <ProximosEventos data="23" titulo="Feira Cultural" subData="23 - FEV 2025" periodo="4 P.M - 5 P.M" color="#FF7E3E" />
             </View>
           </View>
         </View>
