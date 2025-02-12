@@ -1,7 +1,7 @@
 import React from 'react'
 import { Text } from 'react-native';
 import { StyleSheet, View } from 'react-native'
-import { useTheme } from '../path/ThemeContext'; 
+import { useTheme } from '../../path/ThemeContext'; 
 
 export default function Nota({ nota }) {
       const { isDarkMode } = useTheme();

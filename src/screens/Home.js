@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView } from 'react-native';
-import Header from '../components/Header';
-import GraficoMedia from '../components/graficoMedia';
-import CardNota from '../components/cardNota';
+import Header from '../components/Home/Header';
+import GraficoMedia from '../components/Home/graficoMedia';
+import CardNota from '../components/Home/cardNota';
 import { useTheme } from '../path/ThemeContext';
 
 export default function Home() {

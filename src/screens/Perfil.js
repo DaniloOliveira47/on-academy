@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
-import Campo from '../components/Campo';
+import Campo from '../components/Perfil/Campo';
 import { useTheme } from '../path/ThemeContext';
-import HeaderSimples from '../components/HeaderSimples';
+import HeaderSimples from '../components/Gerais/HeaderSimples';
 
 export default function Perfil() {
   const { isDarkMode } = useTheme();

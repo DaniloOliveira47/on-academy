@@ -1,9 +1,9 @@
 import React from 'react'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native'
-import HeaderSimples from '../components/HeaderSimples'
-import CustomCalendar from '../components/Calendario'
-import CardHorario from '../components/CardHorario'
-import ProximosEventos from '../components/proximosEventos'
+import HeaderSimples from '../components/Gerais/HeaderSimples'
+import CustomCalendar from '../components/Eventos/Calendario'
+import CardHorario from '../components/Eventos/CardHorario'
+import ProximosEventos from '../components/Eventos/proximosEventos'
 import { useTheme } from '../path/ThemeContext'
 
 export default function Eventos() {

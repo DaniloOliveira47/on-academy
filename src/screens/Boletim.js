@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
-import HeaderSimples from '../components/HeaderSimples';
-import CardMateria from '../components/CardMateria';
-import Nota from '../components/Nota';
-import BarraAzul from '../components/barraAzul';
+import HeaderSimples from '../components/Gerais/HeaderSimples';
+import CardMateria from '../components/Boletim/CardMateria';
+import Nota from '../components/Boletim/Nota';
+import BarraAzul from '../components/Boletim/barraAzul';
 import { useTheme } from '../path/ThemeContext';
 
 export default function Boletim() {

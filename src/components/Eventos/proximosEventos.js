@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { useTheme } from '../path/ThemeContext';
+import { useTheme } from '../../path/ThemeContext';
 
 export default function ProximosEventos({ data, titulo, subData, periodo, color }) {
   const { isDarkMode } = useTheme();

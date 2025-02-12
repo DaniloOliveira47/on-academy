@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../path/ThemeContext';
+import { useTheme } from '../../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
-import CustomCalendar from './Calendario';
-import ProximosEventos from './proximosEventos';
+import CustomCalendar from '../Eventos/Calendario';
+import ProximosEventos from '../Eventos/proximosEventos';
 
 export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [localTheme, setLocalTheme] = useState(isDarkMode);
-  
-  // Pré-carregar imagens do toggle para evitar atrasos na troca de tema
-  const toggleLight = require('../assets/image/Toggle.png');
-  const toggleDark = require('../assets/image/ToggleDark.png');
+
+  const toggleLight = require('../../assets/image/Toggle.png');
+  const toggleDark = require('../../assets/image/ToggleDark.png');
 
   useEffect(() => {
     setLocalTheme(isDarkMode);
@@ -29,9 +28,9 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    setLocalTheme(!localTheme); // Atualiza rapidamente a interface
+    setLocalTheme(!localTheme);
     setTimeout(() => {
-      setIsDarkMode(!isDarkMode); // Atualiza o tema global após um pequeno delay
+      setIsDarkMode(!isDarkMode);
     }, 10);
   };
 
@@ -59,7 +58,7 @@ export default function Header() {
           </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <Image style={{ width: 25, height: 30 }} source={require('../assets/image/logo.png')} />
+            <Image style={{ width: 25, height: 30 }} source={require('../../assets/image/logo.png')} />
             <Text style={{ color: buttonBackgroundColor, fontWeight: 'bold', fontSize: 18 }}>ONA</Text>
           </View>
 
@@ -67,7 +66,7 @@ export default function Header() {
             <TouchableOpacity onPress={toggleTheme}>
               <Image style={{ width: 110, height: 25 }} source={localTheme ? toggleDark : toggleLight} />
             </TouchableOpacity>
-            <Image style={styles.notification} source={require('../assets/image/Notification3.png')} />
+            <Image style={styles.notification} source={require('../../assets/image/Notification3.png')} />
           </View>
         </View>
       </View>
@@ -90,12 +89,12 @@ export default function Header() {
         <View style={styles.menuItem}>
           <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
             <View style={{ flexDirection: 'row', gap: 20 }}>
-              <Image style={styles.imgPerfil} source={require('../assets/image/perfil4x4.png')} />
+              <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
               <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
                 Roberta
               </Text>
             </View>
-            <Image source={localTheme ? require('../assets/image/OptionWhite.png') : require('../assets/image/Option.png')} style={styles.options} />
+            <Image source={localTheme ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
           </View>
         </View>
 
