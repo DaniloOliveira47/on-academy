@@ -56,7 +56,7 @@ export default function Login() {
                 Acompanhe seu desempenho, receba notificações e explore recursos personalizados para começar
               </Text>
             </View>
-            
+
           </ImageBackground>
         </View>
 
@@ -95,7 +95,7 @@ export default function Login() {
       </View>
     </LinearGradient>
   );
-}
+} // /api/student/login
 
 const styles = StyleSheet.create({
   tela: {
