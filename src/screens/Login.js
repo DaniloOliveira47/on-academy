@@ -1,15 +1,83 @@
 import React, { useState } from 'react';
-import { Text, TextInput, View, Image, ImageBackground, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, TextInput, View, Image, ImageBackground, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
+  const navigation = useNavigation();
   const [password, setPassword] = useState('');
+  const [matricula, setMatricula] = useState('');
   const [secureText, setSecureText] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const handleLogin = async () => {
+    if (!matricula || !password) {
+      Alert.alert('Por Favor, preencha todos os campos');
+      return;
+    }
+
+    const aluno = {
+      identifierCode: matricula,
+      password: password,
+    };
+
+    if (matricula.charAt(0) === "a") {
+      try {
+        const response = await axios.post('http://10.92.198.34:3000/api/student/login', aluno);
+        Alert.alert('Seja Bem-Vindo Aluno!');
+
+        const data = response.data;
+        const token = data.token;
+        if (token) {
+          await AsyncStorage.setItem('@user_token', token);
+          console.log("Token armazenado com sucesso!", token);
+          navigation.navigate('Main');
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Falha ao Realizar o Login');
+        console.error(error);
+      }
+    } else if (matricula.charAt(0) === "p") {
+      try {
+        const response = await axios.post('http://10.92.198.34:3000/api/teacher/login', aluno);
+        Alert.alert('Seja Bem-Vindo Professor!');
+
+        const data = response.data;
+        const token = data.token;
+        if (token) {
+          await AsyncStorage.setItem('@user_token', token);
+          console.log("Token armazenado com sucesso!", token);
+          navigation.navigate('Main');
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Falha ao Realizar o Login');
+        console.error(error);
+      }
+    } else {
+      try {
+        const response = await axios.post('http://10.92.198.34:3000/api/institution/login', aluno);
+        Alert.alert('Seja Bem-Vindo Instituição!');
+
+        const data = response.data;
+        const token = data.token;
+        if (token) {
+          await AsyncStorage.setItem('@user_token', token);
+          console.log("Token armazenado com sucesso!", token);
+          navigation.navigate('Main');
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Falha ao Realizar o Login');
+        console.error(error);
+      }
+    }
+
   };
 
   return (
@@ -66,6 +134,8 @@ export default function Login() {
               style={[styles.input, { color: isDarkMode ? 'black' : 'black' }]}
               placeholder="Nº Matrícula"
               placeholderTextColor="#756262"
+              value={matricula}
+              onChangeText={setMatricula}
             />
           </View>
 
@@ -88,7 +158,10 @@ export default function Login() {
             <Text style={[styles.forgotPassword, { color: isDarkMode ? '#A4A4A4' : '#0077FF' }]}>Esqueceu sua Senha?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#0077FF' : '##0077FF' }]}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: isDarkMode ? '#0077FF' : '#0077FF' }]}
+            onPress={(handleLogin)}
+          >
             <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
         </View>

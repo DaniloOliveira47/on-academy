@@ -6,7 +6,7 @@ import HomeScreen from './screens/Home';
 import PerfilScreen from './screens/Perfil';
 import BoletimScreen from './screens/Boletim';
 import EventosScreen from './screens/Eventos';
-import Screen4 from './screens/Home';
+import OcorrenciaScreen from './screens/Ocorrencia';
 import { useTheme } from './path/ThemeContext';
 
 
@@ -33,7 +33,7 @@ export default function Navigation() {
             case 'Eventos':
               iconName = 'calendar';
               break;
-            case 'Screen4':
+            case 'Ocorrencia':
               iconName = 'alert-circle';
               break;
             default:
@@ -73,8 +73,8 @@ export default function Navigation() {
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="Screen4"
-        component={Screen4}
+        name="Ocorrencia"
+        component={OcorrenciaScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
