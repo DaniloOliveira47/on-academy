@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
         width: 350,
         padding: 10,
         borderRadius: 13,
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         gap: 10,
         marginBottom: 20,
     },

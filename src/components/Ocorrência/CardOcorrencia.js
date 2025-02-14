@@ -1,21 +1,13 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-export default function CardOcorrencia({ocorrencia, tipo, orientador, data }) {
+export default function CardOcorrencia({ ocorrencia, tipo, orientador, data }) {
   return (
     <View style={styles.linha}>
-        <Text style={styles.text}>
-            {ocorrencia}
-        </Text>
-        <Text style={styles.text}>
-            {tipo}
-        </Text>
-        <Text style={styles.text}>
-            {orientador}
-        </Text>
-        <Text style={{fontSize: 10}}>
-            {data}
-        </Text>
+        <Text style={styles.texto}>{ocorrencia}</Text>
+        <Text style={styles.texto}>{tipo}</Text>
+        <Text style={styles.texto}>{orientador}</Text>
+        <Text style={styles.texto}>{data}</Text>
     </View>
   )
 }
@@ -24,9 +16,15 @@ const styles = StyleSheet.create({
     linha: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 10
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
     },
-    text: {
-        fontSize: 12
+    texto: {
+        flex: 1,
+        fontSize: 11,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
