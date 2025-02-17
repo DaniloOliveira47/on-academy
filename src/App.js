@@ -4,6 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/Login';
 import Navigation from './Navigation';
 import { ThemeProvider } from './path/ThemeContext';
+import Perfil from './screens/Perfil';
+import NavigationDocente from './NavigationDocente';
 
 const Stack = createStackNavigator();
 
@@ -11,11 +13,12 @@ export default function App() {
   return (
     <ThemeProvider>
       <NavigationContainer>
-        <Navigation/>
-      {/*<Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="MainDoc">
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Main" component={Navigation} />
-        </Stack.Navigator>*/}
+          <Stack.Screen name="Perfil" component={Perfil} />
+          <Stack.Screen name="MainDoc" component={NavigationDocente} />
+        </Stack.Navigator>
       </NavigationContainer>
     </ThemeProvider>
   );

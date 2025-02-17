@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
 
-import HomeScreen from './screens/Home';
+import HomeScreen from './screens/screensDocente/Home';
 import PerfilScreen from './screens/Perfil';
 import EmocionalScreen from './screens/Emocional';
 import BoletimScreen from './screens/Boletim';
@@ -13,7 +13,7 @@ import { useTheme } from './path/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
-export default function Navigation() {
+export default function NavigationDocente() {
   const { isDarkMode } = useTheme();
   return (
     <Tab.Navigator

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Navigation from './Navigation';
+import NavigationDocente from './src/NavigationDocente';
 import { ThemeProvider } from './path/ThemeContext'; 
 import { StyleSheet } from 'react-native';
 
@@ -8,7 +9,7 @@ export default function MainNavigation() {
   return (
     <ThemeProvider> 
       <NavigationContainer>
-        <Navigation />
+        <NavigationDocente />
       </NavigationContainer>
     </ThemeProvider>
   );

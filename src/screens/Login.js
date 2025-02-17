@@ -160,7 +160,7 @@ export default function Login() {
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: isDarkMode ? '#0077FF' : '#0077FF' }]}
-            onPress={(handleLogin)}
+            onPress={() => navigation.navigate('Main')}
           >
             <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>

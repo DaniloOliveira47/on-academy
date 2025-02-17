@@ -3,12 +3,14 @@ import { useTheme } from '../../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [localTheme, setLocalTheme] = useState(isDarkMode);
+  const navigation = useNavigation();
 
   const toggleLight = require('../../assets/image/Toggle.png');
   const toggleDark = require('../../assets/image/ToggleDark.png');
@@ -87,15 +89,17 @@ export default function Header() {
         </TouchableOpacity>
 
         <View style={styles.menuItem}>
-          <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-            <View style={{ flexDirection: 'row', gap: 20 }}>
-              <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
-              <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                Roberta
-              </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+              <View style={{ flexDirection: 'row', gap: 20 }}>
+                <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
+                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                  Roberta
+                </Text>
+              </View>
+              <Image source={localTheme ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
             </View>
-            <Image source={localTheme ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={[styles.menuItem, { height: 'auto' }]}>
