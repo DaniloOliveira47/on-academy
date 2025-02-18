@@ -20,14 +20,16 @@ const styles = StyleSheet.create({
         borderTopWidth: 1
     },
     Textcirculo: {
-        color: 'white'
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold'
     },
     circulo: {
         alignItems: 'center',
         width: 50,
         
-        borderRadius: 18,
-        padding: 10,
+        borderRadius: 30,
+        padding: 13,
         backgroundColor: '#FF7E3E'
     }
 });

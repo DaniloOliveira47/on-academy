@@ -89,12 +89,8 @@ export default function HomeDocente() {
                             </Text>
                         </View>
                     </View>
-                    <View style={styles.avisos}>
-                            <Avisos/>
                 </View>
 
-                </View>
-                
             </ScrollView>
         </View>
     );
@@ -105,10 +101,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         flex: 1,
-    },
-    avisos: {
-        backgroundColor: 'white',
-        width: '100%'
+        backgroundColor: '#F0F7FF'
     },
     scrollTela: {
         flex: 1,
