@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import HomeScreen from './screens/screensDocente/Home';
 import TurmasScreen from './screens/screensDocente/Turmas';
 import EventosScreen from './screens/Eventos';
-import OcorrenciaScreen from './screens/Ocorrencia';
+import Feedback from './screens/screensDocente/Feedback';
 import { useTheme } from './path/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -30,7 +30,7 @@ export default function NavigationDocente() {
             case 'Eventos':
               iconName = 'calendar';
               break;
-            case 'Mensagens':
+            case 'Feedback':
               iconName = 'message-circle';
               break;
             default:
@@ -53,7 +53,7 @@ export default function NavigationDocente() {
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Turmas" component={TurmasScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Eventos" component={EventosScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Mensagens" component={OcorrenciaScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Feedback" component={Feedback} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }

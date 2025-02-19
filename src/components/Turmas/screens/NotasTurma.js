@@ -1,7 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import HeaderSimples from '../../Gerais/HeaderSimples';
+import CardMateria from '../../Turmas/CardMateria';
+import CardNota from '../../Turmas/CardNota'
+
 
 const alunos = [
   { id: '1', nome: 'Alice Fernandes', matricula: '2025001', media: '87%' },
@@ -28,80 +31,142 @@ const alunos = [
 ];
 
 export default function NotasTurma() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState(null);
+
+  const abrirModal = (aluno) => {
+    setAlunoSelecionado(aluno);
+    setModalVisible(true);
+  };
+
   return (
-    <View style={styles.tela}>
-      <View style={{ padding: 20, paddingBottom: 0 }}>
-        <HeaderSimples />
-      </View>
+    <ScrollView>
 
-      <View style={{ padding: 10 }}>
-        <View style={styles.linha}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Turma A - 1º Ano</Text>
-          <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
+
+      <View style={styles.tela}>
+        <View style={{ padding: 20, paddingBottom: 0 }}>
+          <HeaderSimples />
         </View>
 
-        {/* Container Branco envolvendo Input e Tabela */}
-        <View style={styles.containerBranco}>
-          {/* Input de Pesquisa */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite o nome ou código da turma"
-              placeholderTextColor="#756262"
+        <View style={{ padding: 10 }}>
+          <View style={styles.linha}>
+            <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Turma A - 1º Ano</Text>
+            <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
+          </View>
+
+
+          <View style={styles.containerBranco}>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite o nome ou código da turma"
+                placeholderTextColor="#756262"
+              />
+              <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
+            </View>
+
+
+            <View style={styles.tableHeader}>
+              <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
+              <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
+              <Text style={[styles.headerText, { flex: 1 }]}>Média (%)</Text>
+              <Text style={[styles.headerText, { flex: 1 }]}>Notas</Text>
+            </View>
+
+            <FlatList
+              data={alunos}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.tableRow}>
+                  <Text style={[styles.rowText, { flex: 2 }]}>{item.nome}</Text>
+                  <Text style={[styles.rowText, { flex: 1 }]}>{item.matricula}</Text>
+                  <Text style={[styles.rowText, { flex: 1 }]}>{item.media}</Text>
+                  <TouchableOpacity style={styles.notasButton} onPress={() => abrirModal(item)}>
+                    <Text style={styles.notasText}>Ver Notas</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             />
-            <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
           </View>
-
-          {/* Cabeçalho da Tabela */}
-          <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Média (%)</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Notas</Text>
-          </View>
-
-          {/* Lista de Alunos */}
-          <FlatList
-            data={alunos}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.tableRow}>
-                <Text style={[styles.rowText, { flex: 2 }]}>{item.nome}</Text>
-                <Text style={[styles.rowText, { flex: 1 }]}>{item.matricula}</Text>
-                <Text style={[styles.rowText, { flex: 1 }]}>{item.media}</Text>
-                <TouchableOpacity style={styles.notasButton}>
-                  <Text style={styles.notasText}>Ver Notas</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
         </View>
+
+        <Modal visible={modalVisible} transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{alunoSelecionado?.nome}</Text>
+              <View style={styles.contBoletim}>
+                <View style={styles.columnMateria}>
+                  <CardMateria
+                    materia="Português"
+                  />
+                  <CardMateria
+                    materia="Matemática"
+                  />
+                  <CardMateria
+                    materia="Inglês"
+                  />
+                  <CardMateria
+                    materia="Ciências"
+                  />
+                  <CardMateria
+                    materia="Artes"
+                  />
+                </View>
+                <View style={styles.columnNotas}>
+                  <CardNota
+                    nota="98.5"
+                  />
+                  <CardNota
+                    nota="75.6"
+                  />
+                  <CardNota
+                    nota="90.6"
+                  />
+                  <CardNota
+                    nota="60.2"
+                  />
+                  <CardNota
+                    nota="85.3"
+                  />
+                </View>
+              </View>
+              <TouchableOpacity style={styles.fecharButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.fecharText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   tela: {
     flex: 1,
-    backgroundColor: '#F0F7FF'
+    backgroundColor: '#F0F7FF',
+  },
+  contBoletim: {
+    flexDirection: 'row',
+    gap: 40
   },
   containerBranco: {
-    backgroundColor: '#FFF', 
-    borderRadius: 15, 
-    padding: 15, 
-    marginTop: 15,
-    elevation: 3, 
-    
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 15,
+    marginTop: 5,
+    elevation: 3,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   linha: {
-    marginTop: 10,
+    marginTop: -5,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 50,
+    justifyContent: 'space-between',
+    padding: 10
   },
   inputContainer: {
     flexDirection: 'row',
@@ -112,7 +177,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 15,
     backgroundColor: '#FFF',
-    marginBottom: 10, 
+    marginBottom: 10,
   },
   icon: {
     marginLeft: 10,
@@ -153,5 +218,48 @@ const styles = StyleSheet.create({
   notasText: {
     color: '#1A85FF',
     fontWeight: 'bold',
+  },
+
+  /* Estilos do Modal */
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalNotas: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1A85FF',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  fecharButton: {
+    marginTop: 15,
+    backgroundColor: '#1A85FF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  fecharText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

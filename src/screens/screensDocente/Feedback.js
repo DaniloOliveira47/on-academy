@@ -29,21 +29,21 @@ export default function Turmas() {
                             numero="Nº0231000"
                             alunos="30 Alunos ativos"
                             periodo="Período: Manhã"
-                            navegacao = "NotasTurma"
+                            navegacao= "AlunosFeedback"
                         />
                         <CardTurmas
                             turma="Turma B - 2º Ano"
                             numero="Nº0231000"
                             alunos="28 Alunos ativos"
                             periodo="Período: Tarde"
-                            navegacao = "NotasTurma"
+                            navegacao= "AlunosFeedback"
                         />
                         <CardTurmas
                             turma="Turma C - 3º Ano"
                             numero="Nº0231000"
                             alunos="35 Alunos ativos"
                             periodo="Período: Noite"
-                            navegacao = "NotasTurma"
+                            navegacao= "AlunosFeedback"
                         />
                     </View>
                 </View>

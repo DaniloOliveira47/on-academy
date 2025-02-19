@@ -4,7 +4,7 @@ import { TouchableOpacity } from 'react-native'
 import { StyleSheet, Text, View } from 'react-native'
 
 
-export default function CardTurmas({turma, alunos, periodo, numero}) {
+export default function CardTurmas({turma, alunos, periodo, numero, navegacao}) {
     const navigation = useNavigation();
     return (
         <View style={styles.card}>
@@ -23,7 +23,7 @@ export default function CardTurmas({turma, alunos, periodo, numero}) {
                 {periodo}
             </Text>
             <View style={{alignItems: 'center', marginTop: 20}}>
-            <TouchableOpacity  onPress={() => navigation.navigate('NotasTurma')} style={styles.botao} >
+            <TouchableOpacity  onPress={() => navigation.navigate(navegacao)} style={styles.botao} >
                 <Text style={{color: 'white', fontWeight: 'bold'}}>
                     Visualizar Turma
                 </Text>
