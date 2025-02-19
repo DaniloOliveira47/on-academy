@@ -94,12 +94,12 @@ export default function Ocorrencia() {
                         <CardProfessor />
                         <CardProfessor />
                     </View>
-                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: 20, marginBottom: 20}}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: 20, marginBottom: 20 }}>
                         <TextInput style={{ backgroundColor: '#F0F7FF', borderRadius: 10, width: 260, fontSize: 11 }}
                             placeholder='Escreva aqui seu feedback para o prof(a) Karla Dias'
                         />
-                        <TouchableOpacity style={{backgroundColor: '#0077FF', padding: 7, borderRadius: 10}}>
-                            <Text style={{color: 'white'}}>
+                        <TouchableOpacity style={{ backgroundColor: '#0077FF', padding: 7, borderRadius: 10 }}>
+                            <Text style={{ color: 'white' }}>
                                 Enviar
                             </Text>
                         </TouchableOpacity>
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     botao: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor:  '#0077FF',
+        backgroundColor: '#0077FF',
         width: '100%',
         padding: 10,
         borderRadius: 13,

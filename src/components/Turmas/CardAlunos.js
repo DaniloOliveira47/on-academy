@@ -1,10 +1,12 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react'
 import { Text, TouchableOpacity } from 'react-native';
 import { Image, StyleSheet, View } from 'react-native'
 
 export default function CardAlunos({ nome }) {
+    const navigation = useNavigation();
     return (
-        <View style={styles.container}>
+        <TouchableOpacity onPress={() => navigation.navigate('AlunoPerfil')} style={styles.container}>
             <View style={styles.imageContainer}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
@@ -17,7 +19,7 @@ export default function CardAlunos({ nome }) {
                 </Text>
             </View>
 
-        </View >
+        </TouchableOpacity >
     )
 }
 

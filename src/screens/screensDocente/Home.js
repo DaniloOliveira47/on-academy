@@ -47,7 +47,7 @@ export default function HomeDocente() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas com scroll personalizado */}
+                   
                     <View style={styles.contTurmas}>
                         <Text style={styles.title}>Turmas</Text>
                         <View style={styles.scrollWrapper}>
