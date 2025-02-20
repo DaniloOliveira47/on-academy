@@ -23,7 +23,7 @@ export default function AlunoPerfil() {
     ];
 
     return (
-        <ScrollView>
+        <ScrollView style={{marginBottom: 40}}>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <HeaderSimples titulo="PERFIL" />
                 <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 30 }]} source={require('../../../assets/image/barraAzul.png')} />
@@ -108,17 +108,17 @@ export default function AlunoPerfil() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <View style={{flexDirection: 'row', justifyContent: 'flex-end', gap: 30}}>
-                        <View style={{backgroundColor: 'red', padding: 8, borderRadius: 8, width: 90, alignItems: 'center'}}>
-                            <Text style={{color: 'white'}}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 30 }}>
+                        <TouchableOpacity style={{ backgroundColor: 'red', padding: 8, borderRadius: 8, width: 90, alignItems: 'center' }}>
+                            <Text style={{ color: 'white' }}>
                                 Cancelar
                             </Text>
-                        </View>
-                        <View style={{backgroundColor: '#0077FF', padding: 8, borderRadius: 8, width: 90, alignItems: 'center'}}>
-                            <Text style={{color: 'white'}}>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ backgroundColor: '#0077FF', padding: 8, borderRadius: 8, width: 90, alignItems: 'center' }}>
+                            <Text style={{ color: 'white' }}>
                                 Enviar
                             </Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>

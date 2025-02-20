@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   tela: {
     flex: 1,
     backgroundColor: '#F0F7FF',
+    paddingBottom: 50
   },
   contBoletim: {
     flexDirection: 'row',
