@@ -9,18 +9,19 @@ import { useTheme } from '../path/ThemeContext'
 export default function Eventos() {
     const { isDarkMode } = useTheme();
 
-    const BackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
+    const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const container = isDarkMode ? '#000' : '#FFF';
 
 
     return (
         <ScrollView>
-            <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
-                <HeaderSimples
+            <HeaderSimples
                     titulo="EVENTOS"
                 />
-                <View style={{ marginTop: 45 }}>
+            <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
+                
+                <View style={{ marginTop: 0 }}>
                     <Image style={styles.barraAzul} source={require('../assets/image/barraAzul.png')} />
                     <CustomCalendar />
                 </View>

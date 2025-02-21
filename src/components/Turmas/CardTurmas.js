@@ -2,24 +2,25 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react'
 import { TouchableOpacity } from 'react-native'
 import { StyleSheet, Text, View } from 'react-native'
-
+import { useTheme } from '../../path/ThemeContext';
 
 export default function CardTurmas({turma, alunos, periodo, numero, navegacao}) {
     const navigation = useNavigation();
+     const { isDarkMode } = useTheme();
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}  ]}>
             <View style={styles.linha}>
-                <Text style={{ fontWeight: 'bold', fontSize: 17 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 17, color: isDarkMode ? 'white' : 'black'}}>
                    {turma}
                 </Text>
-                <Text style={{ color: '#8A8A8A', fontWeight: 'bold' }}>
+                <Text style={{ color: '#8A8A8A', fontWeight: 'bold', color: isDarkMode ? 'white' : 'black' }}>
                    {numero}
                 </Text>
             </View>
-            <Text style={styles.subTexto}>
+            <Text style={[styles.subTexto, {color: isDarkMode ? 'white' : 'black'}]}>
                 {alunos}
             </Text>
-            <Text style={styles.subTexto}>
+            <Text style={[styles.subTexto, {color: isDarkMode ? 'white' : 'black'}]}>
                 {periodo}
             </Text>
             <View style={{alignItems: 'center', marginTop: 20}}>

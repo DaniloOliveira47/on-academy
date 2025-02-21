@@ -1,10 +1,17 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { useTheme } from '../../path/ThemeContext';
 
 export default function CardSelecao({ numero, selecionado, onPress }) {
+    const { isDarkMode } = useTheme();
+
     return (
         <TouchableOpacity
-            style={[styles.container, selecionado && styles.ativo]}
+            style={[
+                styles.container,
+                selecionado && styles.ativo,
+                { backgroundColor: selecionado ? '#0077FF' : (isDarkMode ? '#141414' : '#F0F7FF') }
+            ]}
             onPress={onPress}
         >
             <Text style={[styles.texto, selecionado && styles.textoAtivo]}>
@@ -16,12 +23,10 @@ export default function CardSelecao({ numero, selecionado, onPress }) {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFF',
         width: 45,
         borderRadius: 10,
         alignItems: 'center',
         padding: 10,
-        backgroundColor: '#F0F7FF',
         marginHorizontal: 5
     },
     ativo: {

@@ -5,50 +5,52 @@ import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import CardAlunos from '../CardAlunos';
 import CardSelecao from '../CardSelecao';
+import { useTheme } from '../../../path/ThemeContext';
 
 export default function AlunosFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
-
+    const { isDarkMode } = useTheme();
     return (
-        <View style={styles.tela}>
-            <View style={styles.header}>
-                <HeaderSimples />
-            </View>
-            <View style={styles.linha}>
-                <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Turma A - 1º Ano</Text>
-                <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
-            </View>
-            <View style={styles.container}>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Digite o nome ou número da mátricula"
-                        placeholderTextColor="#756262"
-                    />
-                    <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
+        <View>
+            <HeaderSimples />
+                <View style={[styles.tela, {backgroundColor: isDarkMode ?  '#141414' : '#F0F7FF' }]}>
+
+                <View style={styles.linha}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
+                    <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
                 </View>
-                <View style={styles.contColumn}>
-                    <View>
-                        <CardAlunos nome="Alice Fernandes" />
-                        <CardAlunos nome="Bianca Ferreira" />
-                        <CardAlunos nome="Marina Araujo" />
-                    </View>
-                    <View>
-                        <CardAlunos nome="Paola Silva" />
-                        <CardAlunos nome="Raissa Santos" />
-                        <CardAlunos nome="Tauany Mendes" />
-                    </View>
-                </View>
-               
-                <View style={styles.selecao}>
-                    {[1, 2, 3, '>'].map((numero, index) => (
-                        <CardSelecao
-                            key={index}
-                            numero={numero}
-                            selecionado={paginaSelecionada === numero}
-                            onPress={() => setPaginaSelecionada(numero)}
+                <View style={[styles.container, {backgroundColor: isDarkMode ? '#000' : '#FFF'}]}>
+                    <View style={[styles.inputContainer, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Digite o nome ou número da mátricula"
+                            placeholderTextColor="#756262"
                         />
-                    ))}
+                        <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
+                    </View>
+                    <View style={styles.contColumn}>
+                        <View>
+                            <CardAlunos nome="Alice Fernandes" />
+                            <CardAlunos nome="Bianca Ferreira" />
+                            <CardAlunos nome="Marina Araujo" />
+                        </View>
+                        <View>
+                            <CardAlunos nome="Paola Silva" />
+                            <CardAlunos nome="Raissa Santos" />
+                            <CardAlunos nome="Tauany Mendes" />
+                        </View>
+                    </View>
+
+                    <View style={styles.selecao}>
+                        {[1, 2, 3, '>'].map((numero, index) => (
+                            <CardSelecao
+                                key={index}
+                                numero={numero}
+                                selecionado={paginaSelecionada === numero}
+                                onPress={() => setPaginaSelecionada(numero)}
+                            />
+                        ))}
+                    </View>
                 </View>
             </View>
         </View>

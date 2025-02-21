@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
 import { useNavigation } from '@react-navigation/native';
@@ -9,15 +10,7 @@ export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  const [localTheme, setLocalTheme] = useState(isDarkMode);
   const navigation = useNavigation();
-
-  const toggleLight = require('../../assets/image/Toggle.png');
-  const toggleDark = require('../../assets/image/ToggleDark.png');
-
-  useEffect(() => {
-    setLocalTheme(isDarkMode);
-  }, [isDarkMode]);
 
   const toggleMenu = () => {
     const toValue = menuVisible ? 0 : 1;
@@ -30,10 +23,7 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    setLocalTheme(!localTheme);
-    setTimeout(() => {
-      setIsDarkMode(!isDarkMode);
-    }, 10);
+    setIsDarkMode(!isDarkMode);
   };
 
   const menuTranslateX = animation.interpolate({
@@ -41,13 +31,13 @@ export default function Header() {
     outputRange: [-Dimensions.get('window').width, 0],
   });
 
-  const headerBackgroundColor = localTheme ? '#121212' : '#F0F7FF';
-  const textColor = localTheme ? '#FFF' : '#000';
+  const headerBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  const textColor = isDarkMode ? '#FFF' : '#000';
   const buttonBackgroundColor = '#0077FF';
-  const profileBackgroundColor = localTheme ? '#241F1F' : '#F0F7FF';
-  const menuLineColor = localTheme ? '#FFF' : '#0077FF';
+  const profileBackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
+  const menuLineColor = isDarkMode ? '#0077FF' : '#0077FF';
   const closeButtonColor = '#FFF';
-  const container = localTheme ? '#241F1F' : '#FFF';
+  const container = isDarkMode ? '#241F1F' : '#FFF';
 
   return (
     <>
@@ -65,8 +55,8 @@ export default function Header() {
           </View>
 
           <View style={styles.subLinha}>
-            <TouchableOpacity onPress={toggleTheme}>
-              <Image style={{ width: 110, height: 25 }} source={localTheme ? toggleDark : toggleLight} />
+            <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
+              <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
             <Image style={styles.notification} source={require('../../assets/image/Notification3.png')} />
           </View>
@@ -76,13 +66,7 @@ export default function Header() {
       {menuVisible && <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />}
 
       <Animated.View
-        style={[
-          styles.menuOverlay,
-          {
-            transform: [{ translateX: menuTranslateX }],
-            backgroundColor: localTheme ? '#000000' : '#1E6BE6',
-          },
-        ]}
+        style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#000000' : '#1E6BE6' }]}
       >
         <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
@@ -93,11 +77,9 @@ export default function Header() {
             <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
               <View style={{ flexDirection: 'row', gap: 20 }}>
                 <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
-                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  Roberta
-                </Text>
+                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>Roberta</Text>
               </View>
-              <Image source={localTheme ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
+              <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
             </View>
           </TouchableOpacity>
         </View>
@@ -123,6 +105,12 @@ export default function Header() {
 }
 
 const styles = StyleSheet.create({
+  themeButton: {
+    backgroundColor: '#0077FF',
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
   contEventos: {
     width: '100%',
     height: 'auto',
@@ -168,8 +156,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   notification: {
-    width: 25,
-    height: 25,
+    width: 30,
+    height: 30,
     resizeMode: 'contain',
   },
   header: {
@@ -178,6 +166,7 @@ const styles = StyleSheet.create({
   subLinha: {
     flexDirection: 'row',
     gap: 20,
+    alignItems: 'center',
   },
   menuOverlay: {
     position: 'absolute',
@@ -194,7 +183,6 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     paddingVertical: 15,
-
   },
   overlay: {
     position: 'absolute',

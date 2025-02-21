@@ -1,40 +1,60 @@
-import React from 'react'
-import { Image, StyleSheet, Text, View } from 'react-native'
-import { Icon } from 'react-native-elements'
+import React from 'react';
+import { Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
-import { TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 
-export default function HeaderSimples({titulo}) {
-
+export default function HeaderSimples({ titulo }) {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   return (
-    <View style={styles.linha}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-        <Image style={{ width: 25, height: 30 }} source={require('../../assets/image/logo.png')} />
-        <Text style={{ color: '#0077FF', fontWeight: 'bold', fontSize: 18 }}>ONA</Text>
+    <View style={[styles.linha, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+      <View style={styles.logoContainer}>
+        <Image style={styles.logo} source={require('../../assets/image/logo.png')} />
+        <Text style={[styles.logoText, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>ONA</Text>
       </View>
-      <Text style={{ color: '#0077FF', fontWeight: 'bold', fontSize: 18 }}>
+
+      <Text style={[styles.titulo, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
         {titulo}
       </Text>
-      <TouchableOpacity onPress={toggleTheme}>
-        <Image
-          style={{ width: 110, height: 25 }}
-          source={isDarkMode ? require('../../assets/image/ToggleDark.png') : require('../../assets/image/Toggle.png')}
-        />
+
+      <TouchableOpacity style={[styles.themeButton, { backgroundColor: isDarkMode ? '#0077FF' : '#0077FF' }]} onPress={toggleTheme}>
+        <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color={isDarkMode ? '#fff' : '#FFF'} />
       </TouchableOpacity>
     </View>
-  )
+  );
 }
+
 const styles = StyleSheet.create({
   linha: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 0,
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
-
-})
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  logo: {
+    width: 25,
+    height: 30,
+  },
+  logoText: {
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  titulo: {
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  themeButton: {
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+});

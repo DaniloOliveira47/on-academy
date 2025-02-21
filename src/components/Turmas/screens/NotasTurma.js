@@ -3,7 +3,8 @@ import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, Modal, S
 import Icon from 'react-native-vector-icons/Feather';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import CardMateria from '../../Turmas/CardMateria';
-import CardNota from '../../Turmas/CardNota'
+import CardNota from '../../Turmas/CardNota';
+import { useTheme } from '../../../path/ThemeContext';
 
 
 const alunos = [
@@ -33,6 +34,7 @@ const alunos = [
 export default function NotasTurma() {
   const [modalVisible, setModalVisible] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
+  const { isDarkMode } = useTheme();
 
   const abrirModal = (aluno) => {
     setAlunoSelecionado(aluno);
@@ -41,23 +43,18 @@ export default function NotasTurma() {
 
   return (
     <ScrollView>
-
-
-      <View style={styles.tela}>
-        <View style={{ padding: 20, paddingBottom: 0 }}>
-          <HeaderSimples />
-        </View>
-
+      <View style={[styles.tela, {backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}]}>
+        <HeaderSimples />
         <View style={{ padding: 10 }}>
           <View style={styles.linha}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Turma A - 1º Ano</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
             <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
           </View>
 
 
-          <View style={styles.containerBranco}>
+          <View style={[styles.containerBranco, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
               <TextInput
                 style={styles.input}
                 placeholder="Digite o nome ou código da turma"
@@ -79,9 +76,9 @@ export default function NotasTurma() {
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <View style={styles.tableRow}>
-                  <Text style={[styles.rowText, { flex: 2 }]}>{item.nome}</Text>
-                  <Text style={[styles.rowText, { flex: 1 }]}>{item.matricula}</Text>
-                  <Text style={[styles.rowText, { flex: 1 }]}>{item.media}</Text>
+                  <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black'  }]}>{item.nome}</Text>
+                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black'  }]}>{item.matricula}</Text>
+                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black'  }]}>{item.media}</Text>
                   <TouchableOpacity style={styles.notasButton} onPress={() => abrirModal(item)}>
                     <Text style={styles.notasText}>Ver Notas</Text>
                   </TouchableOpacity>

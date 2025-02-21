@@ -24,7 +24,7 @@ export default function HomeDocente() {
     });
 
     return (
-        <View style={[styles.tela, { backgroundColor: isDarkMode ? '#241F1F' : '#F0F7FF' }]}>
+        <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
             <Header isDarkMode={isDarkMode} />
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
@@ -40,15 +40,15 @@ export default function HomeDocente() {
                             <Text style={[styles.titulo, { color: isDarkMode ? '#FFF' : '#fff' }]}>
                                 Seja bem-vindo, Docente 👋
                             </Text>
-                            <Text style={[styles.subtitulo, { color: isDarkMode ? '#BBB' : '#fff' }]}>
+                            <Text style={[styles.subtitulo, { color: isDarkMode ? '#fff' : '#fff' }]}>
                                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
                             </Text>
                         </View>
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                   
-                    <View style={styles.contTurmas}>
+
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={styles.title}>Turmas</Text>
                         <View style={styles.scrollWrapper}>
                             <ScrollView
@@ -71,17 +71,17 @@ export default function HomeDocente() {
                             </ScrollView>
 
 
-                            <View style={styles.scrollBar}>
+                            <View style={[styles.scrollBar, { backgroundColor: isDarkMode ? '#141414' : '#D3D3D3' }]}>
                                 <Animated.View style={[styles.progressIndicator, { height: indicatorHeight, transform: [{ translateY }] }]} />
                             </View>
                         </View>
                     </View>
 
 
-                    <View style={styles.contTurmas}>
-                        <Text style={styles.title}>Aviso</Text>
-                        <View style={styles.contAviso}>
-                            <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16 }}>
+                   <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
+                        <View style={[styles.contAviso, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
+                            <Text style={{ color: isDarkMode ? '#FFF' : '#8A8A8A', fontWeight: 'bold', fontSize: 16 }}>
                                 Prezados alunos, {"\n"}
                                 Lembro a todos que a próxima aula será fundamental para a nossa sequência de estudos. Peço que revisem o conteúdo passado e tragam suas dúvidas. Além disso, o prazo para entrega do trabalho final é nesta sexta-feira. Não deixem para a última hora!{"\n"}
                                 {"\n"}

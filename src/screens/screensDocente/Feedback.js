@@ -4,18 +4,19 @@ import HeaderSimples from '../../components/Gerais/HeaderSimples'
 import { TextInput } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
 import CardTurmas from '../../components/Turmas/CardTurmas';
+import { useTheme } from '../../path/ThemeContext';
 
 export default function Turmas() {
+    const { isDarkMode } = useTheme();
     return (
-        <View>
-            <View style={styles.tela}>
-
-                <HeaderSimples />
-            </View>
+        <View style={{backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', height: '100%'}}>
+            <HeaderSimples
+            titulo= "TURMAS"
+            />
+        
             <View style={styles.subTela}>
-                <View style={styles.container}>
-                    <View style={styles.inputContainer}>
-
+                <View style={[styles.container, {backgroundColor: isDarkMode ? '#000000' : 'white'}]}>
+                    <View style={[styles.inputContainer, {backgroundColor: isDarkMode ? '#000000' : 'white'}]}>
                         <TextInput
                             style={styles.input}
                             placeholder="Digite o nome ou código da turma"
@@ -29,21 +30,21 @@ export default function Turmas() {
                             numero="Nº0231000"
                             alunos="30 Alunos ativos"
                             periodo="Período: Manhã"
-                            navegacao= "AlunosFeedback"
+                            navegacao="AlunosFeedback"
                         />
                         <CardTurmas
                             turma="Turma B - 2º Ano"
                             numero="Nº0231000"
                             alunos="28 Alunos ativos"
                             periodo="Período: Tarde"
-                            navegacao= "AlunosFeedback"
+                            navegacao="AlunosFeedback"
                         />
                         <CardTurmas
                             turma="Turma C - 3º Ano"
                             numero="Nº0231000"
                             alunos="35 Alunos ativos"
                             periodo="Período: Noite"
-                            navegacao= "AlunosFeedback"
+                            navegacao="AlunosFeedback"
                         />
                     </View>
                 </View>
@@ -71,7 +72,8 @@ const styles = StyleSheet.create({
         height: 'auto',
         borderRadius: 16,
         alignItems: 'center',
-        padding: 10
+        padding: 10,
+        marginTop: 20
     },
     inputContainer: {
         flexDirection: 'row',

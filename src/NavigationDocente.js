@@ -46,9 +46,10 @@ export default function NavigationDocente() {
           alignItems: 'center',
           backgroundColor: isDarkMode ? '#000' : '#F7F9FC',
           height: 50,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
           position: 'absolute',
+          borderTopWidth: 0
         },
       })}
     >
