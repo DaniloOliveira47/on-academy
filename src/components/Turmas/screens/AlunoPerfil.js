@@ -4,15 +4,31 @@ import Campo from '../../Perfil/Campo';
 import { useTheme } from '../../../path/ThemeContext';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
+import { BarChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
 
 export default function AlunoPerfil() {
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
-
+    const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
+
+    const data = {
+        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
+        datasets: [{
+            data: [80, 50, 90, 70, 40],
+            colors: [
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6'
+            ]
+        }]
+    };
 
     const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
     const ocorrencias = [
@@ -23,137 +39,82 @@ export default function AlunoPerfil() {
     ];
 
     return (
-        <ScrollView style={{marginBottom: 40}}>
+        <ScrollView>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <HeaderSimples titulo="PERFIL" />
-                <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 30 }]} source={require('../../../assets/image/barraAzul.png')} />
-                <View style={[styles.form, {
-                    backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
-                }]}>
-                    <View style={styles.linhaUser}>
-                        <Image source={require('../../../assets/image/Perfill.png')} />
-                        <View style={styles.name}>
-                            <Text style={[styles.nome, { color: textColor }]}>Renata Vieira</Text>
-                            <Text style={[styles.email, { color: textColor }]}>revieira@gmail.com</Text>
-                        </View>
-                    </View>
-                    <Campo label="Nome Completo" text="Renata Vieira de Souza" textColor={textColor} />
-                    <Campo label="Email" text="revieira@gmail.com" textColor={textColor} />
-                    <Campo label="Nº Matrícula" text="1106434448-1" textColor={textColor} />
-                    <View style={styles.doubleCampo}>
-                        <Campo label="Telefone" text="(11) 95312-8203" textColor={textColor} />
-                        <Campo label="Data de Nascimento" text="23/01/2006" textColor={textColor} />
-                    </View>
-                    <Campo label="Turma" text="3 º A" textColor={textColor} />
-                </View>
-                <View style={{ backgroundColor: 'white', width: '100%', height: 'auto', marginTop: 30, padding: 10, borderRadius: 20 }}>
-                    <View style={{ width: '100%' }}>
-                        <View style={{ alignItems: 'flex-end', width: '100%', marginTop: 0 }}>
-                            <View style={styles.botao}>
-                                <Text style={styles.textoBotao}>Tipo de Feedback</Text>
-                                <TouchableOpacity onPress={() => setModalVisible(true)}>
-                                    <View style={{
-                                        backgroundColor: '#0077FF',
-                                        padding: 10,
-                                        borderRadius: 20,
-                                        height: 24,
-                                        width: 24,
-                                        alignItems: 'center'
-                                    }}>
-                                        <Image style={styles.icone} source={require('../../../assets/image/OptionWhite.png')} />
-                                    </View>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={styles.tabelaContainer}>
-                        <View style={styles.tabelaHeader}>
-                            <Text style={styles.headerText}>Ocorrência</Text>
-                            <Text style={styles.headerText}>Tipo</Text>
-                            <Text style={styles.headerText}>Orientador</Text>
-                            <Text style={styles.headerText}>Data</Text>
-                        </View>
-                        {ocorrencias.map((item) => (
-                            <View key={item.id} style={styles.tabelaLinha}>
-                                <Text style={styles.linhaTexto}>{item.ocorrencia}</Text>
-                                <Text style={styles.linhaTexto}>{item.tipo}</Text>
-                                <Text style={styles.linhaTexto}>{item.orientador}</Text>
-                                <Text style={styles.linhaTexto}>{item.data}</Text>
-                            </View>
-                        ))}
-                    </View>
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', marginTop: 15, marginBottom: 13 }}>
-                        Adicionar Feedback para o aluno
-                    </Text>
-                    <TextInput
-                        placeholder='Escreva seu Feedback...'
-                        style={{ backgroundColor: '#EAF4FF', width: '80%', borderRadius: 15, padding: 20 }} />
-                    <View style={{ marginTop: 20 }}>
-                        <View style={styles.botao}>
-                            <Text style={styles.textoBotao}>Tipo de Feedback</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(true)}>
-                                <View style={{
-                                    backgroundColor: '#0077FF',
-                                    padding: 10,
-                                    borderRadius: 20,
-                                    height: 24,
-                                    width: 24,
-                                    alignItems: 'center'
-                                }}>
-                                    <Image style={styles.icone} source={require('../../../assets/image/OptionWhite.png')} />
+                <View style={{ padding: 15 }}>
+                    <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 0 }]} source={require('../../../assets/image/barraAzul.png')} />
+                    <View style={[styles.form, {
+                        backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 3,
+                    }]}>
+                        <View style={styles.linhaUser}>
+                            <Image source={require('../../../assets/image/Perfill.png')} />
+                            <View style={styles.name}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={[styles.nome, { color: textColor }]}>Renata Vieira</Text>
+                                    <Text style={{ color: 'green' }}>(Ativo)</Text>
                                 </View>
-                            </TouchableOpacity>
+                                <Text style={[styles.email, { color: textColor }]}>revieira@gmail.com</Text>
+                            </View>
                         </View>
+                        <Campo label="Nome Completo" text="Renata Vieira de Souza" textColor={textColor} />
+                        <Campo label="Email" text="revieira@gmail.com" textColor={textColor} />
+                        <Campo label="Nº Matrícula" text="1106434448-1" textColor={textColor} />
+                        <View style={styles.doubleCampo}>
+                            <Campo label="Telefone" text="(11) 95312-8203" textColor={textColor} />
+                            <Campo label="Data de Nascimento" text="23/01/2006" textColor={textColor} />
+                        </View>
+                        <Campo label="Turma" text="3 º A" textColor={textColor} />
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 30 }}>
-                        <TouchableOpacity style={{ backgroundColor: 'red', padding: 8, borderRadius: 8, width: 90, alignItems: 'center' }}>
-                            <Text style={{ color: 'white' }}>
-                                Cancelar
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ backgroundColor: '#0077FF', padding: 8, borderRadius: 8, width: 90, alignItems: 'center' }}>
-                            <Text style={{ color: 'white' }}>
-                                Enviar
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                </View>
+                <View style={styles.grafico}>
+                <BarChart
+    data={data}
+    width={screenWidth}
+    height={200}
+    yAxisSuffix="%"
+    fromZero
+    withInnerLines={false}
+    withHorizontalLabels={false}
+    showBarTops={false}
+    withCustomBarColorFromData={true}
+    flatColor={true}
+    chartConfig={{
+        backgroundGradientFrom: '#fff',
+        backgroundGradientTo: '#fff',
+        decimalPlaces: 0,
+        color: () => '#1E6BE6',
+        labelColor: () => '#000',
+        barPercentage: 1.2,
+        fillShadowGradient: '#A9C1F7',
+        fillShadowGradientOpacity: 1,
+    }}
+    style={[styles.chart, { alignItems: 'center' }]}
+/>
+
                 </View>
             </View>
-
-
-            <Modal visible={modalVisible} transparent animationType="fade">
-                <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
-                        <FlatList
-                            data={tipos}
-                            keyExtractor={(item) => item}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.modalItem}
-                                    onPress={() => {
-                                        setTipoSelecionado(item);
-                                        setModalVisible(false);
-                                    }}
-                                >
-                                    <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </TouchableOpacity>
-            </Modal>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     tela: {
-        padding: 15,
+        padding: 0,
         width: '100%',
         height: '100%',
+        paddingBottom: 60
+    },
+    grafico: {
+        alignItems: 'center'
+    },
+    chart: {
+        width: '100%', 
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     conText: {
         alignItems: 'center',

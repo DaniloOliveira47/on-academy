@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity } from 'react-native';
 import Header from '../../components/Home/Header';
 import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
@@ -78,7 +78,7 @@ export default function HomeDocente() {
                     </View>
 
 
-                   <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <View style={[styles.contAviso, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
                             <Text style={{ color: isDarkMode ? '#FFF' : '#8A8A8A', fontWeight: 'bold', fontSize: 16 }}>
@@ -88,6 +88,39 @@ export default function HomeDocente() {
                                 Atenciosamente,{"\n"}Professor Paulo Andrade
                             </Text>
                         </View>
+                        <View style={{ alignItems: 'center' }}>
+                            <TouchableOpacity style={{ backgroundColor: '#1A85FF', alignItems: 'center', width: 100, padding: 8, borderRadius: 10, marginTop: 10 }}>
+                                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}>
+                                    Enviar
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={{ backgroundColor: 'white', width: '100%', borderRadius: 20, marginTop: 20 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10 }}>
+                            Avisos
+                        </Text>
+                        <View style={{ padding: 10 }}>
+                            <Avisos
+                                abreviacao="AR"
+                                nome="Arthur"
+                                horario="08:34 am"
+                                texto="Olá, só lembrando que o prazo para a entrega do projeto final de Backend é na próxima sexta-feira! Não deixem para última hora, qualquer dúvida me chamem."
+                            />
+                            <Avisos
+                                abreviacao="GI"
+                                nome="Giovanni"
+                                horario="12:33 pm"
+                                texto="Galera, atualizei o Google Drive com o material extra sobre Frontend que mencionei na aula. Dêem uma olhada para ficarem mais preparados para a próxima prova."
+                            />
+                            <Avisos
+                                abreviacao="SA"
+                                nome="Samuel"
+                                horario="16:33 pm"
+                                texto="Olá, pessoal! Queria parabenizar todos pela entrega do trabalho! Vi que muitos se dedicaram bastante e o resultado ficou excelente."
+                            />
+                        </View>
+
                     </View>
                 </View>
 

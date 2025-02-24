@@ -49,7 +49,7 @@ export default function NavigationDocente() {
           borderTopLeftRadius: 10,
           borderTopRightRadius: 10,
           position: 'absolute',
-          borderTopWidth: 0
+          borderTopWidth: 0,
         },
       })}
     >
