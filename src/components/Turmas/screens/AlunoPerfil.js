@@ -6,6 +6,9 @@ import HeaderSimples from '../../Gerais/HeaderSimples';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
 import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import Perguntas from '../../Feedback/Perguntas';
+import Avaliacao from '../../Feedback/Avaliacao';
+
 
 export default function AlunoPerfil() {
     const { isDarkMode } = useTheme();
@@ -69,32 +72,112 @@ export default function AlunoPerfil() {
                         </View>
                         <Campo label="Turma" text="3 º A" textColor={textColor} />
                     </View>
-                </View>
-                <View style={styles.grafico}>
-                <BarChart
-    data={data}
-    width={screenWidth}
-    height={200}
-    yAxisSuffix="%"
-    fromZero
-    withInnerLines={false}
-    withHorizontalLabels={false}
-    showBarTops={false}
-    withCustomBarColorFromData={true}
-    flatColor={true}
-    chartConfig={{
-        backgroundGradientFrom: '#fff',
-        backgroundGradientTo: '#fff',
-        decimalPlaces: 0,
-        color: () => '#1E6BE6',
-        labelColor: () => '#000',
-        barPercentage: 1.2,
-        fillShadowGradient: '#A9C1F7',
-        fillShadowGradientOpacity: 1,
-    }}
-    style={[styles.chart, { alignItems: 'center' }]}
-/>
+                    <View style={[styles.grafico, { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 }]}>
+                        <View style={{ width: '100', alignItems: 'flex-start' }}>
+                            <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                                    Bimestre
+                                </Text>
+                                <TouchableOpacity style={{ backgroundColor: '#F0F7FF', padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}>
+                                    <Text style={{ color: 'blue', fontSize: 18, fontWeight: 'bold' }}>
+                                        v
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
+                        <BarChart
+                            data={data}
+                            width={screenWidth * 0.99}
+                            height={200}
+                            yAxisSuffix="%"
+                            fromZero
+                            showBarTops={false}
+                            withCustomBarColorFromData={true}
+                            flatColor={true}
+                            chartConfig={{
+                                backgroundGradientFrom: '#F0F7FF',
+                                backgroundGradientTo: '#F0F7FF',
+                                decimalPlaces: 0,
+                                color: () => '#1E6BE6',
+                                labelColor: () => '#000',
+                                barPercentage: 1.2,
+                                fillShadowGradient: '#A9C1F7',
+                                fillShadowGradientOpacity: 1,
+
+                            }}
+                            style={styles.chart}
+                        />
+                        <View style={{ width: '100%', marginTop: 20 }}>
+                            <Text style={{ color: '#0077FF', fontSize: 16, fontWeight: 'bold' }}>
+                                Dê seu feedback sobre o aluno(a)!
+                            </Text>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold' }}>
+                                Avalie os seguintes aspectos de 1 a 10 para nos ajudar a melhorar a experiência das aulas.
+                            </Text>
+                            <View style={styles.containerPerguntas}>
+                                <Perguntas
+                                    numero="1"
+                                />
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+                                    <Avaliacao
+                                        numero="1"
+                                    />
+                                    <Avaliacao
+                                        numero="2"
+                                    />
+                                    <Avaliacao
+                                        numero="3"
+                                    />
+                                    <Avaliacao
+                                        numero="4"
+                                    />
+                                    <Avaliacao
+                                        numero="5"
+                                    />
+                                    <Avaliacao
+                                        numero="6"
+                                    />
+                                    <Avaliacao
+                                        numero="7"
+                                    />
+                                    <Avaliacao
+                                        numero="8"
+                                    />
+                                    <Avaliacao
+                                        numero="9"
+                                    />
+                                    <Avaliacao
+                                        numero="10"
+                                    />
+                                </View>
+
+                                <View style={styles.linhaPontilhadaContainer}>
+                                    <Text style={styles.linhaPontilhada}>● ● ● ● ●</Text>
+                                </View>
+                            </View>
+                            <View style={{ paddingTop: 10, borderTopWidth: 2, marginTop: 20 }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                                    Adicionar Feedback Escrito
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                />
+                                <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginTop: 15 }}>
+                                    <TouchableOpacity style={{ backgroundColor: '#0077FF', width: 120, alignItems: 'center', borderRadius: 8, padding: 5 }}>
+                                        <Text style={{ color: 'white' }}>
+                                            Enviar Respostas
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={{ backgroundColor: '#D24C4C', width: 120, alignItems: 'center', borderRadius: 8, padding: 5 }}>
+                                        <Text style={{ color: 'white' }}>
+                                            Cancelar
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
                 </View>
             </View>
         </ScrollView>
@@ -108,11 +191,38 @@ const styles = StyleSheet.create({
         height: '100%',
         paddingBottom: 60
     },
+    input: {
+        backgroundColor: '#F0F7FF', borderRadius: 10
+    },
+    linhaPontilhadaContainer: {
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    linhaPontilhada: {
+        fontSize: 20,
+        letterSpacing: 10,
+        color: 'gray',
+        fontWeight: 'bold',
+    },
+    containerPerguntas: {
+        backgroundColor: '#F0F7FF',
+        width: '100%',
+        padding: 10,
+        borderRadius: 15,
+        height: 'auto',
+        marginTop: 15,
+        paddingBottom: 35
+    },
     grafico: {
-        alignItems: 'center'
+        backgroundColor: 'white',
+        padding: 10,
+        width: '100%',
+        marginTop: 20,
+        borderRadius: 10,
+        alignItems: 'flex-end'
     },
     chart: {
-        width: '100%', 
+        width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
     },
