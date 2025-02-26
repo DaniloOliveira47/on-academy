@@ -9,7 +9,7 @@ export default function Home() {
   const { isDarkMode } = useTheme();
 
   return (
-    <View style={[styles.tela, { backgroundColor: isDarkMode ? '#241F1F' : '#F0F7FF' }]}>
+    <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
       <ScrollView>
         <Header isDarkMode={isDarkMode} />
 
@@ -25,7 +25,7 @@ export default function Home() {
               <Text style={[styles.titulo, { color: isDarkMode ? '#FFF' : '#fff' }]}>
                 Seja bem-vinda, Livia 👋
               </Text>
-              <Text style={[styles.subtitulo, { color: isDarkMode ? '#BBB' : '#fff' }]}>
+              <Text style={[styles.subtitulo, { color: isDarkMode ? '#fff' : '#fff' }]}>
                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
               </Text>
             </View>

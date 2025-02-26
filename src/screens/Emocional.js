@@ -4,18 +4,24 @@ import HeaderSimples from '../components/Gerais/HeaderSimples';
 import CheckList from '../components/Emocional/CheckList';
 import List from '../components/Emocional/List';
 import { TouchableOpacity } from 'react-native';
+import { useTheme } from '../path/ThemeContext';
 
 export default function Emocional() {
+        const { isDarkMode } = useTheme();
+        const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+        const cont = isDarkMode ? '#000' : '#FFF';
+        const text = isDarkMode ? '#FFF' : '#000'
     return (
         <ScrollView>
-            <View style={styles.tela}>
-                <HeaderSimples
+             <HeaderSimples
                     titulo="EMOCIONAL" />
-                <View style={styles.subTela}>
+            <View style={[styles.tela, {backgroundColor: perfilBackgroundColor}]}>
+               
+                <View style={[styles.subTela, {backgroundColor: cont}]}>
                     <Text style={styles.title}>
                         Seu bem-estar importa
                     </Text>
-                    <Text style={styles.subTitle}>
+                    <Text style={[styles.subTitle, {color: text}]}>
                         A rotina escolar envolve muitos desafios, e sabemos que cada aluno vivencia experiências únicas. Pensando nisso, criamos este espaço para que você possa expressar seus sentimentos, dificuldades e sugestões de forma segura e confidencial.
                         O objetivo deste formulário é entender melhor como você está se sentindo e identificar maneiras de tornar o ambiente escolar mais acolhedor e positivo para todos. Suas respostas são valiosas e podem contribuir para melhorias no dia a dia da instituição.
                     </Text>
@@ -47,7 +53,7 @@ export default function Emocional() {
                     />
                     <View style={{ alignItems: 'center' }}>
                         <TouchableOpacity style={styles.botao}>
-                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Acesse o Formulário aqui.</Text>
+                            <Text style={{ fontWeight: 'bold', fontSize: 16, color: text }}>Acesse o Formulário aqui.</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -59,6 +65,7 @@ export default function Emocional() {
 const styles = StyleSheet.create({
     tela: {
         padding: 25,
+        paddingTop: 0
     },
     botao: {
         alignItems: 'center',

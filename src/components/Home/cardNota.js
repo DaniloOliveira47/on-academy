@@ -9,7 +9,7 @@ const CardNota = ({ title, subtitle, imageSource, percentage, isDarkMode }) => {
   const progress = (percentage / 100) * circumference;
 
   return (
-    <View style={[styles.card, { backgroundColor: isDarkMode ? '#121212' : '#FCF9F9' }]}>
+    <View style={[styles.card, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
       <View style={styles.imageBack}>
         <Image style={styles.image} source={imageSource} />
       </View>

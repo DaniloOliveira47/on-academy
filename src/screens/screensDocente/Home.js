@@ -8,7 +8,8 @@ import Avisos from '../../components/Home/Avisos';
 export default function HomeDocente() {
     const { isDarkMode } = useTheme();
     const [scrollY] = useState(new Animated.Value(0));
-
+    const textColor = isDarkMode ? '#FFF' : '#000';
+    const contColor = isDarkMode ? '#000' : '#FFF';
 
     const indicatorHeight = scrollY.interpolate({
         inputRange: [0, 500],
@@ -96,8 +97,8 @@ export default function HomeDocente() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <View style={{ backgroundColor: 'white', width: '100%', borderRadius: 20, marginTop: 20 }}>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10 }}>
+                    <View style={{ backgroundColor: contColor, width: '100%', borderRadius: 20, marginTop: 20 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10, color: textColor}}>
                             Avisos
                         </Text>
                         <View style={{ padding: 10 }}>

@@ -50,6 +50,7 @@ export default function Navigation() {
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           position: 'absolute',
+          borderTopWidth: 0
         },
       })}
     >

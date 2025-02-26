@@ -16,7 +16,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="MainDoc">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Main">
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Main" component={Navigation} />
           <Stack.Screen name="Perfil" component={Perfil} />

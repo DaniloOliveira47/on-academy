@@ -5,7 +5,7 @@ import { useTheme } from '../../path/ThemeContext';
 
 export default function Nota({ nota }) {
       const { isDarkMode } = useTheme();
-      const BackgroundColor = isDarkMode ? '#000' : '#F0F7FF';
+      const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
       const textColor = isDarkMode ? '#FFF' : '#000';
 
 
@@ -27,6 +27,6 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 10,
+        elevation: 5,
     }
 });

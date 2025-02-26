@@ -19,82 +19,99 @@ export default function Boletim() {
         { materia: 'Artes', nota: 85.3 },
     ];
     const { isDarkMode } = useTheme();
-    const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+    const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const container = isDarkMode ? '#000' : '#FFF'
+    const text = isDarkMode ? '#FFF' : '#000'
 
     return (
-        <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
+        <View>
             <HeaderSimples
                 titulo="BOLETIM"
             />
-            <View style={{ alignItems: 'center', marginTop: 90 }}>
-                <View style={styles.botao}>
-                    <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
-                    <TouchableOpacity onPress={() => setModalVisible(true)}>
-                        <View style={{
-                            backgroundColor: '#0077FF',
-                            padding: 10,
-                            borderRadius: 20,
-                            height: 28,
-                            width: 28,
-                            alignItems: 'center'
-                        }}>
-                            <Image style={styles.icone} source={require('../assets/image/OptionWhite.png')} />
+            <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
+
+                <View style={{
+                    backgroundColor: container, marginTop: 40, padding: 20, borderRadius: 20, paddingTop: 30, shadowColor: '#000',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 5,
+                }}>
+                    <View style={{ alignItems: 'center' }}>
+                        <View style={styles.botao}>
+                            <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(true)}>
+                                <View style={{
+                                    backgroundColor: '#0077FF',
+                                    padding: 10,
+                                    borderRadius: 20,
+                                    height: 28,
+                                    width: 28,
+                                    alignItems: 'center'
+                                }}>
+                                    <Image style={styles.icone} source={require('../assets/image/OptionWhite.png')} />
+                                </View>
+                            </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
+                    <View style={styles.boletim}>
+                        <View style={styles.titulos}>
+                            <View style={styles.containers}>
+                                <Text style={styles.contText}>
+                                    Matéria
+                                </Text>
+                            </View>
+                            <View style={styles.containers}>
+                                <Text style={styles.contText}>
+                                    {bimestreSelecionado}
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <BarraAzul />
+                            <View style={styles.column}>
+                                <CardMateria materia="Português" />
+                                <CardMateria materia="Matemática" />
+                                <CardMateria materia="Inglês" />
+                                <CardMateria materia="Ciências" />
+                                <CardMateria materia="Artes" />
+                            </View>
+                            <View style={styles.column}>
+                                <Nota nota="98.5" />
+                                <Nota nota="75.6" />
+                                <Nota nota="90.6" />
+                                <Nota nota="60.2" />
+                                <Nota nota="85.3" />
+                            </View>
+                        </View>
+                        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 2, width: 100, padding: 8, justifyContent: 'space-around', borderRadius: 10, borderColor: '#0077FF', marginLeft: 16 }}>
+                            <Image source={require('../assets/image/baixar.png')} />
+                            <Text style={{ fontSize: 18, color: text, fontWeight: 'bold' }}>PDF</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <Modal visible={modalVisible} transparent animationType="fade">
+                        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                            <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
+                                <FlatList
+                                    data={bimestres}
+                                    keyExtractor={(item) => item}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={styles.modalItem}
+                                            onPress={() => {
+                                                setBimestreSelecionado(item);
+                                                setModalVisible(false);
+                                            }}
+                                        >
+                                            <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
                 </View>
             </View>
-            <View style={styles.boletim}>
-                <View style={styles.titulos}>
-                    <View style={styles.containers}>
-                        <Text style={styles.contText}>
-                            Matéria
-                        </Text>
-                    </View>
-                    <View style={styles.containers}>
-                        <Text style={styles.contText}>
-                            {bimestreSelecionado}
-                        </Text>
-                    </View>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <BarraAzul />
-                    <View style={styles.column}>
-                        <CardMateria materia="Português" />
-                        <CardMateria materia="Matemática" />
-                        <CardMateria materia="Inglês" />
-                        <CardMateria materia="Ciências" />
-                        <CardMateria materia="Artes" />
-                    </View>
-                    <View style={styles.column}>
-                        <Nota nota="98.5" />
-                        <Nota nota="75.6" />
-                        <Nota nota="90.6" />
-                        <Nota nota="60.2" />
-                        <Nota nota="85.3" />
-                    </View>
-                </View>
-            </View>
-            <Modal visible={modalVisible} transparent animationType="fade">
-                <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
-                        <FlatList
-                            data={bimestres}
-                            keyExtractor={(item) => item}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.modalItem}
-                                    onPress={() => {
-                                        setBimestreSelecionado(item);
-                                        setModalVisible(false);
-                                    }}
-                                >
-                                    <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </TouchableOpacity>
-            </Modal>
         </View>
     );
 }
@@ -112,14 +129,15 @@ const styles = StyleSheet.create({
         fontFamily: 'Epilogue-Bold'
     },
     containers: {
-        backgroundColor: '#073162',
+        backgroundColor: '#0077FF',
         padding: 16,
         borderRadius: 13,
         width: 130,
         alignItems: 'center'
     },
     tela: {
-        padding: 25,
+        padding: 10,
+        paddingTop: 0,
         backgroundColor: '#F0F7FF',
         width: '100%',
         height: '100%',
@@ -131,7 +149,7 @@ const styles = StyleSheet.create({
     botao: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#073162',
+        backgroundColor: '#0077FF',
         width: 350,
         padding: 10,
         borderRadius: 13,
@@ -144,7 +162,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 20,
         marginRight: 10,
-        fontWeight: 'bold'
+
     },
     icone: {
         width: 20,

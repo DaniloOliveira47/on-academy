@@ -4,7 +4,7 @@ import { useTheme } from '../../path/ThemeContext';
 
 export default function ProximosEventos({ data, titulo, subData, periodo, color }) {
   const { isDarkMode } = useTheme();
-  const containerColor = isDarkMode ? '#000' : '#F0F7FF';
+  const containerColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   return (
     <View style={[styles.card, {backgroundColor: containerColor}]}>

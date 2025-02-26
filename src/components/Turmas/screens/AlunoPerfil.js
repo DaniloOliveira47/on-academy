@@ -12,12 +12,12 @@ import Avaliacao from '../../Feedback/Avaliacao';
 
 export default function AlunoPerfil() {
     const { isDarkMode } = useTheme();
-    const [modalVisible, setModalVisible] = useState(false);
     const screenWidth = Dimensions.get('window').width - 40;
-    const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
-    const formBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
+    const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
+    const sombra = isDarkMode ? '#FFF' : '#000';
 
     const data = {
         labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
@@ -72,13 +72,13 @@ export default function AlunoPerfil() {
                         </View>
                         <Campo label="Turma" text="3 º A" textColor={textColor} />
                     </View>
-                    <View style={[styles.grafico, { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 }]}>
+                    <View style={[styles.grafico, { shadowColor: sombra, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5, backgroundColor: formBackgroundColor }]}>
                         <View style={{ width: '100', alignItems: 'flex-start' }}>
                             <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
                                     Bimestre
                                 </Text>
-                                <TouchableOpacity style={{ backgroundColor: '#F0F7FF', padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}>
+                                <TouchableOpacity style={{ backgroundColor: perfilBackgroundColor, padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}>
                                     <Text style={{ color: 'blue', fontSize: 18, fontWeight: 'bold' }}>
                                         v
                                     </Text>
@@ -96,11 +96,11 @@ export default function AlunoPerfil() {
                             withCustomBarColorFromData={true}
                             flatColor={true}
                             chartConfig={{
-                                backgroundGradientFrom: '#F0F7FF',
-                                backgroundGradientTo: '#F0F7FF',
+                                backgroundGradientFrom: perfilBackgroundColor,
+                                backgroundGradientTo: perfilBackgroundColor,
                                 decimalPlaces: 0,
                                 color: () => '#1E6BE6',
-                                labelColor: () => '#000',
+                                labelColor: () => textColor,
                                 barPercentage: 1.2,
                                 fillShadowGradient: '#A9C1F7',
                                 fillShadowGradientOpacity: 1,
@@ -112,10 +112,10 @@ export default function AlunoPerfil() {
                             <Text style={{ color: '#0077FF', fontSize: 16, fontWeight: 'bold' }}>
                                 Dê seu feedback sobre o aluno(a)!
                             </Text>
-                            <Text style={{ fontSize: 13, fontWeight: 'bold' }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: textColor }}>
                                 Avalie os seguintes aspectos de 1 a 10 para nos ajudar a melhorar a experiência das aulas.
                             </Text>
-                            <View style={styles.containerPerguntas}>
+                            <View style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
                                 <Perguntas
                                     numero="1"
                                 />
@@ -156,12 +156,12 @@ export default function AlunoPerfil() {
                                     <Text style={styles.linhaPontilhada}>● ● ● ● ●</Text>
                                 </View>
                             </View>
-                            <View style={{ paddingTop: 10, borderTopWidth: 2, marginTop: 20 }}>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                            <View style={{ paddingTop: 10, borderTopWidth: 2, marginTop: 20, borderColor: textColor }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
                                     Adicionar Feedback Escrito
                                 </Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: perfilBackgroundColor, marginTop: 20 }]}
                                 />
                                 <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginTop: 15 }}>
                                     <TouchableOpacity style={{ backgroundColor: '#0077FF', width: 120, alignItems: 'center', borderRadius: 8, padding: 5 }}>

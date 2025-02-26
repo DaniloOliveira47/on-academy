@@ -23,7 +23,7 @@ export default function GraficoMedia({ isDarkMode }) {
 
   return (
     <View style={[styles.card, {
-      backgroundColor: isDarkMode ? '#121212' : '#FCF9F9', shadowColor: isDarkMode ? '#FFF' : '#000',
+      backgroundColor: isDarkMode ? '#000' : '#FFFFFF', shadowColor: isDarkMode ? '#FFF' : '#000',
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 5,

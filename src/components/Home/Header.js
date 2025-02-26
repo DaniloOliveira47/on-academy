@@ -31,13 +31,13 @@ export default function Header() {
     outputRange: [-Dimensions.get('window').width, 0],
   });
 
-  const headerBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  const headerBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const buttonBackgroundColor = '#0077FF';
-  const profileBackgroundColor = isDarkMode ? '#241F1F' : '#F0F7FF';
+  const profileBackgroundColor = isDarkMode ? '#000' : '#F0F7FF';
   const menuLineColor = isDarkMode ? '#0077FF' : '#0077FF';
   const closeButtonColor = '#FFF';
-  const container = isDarkMode ? '#241F1F' : '#FFF';
+  const container = isDarkMode ? '#000' : '#FFF';
 
   return (
     <>
@@ -66,7 +66,7 @@ export default function Header() {
       {menuVisible && <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />}
 
       <Animated.View
-        style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#000000' : '#1E6BE6' }]}
+        style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#141414' : '#1E6BE6' }]}
       >
         <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
