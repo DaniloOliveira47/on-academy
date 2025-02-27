@@ -33,13 +33,6 @@ export default function AlunoPerfil() {
         }]
     };
 
-    const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
-    const ocorrencias = [
-        { id: '1', ocorrencia: 'Exemplo 1', tipo: 'All', orientador: 'João Silva', data: '10/02/2025' },
-        { id: '2', ocorrencia: 'Exemplo 1', tipo: 'All', orientador: 'João Silva', data: '10/02/2025' },
-        { id: '3', ocorrencia: 'Exemplo 1', tipo: 'All', orientador: 'João Silva', data: '10/02/2025' },
-        { id: '4', ocorrencia: 'Exemplo 1', tipo: 'All', orientador: 'João Silva', data: '10/02/2025' },
-    ];
 
     return (
         <ScrollView>

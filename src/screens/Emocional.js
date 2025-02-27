@@ -21,7 +21,7 @@ export default function Emocional() {
                     <Text style={styles.title}>
                         Seu bem-estar importa
                     </Text>
-                    <Text style={[styles.subTitle, {color: text}]}>
+                    <Text style={[styles.subTitle, {color: text, textAlign: 'justify'}]}>
                         A rotina escolar envolve muitos desafios, e sabemos que cada aluno vivencia experiências únicas. Pensando nisso, criamos este espaço para que você possa expressar seus sentimentos, dificuldades e sugestões de forma segura e confidencial.
                         O objetivo deste formulário é entender melhor como você está se sentindo e identificar maneiras de tornar o ambiente escolar mais acolhedor e positivo para todos. Suas respostas são valiosas e podem contribuir para melhorias no dia a dia da instituição.
                     </Text>
@@ -64,7 +64,7 @@ export default function Emocional() {
 
 const styles = StyleSheet.create({
     tela: {
-        padding: 25,
+        padding: 15,
         paddingTop: 0
     },
     botao: {

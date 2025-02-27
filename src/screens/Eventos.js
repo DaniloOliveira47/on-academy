@@ -94,13 +94,13 @@ export default function Eventos() {
 
 const styles = StyleSheet.create({
     tela: {
-        padding: 25,
+        padding: 15,
         width: '100%',
         height: '100%',
         marginBottom: 50
     },
     barraAzul: {
-        width: 362,
+        width: 381,
         height: 70,
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,

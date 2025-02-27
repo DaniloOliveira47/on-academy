@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     tela: {
-        padding: 10,
+        padding: 15,
         paddingTop: 0,
         backgroundColor: '#F0F7FF',
         width: '100%',

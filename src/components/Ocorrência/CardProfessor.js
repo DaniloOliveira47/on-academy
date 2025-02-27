@@ -1,17 +1,24 @@
 import React from 'react'
 import { Text, TouchableOpacity } from 'react-native';
 import { Image, StyleSheet, View } from 'react-native'
+import { useTheme } from '../../path/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CardProfessor() {
+      const navigation = useNavigation();
+      const { isDarkMode } = useTheme();
+        const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+        const textColor = isDarkMode ? '#FFF' : '#000';
+        const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     return (
-        <View style={styles.container}>
-            <View style={styles.imageContainer}>
+        <View style={[styles.container, {backgroundColor: perfilBackgroundColor}]}>
+            <View style={[styles.imageContainer, {borderColor: perfilBackgroundColor}]}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
-            <Text style={{marginTop: 50, fontWeight: 'bold'}}>
+            <Text style={{marginTop: 50, fontWeight: 'bold', color: textColor}}>
                 Prof(a) Karla Dias
             </Text>
-            <TouchableOpacity style={styles.botao}>
+            <TouchableOpacity  onPress={() => navigation.navigate('ProfessorPerfil')} style={styles.botao}>
                 <Text style={{color: 'white', fontWeight: 'bold'}}>
                     Ver
                 </Text>

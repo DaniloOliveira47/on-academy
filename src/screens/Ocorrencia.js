@@ -1,84 +1,92 @@
 import React, { useState } from 'react'
 import HeaderSimples from '../components/Gerais/HeaderSimples'
-import { FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { TouchableOpacity } from 'react-native'
 import { Modal } from 'react-native'
 import { useTheme } from '../path/ThemeContext'
 import CardOcorrencia from '../components/Ocorrência/CardOcorrencia'
 import CardProfessor from '../components/Ocorrência/CardProfessor'
+import { BarChart } from 'react-native-chart-kit'
 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
     const [tipoSelecionado, setTipoSelecionado] = useState(" 1º Bim.");
+    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const textColor = isDarkMode ? '#FFF' : '#000';
+    const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
+    const screenWidth = Dimensions.get('window').width - 40;
+
+    const data = {
+        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
+        datasets: [{
+            data: [80, 50, 90, 70, 40],
+            colors: [
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6'
+            ]
+        }]
+    };
 
     const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
     return (
         <ScrollView>
+            <HeaderSimples
+                titulo="FEEDBACK"
+            />
+            <View style={[styles.tela, {backgroundColor: perfilBackgroundColor}]}>
+                <View style={{
+                    backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20
 
-
-            <View style={styles.tela}>
-                <HeaderSimples
-                    titulo="FEEDBACK"
-                />
-                <View style={{ alignItems: 'center', marginTop: 50 }}>
-                    <View style={styles.botao}>
-                        <Text style={styles.textoBotao}>Tipos de Feedback</Text>
-                        <TouchableOpacity onPress={() => setModalVisible(true)}>
-                            <View style={{
-                                backgroundColor: '#073162',
-                                padding: 10,
-                                borderRadius: 20,
-                                height: 28,
-                                width: 28,
-                                alignItems: 'center'
-                            }}>
-                                <Image style={styles.icone} source={require('../assets/image/OptionWhite.png')} />
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-                <View style={styles.container}>
-                    <Image style={styles.barraAzul} source={require('../assets/image/barraAzul.png')} />
-                    <View style={styles.form}>
-                        <View style={styles.perfil}>
-                            <Image style={{ width: 70, height: 70, borderRadius: 50, borderWidth: 3, borderColor: 'white' }} source={require('../assets/image/perfil4x4.png')} />
-                            <View style={styles.grupoText}>
-                                <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Renata Vieira</Text>
-                                <Text style={{ color: '#8A8A8A' }}>revieira@gmail.com</Text>
-                            </View>
+                }}>
+                    <View style={{ width: '100%', alignItems: 'flex-end', marginLeft: 12 }}>
+                        <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
+                                Bimestre
+                            </Text>
+                            <TouchableOpacity style={{ backgroundColor: perfilBackgroundColor, padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}>
+                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: 'bold' }}>
+                                    v
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                        <View style={styles.conteudo}>
-
-                            <View style={styles.headerTabela}>
-                                <Text style={styles.headerTexto}>Ocorrência</Text>
-                                <Text style={styles.headerTexto}>Tipo</Text>
-                                <Text style={styles.headerTexto}>Orientador</Text>
-                                <Text style={styles.headerTexto}>Data</Text>
-                            </View>
-
-
-                            <View>
-                                <CardOcorrencia ocorrencia="Exemplo 1" tipo="Todos" orientador="João Silva" data="10/02/2025" />
-                                <CardOcorrencia ocorrencia="Exemplo 2" tipo="Frequência" orientador="Maria Souza" data="12/02/2025" />
-                                <CardOcorrencia ocorrencia="Exemplo 3" tipo="Saúde Mental" orientador="Carlos Lima" data="15/02/2025" />
-                                <CardOcorrencia ocorrencia="Exemplo 4" tipo="Comportamento" orientador="Ana Ribeiro" data="18/02/2025" />
-                            </View>
-                        </View>
-
                     </View>
+                    <BarChart
+                        data={data}
+                        width={screenWidth * 0.99}
+                        height={200}
+                        yAxisSuffix="%"
+                        fromZero
+                        showBarTops={false}
+                        withCustomBarColorFromData={true}
+                        flatColor={true}
+                        chartConfig={{
+                            backgroundGradientFrom: perfilBackgroundColor,
+                            backgroundGradientTo: perfilBackgroundColor,
+                            decimalPlaces: 0,
+                            color: () => '#1E6BE6',
+                            labelColor: () => textColor,
+                            barPercentage: 1.2,
+                            fillShadowGradient: '#A9C1F7',
+                            fillShadowGradientOpacity: 1,
+
+                        }}
+                        style={styles.chart}
+                    />
                 </View>
-                <View style={styles.container2}>
 
-
+                <View style={[styles.container2, {backgroundColor: formBackgroundColor}]}>
                     <Text style={{ marginTop: 5, fontSize: 18, color: '#0077FF', fontWeight: 'bold' }}>
                         A importância do seu Feedback
                     </Text>
                     <View style={{ width: '100%', paddingVertical: 8 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 15 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
                             O feedback dos alunos é essencial para aprimorar a qualidade do ensino. Aqui, você pode compartilhar sua experiência em sala de aula, destacando o que está funcionando bem e o que pode ser melhorado.
                         </Text>
-                        <Text style={{ fontWeight: 'bold', marginTop: 7, fontSize: 15 }}>
+                        <Text style={{ fontWeight: 'bold', marginTop: 7, fontSize: 15, color: textColor }}>
                             Seus comentários ajudam os professores a ajustar métodos de ensino, tornando as aulas mais dinâmicas e eficazes. Seja claro e respeitoso em suas respostas, pois sua opinião contribui para um ambiente de aprendizado cada vez melhor para todos!
                         </Text>
                     </View>
@@ -95,8 +103,9 @@ export default function Ocorrencia() {
                         <CardProfessor />
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: 20, marginBottom: 20 }}>
-                        <TextInput style={{ backgroundColor: '#F0F7FF', borderRadius: 10, width: 260, fontSize: 11 }}
+                        <TextInput style={{ backgroundColor: perfilBackgroundColor, borderRadius: 10, width: 260, fontSize: 11, color: textColor }}
                             placeholder='Escreva aqui seu feedback para o prof(a) Karla Dias'
+                            placeholderTextColor={textColor}
                         />
                         <TouchableOpacity style={{ backgroundColor: '#0077FF', padding: 7, borderRadius: 10 }}>
                             <Text style={{ color: 'white' }}>
@@ -133,14 +142,20 @@ export default function Ocorrencia() {
 
 const styles = StyleSheet.create({
     tela: {
-        padding: 25,
-        marginBottom: 30
+        padding: 15,
+        marginBottom: 30,
+        backgroundColor: '#F0F7FF'
     },
     container2: {
         backgroundColor: 'white',
         padding: 10,
         marginTop: 20,
         borderRadius: 10
+    },
+    chart: {
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     grupoText: {
         marginLeft: 5
