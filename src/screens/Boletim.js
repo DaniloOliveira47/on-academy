@@ -23,6 +23,8 @@ export default function Boletim() {
     const container = isDarkMode ? '#000' : '#FFF'
     const text = isDarkMode ? '#FFF' : '#000'
 
+
+
     return (
         <View>
             <HeaderSimples

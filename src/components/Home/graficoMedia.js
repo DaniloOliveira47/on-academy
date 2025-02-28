@@ -7,6 +7,7 @@ export default function GraficoMedia({ isDarkMode }) {
   const total = 100;
   const valorAtual = 50;
   const angulo = (valorAtual / total) * 180;
+  
 
   const [modalVisible, setModalVisible] = useState(false);
   const [materiaSelecionada, setMateriaSelecionada] = useState("Média Geral");

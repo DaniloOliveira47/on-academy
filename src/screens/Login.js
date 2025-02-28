@@ -17,36 +17,58 @@ export default function Login() {
     setIsDarkMode(!isDarkMode);
   };
 
+  const buscarIdDoAluno = async (token) => {
+    try {
+      const response = await axios.get('http://10.92.198.34:3000/api/student', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const studentId = response.data.id; 
+      if (studentId) {
+        await AsyncStorage.setItem('@student_id', studentId.toString());
+        console.log("ID do estudante armazenado:", studentId);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar ID do aluno:", error);
+    }
+  };
+  
+
   const handleLogin = async () => {
     if (!matricula || !password) {
       Alert.alert('Por Favor, preencha todos os campos');
       return;
     }
 
-    const aluno = {
+    const usuario = {
       identifierCode: matricula,
       password: password,
     };
 
     if (matricula.charAt(0) === "a") {
       try {
-        const response = await axios.post('http://10.92.198.34:3000/api/student/login', aluno);
+        const response = await axios.post('http://10.92.198.34:3000/api/student/login', usuario);
         Alert.alert('Seja Bem-Vindo Aluno!');
 
         const data = response.data;
-        const token = data.token;
+        const token = data.token; 
+
+
         if (token) {
           await AsyncStorage.setItem('@user_token', token);
           console.log("Token armazenado com sucesso!", token);
+          await buscarIdDoAluno(token); 
           navigation.navigate('Main');
         }
+
+        
       } catch (error) {
         Alert.alert('Erro', 'Falha ao Realizar o Login');
         console.error(error);
       }
     } else if (matricula.charAt(0) === "p") {
       try {
-        const response = await axios.post('http://10.92.198.34:3000/api/teacher/login', aluno);
+        const response = await axios.post('http://10.92.198.34:3000/api/teacher/login', usuario);
         Alert.alert('Seja Bem-Vindo Professor!');
 
         const data = response.data;
@@ -62,7 +84,7 @@ export default function Login() {
       }
     } else {
       try {
-        const response = await axios.post('http://10.92.198.34:3000/api/institution/login', aluno);
+        const response = await axios.post('http://10.92.198.34:3000/api/institution/login', usuario);
         Alert.alert('Seja Bem-Vindo Instituição!');
 
         const data = response.data;
@@ -160,7 +182,7 @@ export default function Login() {
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: isDarkMode ? '#0077FF' : '#0077FF' }]}
-            onPress={() => navigation.navigate('Main')}
+            onPress={handleLogin}
           >
             <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
