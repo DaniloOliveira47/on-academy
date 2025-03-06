@@ -11,7 +11,7 @@ import AlunosFeedback from './components/Turmas/screens/AlunosFeedback';
 import AlunoPerfil from './components/Turmas/screens/AlunoPerfil';
 import ProfessorPerfil from './screens/PerfilProfessor';
 import TurmasInstituicao from './screens/screensInstituicao/Turmas';
-import NavigationInstituicao from './screens/screensInstituicao/Turmas'
+import NavigationInstituicao from './NavigationInstituicao'
 
 const Stack = createStackNavigator();
 

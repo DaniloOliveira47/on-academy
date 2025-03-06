@@ -35,7 +35,8 @@ export default function Login() {
   
 
   const handleLogin = async () => {
-    if (!matricula || !password) {
+    navigation.navigate('MainIns');
+   /* if (!matricula || !password) {
       Alert.alert('Por Favor, preencha todos os campos');
       return;
     }
@@ -98,7 +99,7 @@ export default function Login() {
         Alert.alert('Erro', 'Falha ao Realizar o Login');
         console.error(error);
       }
-    }
+    }*/
 
   };
 
