@@ -2,12 +2,12 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
 
-import HomeScreen from './screens/Home';
-import PerfilScreen from './screens/Perfil';
-import EmocionalScreen from './screens/Emocional';
-import BoletimScreen from './screens/Boletim';
+import HomeScreen from './screens/screensAluno/Home';
+import PerfilScreen from './screens/screensAluno/Perfil';
+import EmocionalScreen from './screens/screensAluno/Emocional';
+import BoletimScreen from './screens/screensAluno/Boletim';
 import EventosScreen from './screens/Eventos';
-import OcorrenciaScreen from './screens/Ocorrencia';
+import OcorrenciaScreen from './screens/screensAluno/Ocorrencia';
 import { useTheme } from './path/ThemeContext';
 
 

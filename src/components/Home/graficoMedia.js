@@ -1,18 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
 
 export default function GraficoMedia({ isDarkMode }) {
-  const total = 100;
-  const valorAtual = 50;
-  const angulo = (valorAtual / total) * 180;
-  
-
   const [modalVisible, setModalVisible] = useState(false);
   const [materiaSelecionada, setMateriaSelecionada] = useState("Média Geral");
+  const [notas, setNotas] = useState([]);
+  const [media, setMedia] = useState(0);
+  const [materias, setMaterias] = useState(["Média Geral"]);
 
-  const materias = ["Português", "Matemática", "Ciências", "História", "Geografia", "Média Geral"];
+  useEffect(() => {
+    const fetchNotas = async () => {
+      try {
+        const response = await axios.get('http://10.0.2.2:3000/api/note');
+        setNotas(response.data);
+        calcularMedia(response.data);
+        extrairMaterias(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar notas:', error);
+      }
+    };
+
+    fetchNotas();
+  }, []);
+
+  const calcularMedia = (notasLista) => {
+    if (notasLista.length === 0) {
+      setMedia(0);
+      return;
+    }
+
+    const mediaGeral = notasLista.reduce((acc, nota) => acc + nota.nota, 0) / notasLista.length;
+    setMedia(mediaGeral);
+  };
+
+  const extrairMaterias = (notasLista) => {
+    const materiasExtraidas = [...new Set(notasLista.map(nota => nota.disciplineId.nomeDisciplina))];
+    setMaterias(["Média Geral", ...materiasExtraidas]);
+  };
+
+  const obterMediaPorMateria = (materia) => {
+    if (materia === "Média Geral") {
+      return media;
+    }
+    const notasMateria = notas.filter(nota => nota.disciplineId.nomeDisciplina === materia);
+    if (notasMateria.length === 0) return 0;
+    
+    return notasMateria.reduce((acc, nota) => acc + nota.nota, 0) / notasMateria.length;
+  };
+
+  const valorAtual = obterMediaPorMateria(materiaSelecionada);
+  const total = 100;
+  const angulo = (valorAtual / total) * 180;
 
   const calcularArco = (angulo) => {
     const radians = (Math.PI * (angulo - 180)) / 180;
@@ -30,7 +71,7 @@ export default function GraficoMedia({ isDarkMode }) {
       elevation: 5,
     }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#222' }]}>Frequência</Text>
+        <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#222' }]}>Por Notas</Text>
 
         <TouchableOpacity style={styles.mediaContainer} onPress={() => setModalVisible(true)}>
           <Text style={[styles.mediaText, { color: isDarkMode ? '#BBB' : '#888' }]}>{materiaSelecionada}</Text>
@@ -56,8 +97,8 @@ export default function GraficoMedia({ isDarkMode }) {
             />
           </G>
         </Svg>
-        <Text style={[styles.valorAtual, { color: isDarkMode ? '#AAA' : '#666' }]}>Valor atual</Text>
-        <Text style={[styles.valor, { color: isDarkMode ? '#FFF' : '#333' }]}>{valorAtual},0</Text>
+        <Text style={[styles.valorAtual, { color: isDarkMode ? '#AAA' : '#666' }]}>Média</Text>
+        <Text style={[styles.valor, { color: isDarkMode ? '#FFF' : '#333' }]}>{valorAtual.toFixed(1)}</Text>
       </View>
 
       <Modal visible={modalVisible} transparent animationType="fade">

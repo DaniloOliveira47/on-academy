@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
-import Campo from '../components/Perfil/Campo';
-import { useTheme } from '../path/ThemeContext';
-import HeaderSimples from '../components/Gerais/HeaderSimples';
+import Campo from '../../components/Perfil/Campo';
+import { useTheme } from '../../path/ThemeContext';
+import HeaderSimples from '../../components/Gerais/HeaderSimples';
 
 export default function Perfil() {
     const { isDarkMode } = useTheme();
@@ -20,7 +20,7 @@ export default function Perfil() {
             />
 
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../assets/image/barraAzul.png')} />
+                <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
                 <View style={[styles.form, {
                     backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
                     shadowOpacity: 0.1,
@@ -28,7 +28,7 @@ export default function Perfil() {
                     elevation: 3,
                 }]}>
                     <View style={styles.linhaUser}>
-                        <Image source={require('../assets/image/Perfill.png')} />
+                        <Image source={require('../../assets/image/Perfill.png')} />
                         <View style={styles.name}>
                             <Text style={[styles.nome, { color: textColor }]}>
                                 Renata Vieira

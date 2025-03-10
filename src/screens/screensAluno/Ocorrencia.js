@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import HeaderSimples from '../components/Gerais/HeaderSimples'
+import HeaderSimples from '../../components/Gerais/HeaderSimples'
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { TouchableOpacity } from 'react-native'
 import { Modal } from 'react-native'
-import { useTheme } from '../path/ThemeContext'
-import CardOcorrencia from '../components/Ocorrência/CardOcorrencia'
-import CardProfessor from '../components/Ocorrência/CardProfessor'
+import { useTheme } from '../../path/ThemeContext'
+import CardOcorrencia from '../../components/Ocorrência/CardOcorrencia'
+import CardProfessor from '../../components/Ocorrência/CardProfessor'
 import { BarChart } from 'react-native-chart-kit'
 
 export default function Ocorrencia() {

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
-import HeaderSimples from '../components/Gerais/HeaderSimples';
-import CardMateria from '../components/Boletim/CardMateria';
-import Nota from '../components/Boletim/Nota';
-import BarraAzul from '../components/Boletim/barraAzul';
-import { useTheme } from '../path/ThemeContext';
+import HeaderSimples from '../../components/Gerais/HeaderSimples';
+import CardMateria from '../../components/Boletim/CardMateria';
+import Nota from '../../components/Boletim/Nota';
+import BarraAzul from '../../components/Boletim/barraAzul';
+import { useTheme } from '../../path/ThemeContext';
 
 export default function Boletim() {
     const [modalVisible, setModalVisible] = useState(false);
@@ -50,7 +50,7 @@ export default function Boletim() {
                                     width: 28,
                                     alignItems: 'center'
                                 }}>
-                                    <Image style={styles.icone} source={require('../assets/image/OptionWhite.png')} />
+                                    <Image style={styles.icone} source={require('../../assets/image/OptionWhite.png')} />
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -86,7 +86,7 @@ export default function Boletim() {
                             </View>
                         </View>
                         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 2, width: 100, padding: 8, justifyContent: 'space-around', borderRadius: 10, borderColor: '#0077FF', marginLeft: 16 }}>
-                            <Image source={require('../assets/image/baixar.png')} />
+                            <Image source={require('../../assets/image/baixar.png')} />
                             <Text style={{ fontSize: 18, color: text, fontWeight: 'bold' }}>PDF</Text>
                         </TouchableOpacity>
                     </View>

@@ -4,12 +4,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/Login';
 import Navigation from './Navigation';
 import { ThemeProvider } from './path/ThemeContext';
-import Perfil from './screens/Perfil';
+import Perfil from './screens/screensAluno/Perfil';
 import NavigationDocente from './NavigationDocente';
 import NotasTurma from './components/Turmas/screens/NotasTurma';
 import AlunosFeedback from './components/Turmas/screens/AlunosFeedback';
 import AlunoPerfil from './components/Turmas/screens/AlunoPerfil';
-import ProfessorPerfil from './screens/PerfilProfessor';
+import ProfessorPerfil from './screens/screensAluno/PerfilProfessor';
 import TurmasInstituicao from './screens/screensInstituicao/Turmas';
 import NavigationInstituicao from './NavigationInstituicao'
 
@@ -19,7 +19,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Main">
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Main" component={Navigation} />
           <Stack.Screen name="MainIns" component={NavigationInstituicao} />

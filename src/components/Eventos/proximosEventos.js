@@ -1,15 +1,17 @@
-import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 
 export default function ProximosEventos({ data, titulo, subData, periodo, color }) {
   const { isDarkMode } = useTheme();
   const containerColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
+
   return (
-    <View style={[styles.card, {backgroundColor: containerColor}]}>
+    <View style={[styles.card, { backgroundColor: containerColor }]}>
+      {/* Círculo com a data */}
       <View style={{
-        backgroundColor: color,
+        backgroundColor: color, // Usa a cor passada como prop
         padding: 10,
         alignItems: 'center',
         width: 45,
@@ -19,6 +21,8 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
           {data}
         </Text>
       </View>
+
+      {/* Detalhes do evento */}
       <View>
         <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
           {titulo}
@@ -35,7 +39,7 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
         </View>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -45,12 +49,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     borderRadius: 15,
-
   },
-
   subTitulo: {
     color: '#8A8A8A',
     fontWeight: 'bold',
-    fontSize: 11
-  }
+    fontSize: 11,
+  },
 });

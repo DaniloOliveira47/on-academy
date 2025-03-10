@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import HeaderSimples from '../components/Gerais/HeaderSimples';
-import CheckList from '../components/Emocional/CheckList';
-import List from '../components/Emocional/List';
+import HeaderSimples from '../../components/Gerais/HeaderSimples';
+import CheckList from '../../components/Emocional/CheckList';
+import List from '../../components/Emocional/List';
 import { TouchableOpacity } from 'react-native';
-import { useTheme } from '../path/ThemeContext';
+import { useTheme } from '../../path/ThemeContext';
 
 export default function Emocional() {
         const { isDarkMode } = useTheme();

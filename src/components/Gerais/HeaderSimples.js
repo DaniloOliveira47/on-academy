@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 15,
+    paddingTop: 20
   },
   logoContainer: {
     flexDirection: 'row',
