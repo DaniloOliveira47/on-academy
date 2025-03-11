@@ -1,120 +1,175 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Image, StyleSheet, Text, View, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CardMateria from '../../components/Boletim/CardMateria';
 import Nota from '../../components/Boletim/Nota';
 import BarraAzul from '../../components/Boletim/barraAzul';
 import { useTheme } from '../../path/ThemeContext';
+import axios from 'axios';
+import { ScrollView } from 'react-native-gesture-handler';
+import * as FileSystem from 'expo-file-system'; // Para baixar o PDF
+import * as Print from 'expo-print'; // Para visualizar o PDF
 
 export default function Boletim() {
     const [modalVisible, setModalVisible] = useState(false);
-    const [bimestreSelecionado, setBimestreSelecionado] = useState(" 1º Bim.");
+    const [bimestreSelecionado, setBimestreSelecionado] = useState("1º Bim.");
+    const [notas, setNotas] = useState([]);
+    const [aluno, setAluno] = useState(null);
 
     const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
-    const notas = [
-        { materia: 'Português', nota: 98.5 },
-        { materia: 'Matemática', nota: 75.6 },
-        { materia: 'Inglês', nota: 90.6 },
-        { materia: 'Ciências', nota: 60.2 },
-        { materia: 'Artes', nota: 85.3 },
-    ];
     const { isDarkMode } = useTheme();
     const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
-    const container = isDarkMode ? '#000' : '#FFF'
-    const text = isDarkMode ? '#FFF' : '#000'
+    const container = isDarkMode ? '#000' : '#FFF';
+    const text = isDarkMode ? '#FFF' : '#000';
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('http://10.0.2.2:3000/api/student/1');
+                setAluno(response.data);
+                setNotas(response.data.notas);
+            } catch (error) {
+                console.error("Erro ao buscar dados do aluno:", error);
+            }
+        };
 
+        fetchData();
+    }, []);
+
+    const getNotasPorBimestre = (bimestre) => {
+        return notas.filter(nota => nota.bimestre === parseInt(bimestre));
+    };
+
+    const notasBimestreSelecionado = getNotasPorBimestre(bimestreSelecionado[0]);
+
+    // Função para baixar e visualizar o boletim
+    const downloadAndViewBoletim = async () => {
+        const url = 'http://10.0.2.2:3000/api/boletim/1'; // URL do boletim
+        const fileName = 'boletim.pdf'; // Nome do arquivo
+        const fileUri = `${FileSystem.documentDirectory}${fileName}`; // Caminho onde o arquivo será salvo
+
+        try {
+            // Faz o download do arquivo
+            const { uri } = await FileSystem.downloadAsync(url, fileUri);
+
+            console.log('Boletim baixado em:', uri);
+
+            // Verifica se o arquivo foi baixado corretamente
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            if (fileInfo.exists) {
+                Alert.alert('Sucesso', 'Boletim baixado com sucesso!');
+
+                // Abre o PDF com o expo-print
+                await Print.printAsync({
+                    uri: uri, // URI do arquivo baixado
+                });
+            } else {
+                Alert.alert('Erro', 'O boletim não foi baixado corretamente.');
+            }
+        } catch (error) {
+            console.error('Erro ao baixar ou visualizar o boletim:', error);
+            Alert.alert('Erro', 'Não foi possível baixar ou visualizar o boletim.');
+        }
+    };
 
     return (
-        <View>
-            <HeaderSimples
-                titulo="BOLETIM"
-            />
-            <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
-
-                <View style={{
-                    backgroundColor: container, marginTop: 40, padding: 20, borderRadius: 20, paddingTop: 30, shadowColor: '#000',
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 5,
-                }}>
-                    <View style={{ alignItems: 'center' }}>
-                        <View style={styles.botao}>
-                            <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(true)}>
-                                <View style={{
-                                    backgroundColor: '#0077FF',
-                                    padding: 10,
-                                    borderRadius: 20,
-                                    height: 28,
-                                    width: 28,
-                                    alignItems: 'center'
-                                }}>
-                                    <Image style={styles.icone} source={require('../../assets/image/OptionWhite.png')} />
+        <ScrollView>
+            <View>
+                <HeaderSimples titulo="BOLETIM" />
+                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 70 }]}>
+                    <View style={{
+                        backgroundColor: container, marginTop: 10, padding: 20, borderRadius: 20, paddingTop: 30, shadowColor: '#000',
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 5,
+                    }}>
+                        <View style={{ alignItems: 'center' }}>
+                            <View style={styles.botao}>
+                                <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
+                                <TouchableOpacity onPress={() => setModalVisible(true)}>
+                                    <View style={{
+                                        backgroundColor: '#0077FF',
+                                        padding: 10,
+                                        borderRadius: 20,
+                                        height: 28,
+                                        width: 28,
+                                        alignItems: 'center'
+                                    }}>
+                                        <Image style={styles.icone} source={require('../../assets/image/OptionWhite.png')} />
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View style={styles.boletim}>
+                            <View style={styles.titulos}>
+                                <View style={styles.containers}>
+                                    <Text style={styles.contText}>
+                                        Matéria
+                                    </Text>
                                 </View>
+                                <View style={styles.containers}>
+                                    <Text style={styles.contText}>
+                                        {bimestreSelecionado}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+
+                                <View style={styles.column}>
+                                    {notasBimestreSelecionado.map((nota, index) => (
+                                        <CardMateria key={index} materia={nota.nomeDisciplina} />
+                                    ))}
+                                </View>
+                                <View style={styles.column}>
+                                    {notasBimestreSelecionado.map((nota, index) => (
+                                        <Nota key={index} nota={nota.nota.toString()} />
+                                    ))}
+                                </View>
+                            </View>
+                            <TouchableOpacity
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    borderWidth: 2,
+                                    width: 100,
+                                    padding: 8,
+                                    justifyContent: 'space-around',
+                                    borderRadius: 10,
+                                    borderColor: '#0077FF',
+                                    marginLeft: 16,
+                                }}
+                                onPress={downloadAndViewBoletim} // Chama a função de download e visualização
+                            >
+                                <Image source={require('../../assets/image/baixar.png')} />
+                                <Text style={{ fontSize: 18, color: '#000', fontWeight: 'bold' }}>PDF</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                    <View style={styles.boletim}>
-                        <View style={styles.titulos}>
-                            <View style={styles.containers}>
-                                <Text style={styles.contText}>
-                                    Matéria
-                                </Text>
-                            </View>
-                            <View style={styles.containers}>
-                                <Text style={styles.contText}>
-                                    {bimestreSelecionado}
-                                </Text>
-                            </View>
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <BarraAzul />
-                            <View style={styles.column}>
-                                <CardMateria materia="Português" />
-                                <CardMateria materia="Matemática" />
-                                <CardMateria materia="Inglês" />
-                                <CardMateria materia="Ciências" />
-                                <CardMateria materia="Artes" />
-                            </View>
-                            <View style={styles.column}>
-                                <Nota nota="98.5" />
-                                <Nota nota="75.6" />
-                                <Nota nota="90.6" />
-                                <Nota nota="60.2" />
-                                <Nota nota="85.3" />
-                            </View>
-                        </View>
-                        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 2, width: 100, padding: 8, justifyContent: 'space-around', borderRadius: 10, borderColor: '#0077FF', marginLeft: 16 }}>
-                            <Image source={require('../../assets/image/baixar.png')} />
-                            <Text style={{ fontSize: 18, color: text, fontWeight: 'bold' }}>PDF</Text>
-                        </TouchableOpacity>
-                    </View>
 
-                    <Modal visible={modalVisible} transparent animationType="fade">
-                        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                            <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
-                                <FlatList
-                                    data={bimestres}
-                                    keyExtractor={(item) => item}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            style={styles.modalItem}
-                                            onPress={() => {
-                                                setBimestreSelecionado(item);
-                                                setModalVisible(false);
-                                            }}
-                                        >
-                                            <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                />
-                            </View>
-                        </TouchableOpacity>
-                    </Modal>
+                        <Modal visible={modalVisible} transparent animationType="fade">
+                            <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                                <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
+                                    <FlatList
+                                        data={bimestres}
+                                        keyExtractor={(item) => item}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity
+                                                style={styles.modalItem}
+                                                onPress={() => {
+                                                    setBimestreSelecionado(item);
+                                                    setModalVisible(false);
+                                                }}
+                                            >
+                                                <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                        </Modal>
+                    </View>
                 </View>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -193,4 +248,4 @@ const styles = StyleSheet.create({
     modalText: {
         fontSize: 18,
     },
-})
+});
