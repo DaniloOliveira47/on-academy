@@ -18,10 +18,12 @@
     "@react-navigation/stack": "^7.1.1",
     "axios": "^1.7.9",
     "expo": "~52.0.30",
+    "expo-document-picker": "~13.0.3",
     "expo-file-system": "~18.0.11",
     "expo-font": "~13.0.3",
     "expo-image-picker": "~16.0.6",
     "expo-linear-gradient": "~14.0.2",
+    "expo-print": "~14.0.3",
     "expo-sharing": "~13.0.1",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
@@ -35,11 +37,10 @@
     "react-native-reanimated": "^3.16.7",
     "react-native-safe-area-context": "^5.2.0",
     "react-native-screens": "^4.6.0",
+    "react-native-scroll-indicator": "^0.1.0",
     "react-native-share": "^12.0.9",
     "react-native-svg": "^15.8.0",
-    "react-native-vector-icons": "^10.2.0",
-    "expo-document-picker": "~13.0.3",
-    "expo-print": "~14.0.3"
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

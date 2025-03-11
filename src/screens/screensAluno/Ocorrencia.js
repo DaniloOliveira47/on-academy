@@ -1,21 +1,33 @@
-import React, { useState } from 'react'
-import HeaderSimples from '../../components/Gerais/HeaderSimples'
-import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { TouchableOpacity } from 'react-native'
-import { Modal } from 'react-native'
-import { useTheme } from '../../path/ThemeContext'
-import CardOcorrencia from '../../components/Ocorrência/CardOcorrencia'
-import CardProfessor from '../../components/Ocorrência/CardProfessor'
-import { BarChart } from 'react-native-chart-kit'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Importe o axios para fazer a requisição
+import HeaderSimples from '../../components/Gerais/HeaderSimples';
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { Modal } from 'react-native';
+import { useTheme } from '../../path/ThemeContext';
+import CardProfessor from '../../components/Ocorrência/CardProfessor';
+import { BarChart } from 'react-native-chart-kit';
 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
     const [tipoSelecionado, setTipoSelecionado] = useState(" 1º Bim.");
+    const [professores, setProfessores] = useState([]);
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const screenWidth = Dimensions.get('window').width - 40;
+
+
+    useEffect(() => {
+        axios.get('http://10.0.2.2:3000/api/teacher')
+            .then(response => {
+                setProfessores(response.data);
+            })
+            .catch(error => {
+                console.error('Erro ao buscar professores:', error);
+            });
+    }, []);
 
     const data = {
         labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
@@ -32,12 +44,13 @@ export default function Ocorrencia() {
     };
 
     const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
+
     return (
         <ScrollView>
             <HeaderSimples
                 titulo="FEEDBACK"
             />
-            <View style={[styles.tela, {backgroundColor: perfilBackgroundColor}]}>
+            <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <View style={{
                     backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20
 
@@ -78,7 +91,7 @@ export default function Ocorrencia() {
                     />
                 </View>
 
-                <View style={[styles.container2, {backgroundColor: formBackgroundColor}]}>
+                <View style={[styles.container2, { backgroundColor: formBackgroundColor }]}>
                     <Text style={{ marginTop: 5, fontSize: 18, color: '#0077FF', fontWeight: 'bold' }}>
                         A importância do seu Feedback
                     </Text>
@@ -91,16 +104,31 @@ export default function Ocorrencia() {
                         </Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        <CardProfessor />
-                        <CardProfessor />
+                        {professores.slice(0, 2).map((professor, index) => (
+                            <CardProfessor
+                                key={index}
+                                nome={"Prof - " + professor.nomeDocente}
+                                id={professor.id} 
+                            />
+                        ))}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        <CardProfessor />
-                        <CardProfessor />
+                        {professores.slice(2, 4).map((professor, index) => (
+                            <CardProfessor
+                                key={index}
+                                nome={"Prof - " + professor.nomeDocente}
+                                id={professor.id} 
+                            />
+                        ))}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        <CardProfessor />
-                        <CardProfessor />
+                        {professores.slice(4, 6).map((professor, index) => (
+                            <CardProfessor
+                                key={index}
+                                nome={"Prof - " + professor.nomeDocente}
+                                id={professor.id} 
+                            />
+                        ))}
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: 20, marginBottom: 20 }}>
                         <TextInput style={{ backgroundColor: perfilBackgroundColor, borderRadius: 10, width: 260, fontSize: 11, color: textColor }}
@@ -137,7 +165,7 @@ export default function Ocorrencia() {
                 </Modal>
             </View>
         </ScrollView>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -264,4 +292,4 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center'
     },
-})
+});

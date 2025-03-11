@@ -62,20 +62,28 @@ export default function Home() {
               <Text style={styles.bimestreButtonText}>{bimestreSelecionado ? `${bimestreSelecionado}º Bimestre` : "Selecionar"}</Text>
             </TouchableOpacity>
           </View>
-          {filtrarNotasPorBimestre().length > 0 ? (
-            filtrarNotasPorBimestre().map((nota, index) => (
-              <CardNota
-                key={index}
-                title={nota.nomeDisciplina}
-                subtitle={`Bimestre ${nota.bimestre} - ${nota.status}`}
-                imageSource={require('../../assets/image/matematica.png')}
-                percentage={nota.nota}
-                isDarkMode={isDarkMode}
-              />
-            ))
-          ) : (
-            <Text style={{ textAlign: 'center', color: isDarkMode ? '#FFF' : '#000' }}>Nenhuma nota encontrada.</Text>
-          )}
+          <View style={styles.scrollContainer}>
+            <ScrollView
+              style={styles.scrollContent}
+              indicatorStyle={isDarkMode ? 'white' : 'default'} // Personaliza a cor da barra de rolagem
+              nestedScrollEnabled={true} // Permite rolagem independente
+            >
+              {filtrarNotasPorBimestre().length > 0 ? (
+                filtrarNotasPorBimestre().map((nota, index) => (
+                  <CardNota
+                    key={index}
+                    title={nota.nomeDisciplina}
+                    subtitle={`Bimestre ${nota.bimestre} - ${nota.status}`}
+                    imageSource={require('../../assets/image/matematica.png')}
+                    percentage={nota.nota}
+                    isDarkMode={isDarkMode}
+                  />
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: isDarkMode ? '#FFF' : '#000' }}>Nenhuma nota encontrada.</Text>
+              )}
+            </ScrollView>
+          </View>
         </View>
       </ScrollView>
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
@@ -111,6 +119,14 @@ const styles = StyleSheet.create({
   tituloNotas: { fontSize: 30 },
   bimestreButton: { backgroundColor: '#1E6BE6', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 5 },
   bimestreButtonText: { color: '#FFF', fontSize: 16 },
+  scrollContainer: { 
+    flex: 1, // Ocupa o espaço disponível
+    maxHeight: 400, // Define uma altura máxima para o ScrollView
+  },
+  scrollContent: {
+    flexGrow: 1, 
+    padding: 10
+  },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
   modalContent: { width: '80%', padding: 20, borderRadius: 10, alignItems: 'center' },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
