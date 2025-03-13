@@ -5,6 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
+
+
 
 export default function Login() {
   const navigation = useNavigation();
@@ -19,72 +22,60 @@ export default function Login() {
 
 
   const handleLogin = async () => {
-
     if (!matricula || !password) {
-      Alert.alert('Por Favor, preencha todos os campos');
+      Alert.alert('Por favor, preencha todos os campos');
       return;
     }
-
+  
     const usuario = {
       identifierCode: matricula,
       password: password,
     };
-
+  
+    let url = '';
+  
     if (matricula.charAt(0) === "a") {
-      try {
-        const response = await axios.post('http://10.0.2.2:3000/api/student/login', usuario);
-        Alert.alert('Seja Bem-Vindo Aluno!');
-
-        const data = response.data;
-        const token = data.token;
-
-
-        if (token) {
-          await AsyncStorage.setItem('@user_token', token);
-          console.log("Token armazenado com sucesso!", token);
-          navigation.navigate('Main');
-        }
-
-
-      } catch (error) {
-        Alert.alert('Erro', 'Falha ao Realizar o Login');
-        console.error(error);
-      }
+      url = 'http://10.0.2.2:3000/api/student/login';
     } else if (matricula.charAt(0) === "p") {
-      try {
-        const response = await axios.post('http://10.0.2.2:3000/api/teacher/login', usuario);
-        Alert.alert('Seja Bem-Vindo Professor!');
-
-        const data = response.data;
-        const token = data.token;
-        if (token) {
-          await AsyncStorage.setItem('@user_token', token);
-          console.log("Token armazenado com sucesso!", token);
-          navigation.navigate('MainDoc');
-        }
-      } catch (error) {
-        Alert.alert('Erro', 'Falha ao Realizar o Login');
-        console.error(error);
-      }
+      url = 'http://10.0.2.2:3000/api/teacher/login';
     } else {
-      try {
-        const response = await axios.post('http://10.0.2.2:3000/api/institution/login', usuario);
-        Alert.alert('Seja Bem-Vindo Instituição!');
-
-        const data = response.data;
-        const token = data.token;
-        if (token) {
-          await AsyncStorage.setItem('@user_token', token);
-          console.log("Token armazenado com sucesso!", token);
+      url = 'http://10.0.2.2:3000/api/institution/login';
+    }
+  
+    try {
+      const response = await axios.post(url, usuario);
+      const data = response.data;
+      const token = data.token;
+  
+      if (token) {
+        // Limpar o AsyncStorage antes de armazenar os novos dados
+        await AsyncStorage.clear();
+  
+        await AsyncStorage.setItem('@user_token', token);
+  
+        // Decodificar o token para obter o ID do usuário
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken.sub; // 'sub' contém o ID do usuário
+  
+        await AsyncStorage.setItem('@user_id', userId.toString());
+        console.log("Token armazenado com sucesso!", token);
+        console.log("ID do usuário:", userId);
+  
+        // Redirecionamento baseado no tipo de usuário
+        if (matricula.charAt(0) === "a") {
+          navigation.navigate('Main');
+        } else if (matricula.charAt(0) === "p") {
+          navigation.navigate('MainDoc');
+        } else {
           navigation.navigate('MainIns');
         }
-      } catch (error) {
-        Alert.alert('Erro', 'Falha ao Realizar o Login');
-        console.error(error);
       }
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao realizar o login');
+      console.error(error);
     }
-
   };
+  
 
   return (
     <LinearGradient

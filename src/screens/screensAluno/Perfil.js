@@ -3,16 +3,32 @@ import { StyleSheet, Text, View, Image } from 'react-native';
 import Campo from '../../components/Perfil/Campo';
 import { useTheme } from '../../path/ThemeContext';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Perfil() {
   const { isDarkMode } = useTheme();
   const [dadosAluno, setDadosAluno] = useState(null);
 
   useEffect(() => {
-    fetch('http://10.0.2.2:3000/api/student/1')
-      .then(response => response.json())
-      .then(data => setDadosAluno(data))
-      .catch(error => console.error('Erro ao buscar dados do aluno:', error));
+    const fetchUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('@user_id');
+        console.log('userId recuperado:', userId);
+
+        if (userId) {
+          const response = await fetch(`http://10.0.2.2:3000/api/student/5`);
+          const data = await response.json();
+          console.log('Dados do aluno:', data);
+          setDadosAluno(data);
+        } else {
+          console.log('ID do usuário não encontrado no AsyncStorage');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do aluno:', error);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';

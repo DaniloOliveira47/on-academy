@@ -16,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAluno = async () => {
       try {
-        const response = await axios.get('http://10.0.2.2:3000/api/student/1');
+        const response = await axios.get('http://10.0.2.2:3000/api/student/4');
         setAluno(response.data);
       } catch (error) {
         console.error('Erro ao buscar dados do aluno:', error);
