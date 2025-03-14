@@ -6,7 +6,7 @@ const CardNota = ({ title, subtitle, imageSource, percentage, isDarkMode }) => {
   const radius = 25;
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
-  const progress = (percentage / 100) * circumference;
+  const progress = (percentage / 10) * circumference;
 
   return (
     <View style={[styles.card, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>

@@ -5,7 +5,7 @@ import Header from '../../components/Home/Header';
 import GraficoMedia from '../../components/Home/graficoMedia';
 import CardNota from '../../components/Home/cardNota';
 import { useTheme } from '../../path/ThemeContext';
-import Avisos from '../../components/Home/Avisos';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
   const { isDarkMode } = useTheme();
@@ -16,7 +16,16 @@ export default function Home() {
   useEffect(() => {
     const fetchAluno = async () => {
       try {
-        const response = await axios.get('http://10.0.2.2:3000/api/student/4');
+        // Recupera o ID do aluno do Async Storage
+        const alunoId = await AsyncStorage.getItem('@user_id');
+        if (!alunoId) {
+          console.error('ID do aluno não encontrado no Async Storage');
+          return;
+        }
+
+        // Faz a requisição à API para buscar os dados do aluno
+        const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        console.log('Resposta da API:', response.data);
         setAluno(response.data);
       } catch (error) {
         console.error('Erro ao buscar dados do aluno:', error);
@@ -45,7 +54,7 @@ export default function Home() {
           }]}>
             <View style={styles.textContainer}>
               <Text style={[styles.titulo, { color: isDarkMode ? '#FFF' : '#fff' }]}>
-                Seja bem-vindo,  👋
+                Seja bem-vindo, {aluno?.nome || ''} 👋
               </Text>
               <Text style={[styles.subtitulo, { color: isDarkMode ? '#fff' : '#fff' }]}>
                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
@@ -119,12 +128,12 @@ const styles = StyleSheet.create({
   tituloNotas: { fontSize: 30 },
   bimestreButton: { backgroundColor: '#1E6BE6', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 5 },
   bimestreButtonText: { color: '#FFF', fontSize: 16 },
-  scrollContainer: { 
+  scrollContainer: {
     flex: 1, // Ocupa o espaço disponível
     maxHeight: 400, // Define uma altura máxima para o ScrollView
   },
   scrollContent: {
-    flexGrow: 1, 
+    flexGrow: 1,
     padding: 10
   },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },

@@ -1,16 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [events, setEvents] = useState([]); // Estado para armazenar os eventos
+  const [eventColors, setEventColors] = useState({}); // Estado para armazenar as cores dos eventos
+  const [aluno, setAluno] = useState(null); // Estado para armazenar os dados do aluno
   const navigation = useNavigation();
+
+  // Função para gerar uma cor aleatória
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Busca os eventos
+        const eventsResponse = await axios.get('http://10.0.2.2:3000/api/event');
+        const events = eventsResponse.data;
+
+        // Gerar cores aleatórias para cada evento
+        const colors = {};
+        events.forEach(event => {
+          colors[event.id] = getRandomColor();
+        });
+
+        setEvents(events);
+        setEventColors(colors); // Armazena as cores no estado
+
+        // Busca os dados do aluno
+        const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
+        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        setAluno(alunoResponse.data); // Armazena os dados do aluno
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const toggleMenu = () => {
     const toValue = menuVisible ? 0 : 1;
@@ -38,6 +81,22 @@ export default function Header() {
   const menuLineColor = isDarkMode ? '#0077FF' : '#0077FF';
   const closeButtonColor = '#FFF';
   const container = isDarkMode ? '#000' : '#FFF';
+
+  // Função para formatar a data e o horário
+  const formatDateTime = (date, time) => {
+    const dateTimeString = `${date}T${time}`;
+    return new Date(dateTimeString);
+  };
+
+  // Função para formatar o horário
+  const formatTime = (dateTime) => {
+    return dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  // Função para formatar a data
+  const formatDate = (dateTime) => {
+    return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+  };
 
   return (
     <>
@@ -77,7 +136,9 @@ export default function Header() {
             <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
               <View style={{ flexDirection: 'row', gap: 20 }}>
                 <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
-                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>Roberta</Text>
+                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                  {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
+                </Text>
               </View>
               <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
             </View>
@@ -85,17 +146,30 @@ export default function Header() {
         </View>
 
         <View style={[styles.menuItem, { height: 'auto' }]}>
-          <CustomCalendar />
+        <CustomCalendar events={events} />
         </View>
 
         <View style={styles.menuItem}>
           <View style={[styles.contEventos, { backgroundColor: container }]}>
             <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
             <View>
-              <ProximosEventos data="8" titulo="Início das Aulas" subData="8 - FEV 2025" periodo="8 A.M - 9 A.M" color="#0077FF" />
-              <ProximosEventos data="13" titulo="Clube do Livro" subData="13 - FEV 2025" periodo="10 A.M - 11 A.M" color="#FF1D86" />
-              <ProximosEventos data="18" titulo="Entrega das Apostilas" subData="18 - FEV 2025" periodo="2 P.M - 3 P.M" color="#16D03B" />
-              <ProximosEventos data="23" titulo="Feira Cultural" subData="23 - FEV 2025" periodo="4 P.M - 5 P.M" color="#FF7E3E" />
+              {events.length > 0 ? (
+                events.map((event, index) => {
+                  const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                  return (
+                    <ProximosEventos
+                      key={index}
+                      data={eventDateTime.getDate()}
+                      titulo={event.tituloEvento}
+                      subData={formatDate(eventDateTime)}
+                      periodo={formatTime(eventDateTime)}
+                      color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                    />
+                  );
+                })
+              ) : (
+                <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
+              )}
             </View>
           </View>
         </View>
@@ -117,7 +191,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
   },
-
   menuContainer: {
     width: 30,
     height: 30,

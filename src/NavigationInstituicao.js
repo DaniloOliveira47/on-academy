@@ -4,8 +4,8 @@ import Icon from 'react-native-vector-icons/Feather';
 
 import HomeScreen from './screens/screensDocente/Home';
 
-import EventosScreen from './screens/Eventos';
-import FeedbackStack from './stacks/FeedbackStack';
+import EventosScreen from './screens/screensInstituicao/EventosInstitution';
+import FeedbackStack from './screens/screensInstituicao/Professores';
 import NotasStack from './stacks/EditarTurmasStack'
 
 import { useTheme } from './path/ThemeContext';

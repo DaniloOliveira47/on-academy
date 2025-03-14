@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList } from 'react
 import Svg, { Path, G } from 'react-native-svg';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function GraficoMedia({ isDarkMode }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -14,10 +15,25 @@ export default function GraficoMedia({ isDarkMode }) {
   useEffect(() => {
     const fetchNotas = async () => {
       try {
-        const response = await axios.get('http://10.0.2.2:3000/api/note');
-        setNotas(response.data);
-        calcularMedia(response.data);
-        extrairMaterias(response.data);
+        // Recupera o ID do aluno do Async Storage
+        const alunoId = await AsyncStorage.getItem('@user_id');
+        if (!alunoId) {
+          console.error('ID do aluno não encontrado no Async Storage');
+          return;
+        }
+
+        // Faz a requisição à API para buscar as notas do aluno
+        const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        console.log('Resposta da API:', response.data);
+
+        // Verifica se a resposta contém as notas do aluno
+        if (response.data && Array.isArray(response.data.notas)) {
+          setNotas(response.data.notas); // Atualiza o estado com as notas do aluno
+          calcularMedia(response.data.notas); // Calcula a média geral
+          extrairMaterias(response.data.notas); // Extrai as matérias disponíveis
+        } else {
+          console.error('Resposta da API não contém um array de notas:', response.data);
+        }
       } catch (error) {
         console.error('Erro ao buscar notas:', error);
       }
@@ -37,7 +53,7 @@ export default function GraficoMedia({ isDarkMode }) {
   };
 
   const extrairMaterias = (notasLista) => {
-    const materiasExtraidas = [...new Set(notasLista.map(nota => nota.disciplineId.nomeDisciplina))];
+    const materiasExtraidas = [...new Set(notasLista.map(nota => nota.nomeDisciplina))];
     setMaterias(["Média Geral", ...materiasExtraidas]);
   };
 
@@ -45,14 +61,14 @@ export default function GraficoMedia({ isDarkMode }) {
     if (materia === "Média Geral") {
       return media;
     }
-    const notasMateria = notas.filter(nota => nota.disciplineId.nomeDisciplina === materia);
+    const notasMateria = notas.filter(nota => nota.nomeDisciplina === materia);
     if (notasMateria.length === 0) return 0;
-    
+
     return notasMateria.reduce((acc, nota) => acc + nota.nota, 0) / notasMateria.length;
   };
 
   const valorAtual = obterMediaPorMateria(materiaSelecionada);
-  const total = 100;
+  const total = 10;
   const angulo = (valorAtual / total) * 180;
 
   const calcularArco = (angulo) => {

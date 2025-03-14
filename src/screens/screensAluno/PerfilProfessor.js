@@ -30,10 +30,8 @@ export default function ProfessorPerfil({ route }) {
     <View>
       <HeaderSimples titulo="PERFIL DO PROFESSOR" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-        <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, {dadosProfessor ? dadosProfessor.nomeDocente : 'Carregando...'}</Text>
-        </View>
-        <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
+     
+        <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 90 }]} source={require('../../assets/image/barraAzul.png')} />
         <View style={[styles.form, {
           backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
           shadowOpacity: 0.1,

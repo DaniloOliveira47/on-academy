@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Calendar } from 'react-native-calendars';
 import { View, StyleSheet } from 'react-native';
 
-const CustomCalendar = ({ onDayPress }) => {
+const CustomCalendar = ({ onDayPress, events }) => {
   const [markedDates, setMarkedDates] = useState({});
-  const [events, setEvents] = useState([]);
   const [eventColors, setEventColors] = useState({}); // Estado para armazenar as cores dos eventos
 
+  // Função para gerar uma cor aleatória
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -17,40 +17,35 @@ const CustomCalendar = ({ onDayPress }) => {
   };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch('http://10.0.2.2:3000/api/event');
-        const events = await response.json();
-        setEvents(events);
+    if (events && events.length > 0) {
+      const formattedDates = {};
+      const colors = {};
 
-        const formattedDates = {};
-        const colors = {};
+      events.forEach((event) => {
+        const date = new Date(event.dataEvento).toISOString().split('T')[0]; // Usa dataEvento
+        const color = getRandomColor();
+        formattedDates[date] = { 
+          selected: true, 
+          selectedColor: color, 
+          id: event.id, 
+          dotColor: color, // Adiciona um ponto colorido no dia
+        };
+        colors[event.id] = color; // Armazena a cor gerada para o evento
+      });
 
-        events.forEach((event) => {
-          const date = new Date(event.dataHorarioEvento).toISOString().split('T')[0];
-          const color = getRandomColor();
-          formattedDates[date] = { selected: true, selectedColor: color, id: event.id };
-          colors[event.id] = color; // Armazena a cor gerada para o evento
-        });
-
-        setMarkedDates(formattedDates);
-        setEventColors(colors); // Atualiza o estado com as cores dos eventos
-      } catch (error) {
-        console.error('Erro ao buscar eventos:', error);
-      }
-    };
-
-    fetchEvents();
-  }, []);
+      setMarkedDates(formattedDates);
+      setEventColors(colors); // Atualiza o estado com as cores dos eventos
+    }
+  }, [events]);
 
   const handleDayPress = (day) => {
     const event = events.find((event) => {
-      const eventDate = new Date(event.dataHorarioEvento).toISOString().split('T')[0];
+      const eventDate = new Date(event.dataEvento).toISOString().split('T')[0]; // Usa dataEvento
       return eventDate === day.dateString;
     });
 
     if (event) {
-      onDayPress(event.id); 
+      onDayPress(event.id); // Passa o ID do evento selecionado
     }
   };
 

@@ -10,7 +10,7 @@ export default function Eventos() {
     const { isDarkMode } = useTheme();
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState(null);
-    const [eventColors, setEventColors] = useState({}); 
+    const [eventColors, setEventColors] = useState({});
 
     const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
@@ -22,6 +22,13 @@ export default function Eventos() {
                 const response = await fetch('http://10.0.2.2:3000/api/event');
                 const data = await response.json();
                 setEvents(data);
+
+                // Gerar cores dinâmicas para os eventos
+                const colors = {};
+                data.forEach(event => {
+                    colors[event.id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // Cor aleatória
+                });
+                setEventColors(colors);
             } catch (error) {
                 console.error('Erro ao buscar eventos:', error);
             }
@@ -36,8 +43,17 @@ export default function Eventos() {
 
     const selectedEvent = events.find((event) => event.id === selectedEventId);
 
-    const formatTime = (date) => {
-        return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formatDateTime = (date, time) => {
+        const dateTimeString = `${date}T${time}`;
+        return new Date(dateTimeString);
+    };
+
+    const formatTime = (dateTime) => {
+        return dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+
+    const formatDate = (dateTime) => {
+        return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
     };
 
     return (
@@ -46,7 +62,7 @@ export default function Eventos() {
             <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
                 <View style={{ marginTop: 0 }}>
                     <Image style={styles.barraAzul} source={require('../assets/image/barraAzul.png')} />
-                    <CustomCalendar onDayPress={handleDayPress} />
+                    <CustomCalendar events={events} onDayPress={handleDayPress} />
                 </View>
                 <Text style={{ fontSize: 30, fontWeight: 'bold', marginTop: 20, marginLeft: 20, color: textColor }}>
                     Sobre o Evento
@@ -61,7 +77,7 @@ export default function Eventos() {
                                 Horário
                             </Text>
                             <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
-                                <CardHorario hora={formatTime(selectedEvent.dataHorarioEvento)} />
+                                <CardHorario hora={formatTime(formatDateTime(selectedEvent.dataEvento, selectedEvent.horarioEvento))} />
                             </View>
                             <Text style={{ fontWeight: 'bold', fontSize: 24, marginTop: 25, color: textColor }}>
                                 Local
@@ -77,16 +93,19 @@ export default function Eventos() {
                         Próximos Eventos
                     </Text>
                     <View>
-                        {events.map((event, index) => (
-                            <ProximosEventos
-                                key={index}
-                                data={new Date(event.dataHorarioEvento).getDate()}
-                                titulo={event.tituloEvento}
-                                subData={`${new Date(event.dataHorarioEvento).getDate()} - ${new Date(event.dataHorarioEvento).toLocaleString('default', { month: 'short' }).toUpperCase()} ${new Date(event.dataHorarioEvento).getFullYear()}`}
-                                periodo={formatTime(event.dataHorarioEvento)}
-                                color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
-                            />
-                        ))}
+                        {events.map((event, index) => {
+                            const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                            return (
+                                <ProximosEventos
+                                    key={index}
+                                    data={eventDateTime.getDate()}
+                                    titulo={event.tituloEvento}
+                                    subData={formatDate(eventDateTime)}
+                                    periodo={formatTime(eventDateTime)}
+                                    color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                                />
+                            );
+                        })}
                     </View>
                 </View>
             </View>
@@ -102,7 +121,7 @@ const styles = StyleSheet.create({
         marginBottom: 50
     },
     barraAzul: {
-        width: 381,
+        width: '100%',
         height: 70,
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,

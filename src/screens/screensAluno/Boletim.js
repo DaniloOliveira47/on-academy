@@ -3,17 +3,18 @@ import { Image, StyleSheet, Text, View, TouchableOpacity, Modal, FlatList, Alert
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CardMateria from '../../components/Boletim/CardMateria';
 import Nota from '../../components/Boletim/Nota';
-import BarraAzul from '../../components/Boletim/barraAzul';
 import { useTheme } from '../../path/ThemeContext';
 import axios from 'axios';
 import { ScrollView } from 'react-native-gesture-handler';
 import * as FileSystem from 'expo-file-system'; // Para baixar o PDF
 import * as Print from 'expo-print'; // Para visualizar o PDF
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Boletim() {
     const [modalVisible, setModalVisible] = useState(false);
     const [bimestreSelecionado, setBimestreSelecionado] = useState("1º Bim.");
     const [notas, setNotas] = useState([]);
+    const [disciplinas, setDisciplinas] = useState([]);
     const [aluno, setAluno] = useState(null);
 
     const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
@@ -25,31 +26,49 @@ export default function Boletim() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://10.0.2.2:3000/api/student/1');
-                setAluno(response.data);
-                setNotas(response.data.notas);
+                // Busca as disciplinas
+                const disciplinasResponse = await axios.get('http://10.0.2.2:3000/api/discipline');
+                setDisciplinas(disciplinasResponse.data);
+
+                // Busca os dados do aluno e suas notas
+                const alunoId = await AsyncStorage.getItem('@user_id'); // Substitua pelo ID do aluno logado
+                const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+                setAluno(alunoResponse.data);
+                setNotas(alunoResponse.data.notas);
             } catch (error) {
-                console.error("Erro ao buscar dados do aluno:", error);
+                console.error("Erro ao buscar dados:", error);
             }
         };
 
         fetchData();
     }, []);
 
+    // Função para combinar disciplinas com notas
     const getNotasPorBimestre = (bimestre) => {
-        return notas.filter(nota => nota.bimestre === parseInt(bimestre));
+        const bimestreNumero = parseInt(bimestre[0]); // Extrai o número do bimestre (1, 2, 3, 4)
+        const notasDoBimestre = notas.filter(nota => nota.bimestre === bimestreNumero);
+
+        // Combina as disciplinas com as notas
+        return disciplinas.map(disciplina => {
+            const notaDaDisciplina = notasDoBimestre.find(nota => nota.nomeDisciplina === disciplina.nomeDisciplina);
+            return {
+                disciplina: disciplina.nomeDisciplina,
+                nota: notaDaDisciplina ? notaDaDisciplina.nota : '-', // Se não houver nota, exibe '-'
+            };
+        });
     };
 
-    const notasBimestreSelecionado = getNotasPorBimestre(bimestreSelecionado[0]);
+    const notasBimestreSelecionado = getNotasPorBimestre(bimestreSelecionado);
 
     // Função para baixar e visualizar o boletim
     const downloadAndViewBoletim = async () => {
-        const url = 'http://10.0.2.2:3000/api/boletim/1'; // URL do boletim
+        const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
+        const url = `http://10.0.2.2:3000/api/boletim/${alunoId}`; // URL do boletim com o ID do aluno
         const fileName = 'boletim.pdf'; // Nome do arquivo
         const fileUri = `${FileSystem.documentDirectory}${fileName}`; // Caminho onde o arquivo será salvo
 
         try {
-            // Faz o download do arquivo
+            console.log('Iniciando download do boletim...');
             const { uri } = await FileSystem.downloadAsync(url, fileUri);
 
             console.log('Boletim baixado em:', uri);
@@ -60,6 +79,7 @@ export default function Boletim() {
                 Alert.alert('Sucesso', 'Boletim baixado com sucesso!');
 
                 // Abre o PDF com o expo-print
+                console.log('Abrindo o PDF...');
                 await Print.printAsync({
                     uri: uri, // URI do arquivo baixado
                 });
@@ -116,13 +136,13 @@ export default function Boletim() {
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 
                                 <View style={styles.column}>
-                                    {notasBimestreSelecionado.map((nota, index) => (
-                                        <CardMateria key={index} materia={nota.nomeDisciplina} />
+                                    {notasBimestreSelecionado.map((item, index) => (
+                                        <CardMateria key={index} materia={item.disciplina} />
                                     ))}
                                 </View>
                                 <View style={styles.column}>
-                                    {notasBimestreSelecionado.map((nota, index) => (
-                                        <Nota key={index} nota={nota.nota.toString()} />
+                                    {notasBimestreSelecionado.map((item, index) => (
+                                        <Nota key={index} nota={item.nota.toString()} />
                                     ))}
                                 </View>
                             </View>

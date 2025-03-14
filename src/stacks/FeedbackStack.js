@@ -1,7 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import FeedbackScreen from '../screens/screensDocente/Feedback';
-import AlunosFeedback from '../components/Turmas/screens/AlunosFeedback';
+import AlunosFeedback from '../screens/screensInstituicao/Professores';
 import AlunoPerfil from '../components/Turmas/screens/AlunoPerfil';
 
 const Stack = createStackNavigator();

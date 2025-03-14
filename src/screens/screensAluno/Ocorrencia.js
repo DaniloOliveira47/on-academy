@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Importe o axios para fazer a requisição
+import axios from 'axios';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TouchableOpacity } from 'react-native';
@@ -13,11 +13,13 @@ export default function Ocorrencia() {
     const [modalVisible, setModalVisible] = useState(false);
     const [tipoSelecionado, setTipoSelecionado] = useState(" 1º Bim.");
     const [professores, setProfessores] = useState([]);
+    const [professorSelecionado, setProfessorSelecionado] = useState(null); // Estado para o professor selecionado
+    const [titulo, setTitulo] = useState(''); // Estado para o título do feedback
+    const [conteudo, setConteudo] = useState(''); // Estado para o conteúdo do feedback
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const screenWidth = Dimensions.get('window').width - 40;
-
 
     useEffect(() => {
         axios.get('http://10.0.2.2:3000/api/teacher')
@@ -45,15 +47,48 @@ export default function Ocorrencia() {
 
     const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
 
+    // Função para selecionar o professor
+    const selecionarProfessor = (professor) => {
+        setProfessorSelecionado(professor);
+    };
+
+    // Função para enviar o feedback
+    const enviarFeedback = () => {
+        if (!professorSelecionado || !titulo || !conteudo) {
+            Alert.alert('Erro', 'Preencha todos os campos antes de enviar.');
+            return;
+        }
+
+        const feedback = {
+            professorId: professorSelecionado.id,
+            titulo: titulo,
+            conteudo: conteudo,
+        };
+
+        console.log('Feedback enviado:', feedback);
+
+        // Aqui você pode fazer uma requisição POST para enviar o feedback
+        // axios.post('http://10.0.2.2:3000/api/feedback', feedback)
+        //     .then(response => {
+        //         Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
+        //     })
+        //     .catch(error => {
+        //         console.error('Erro ao enviar feedback:', error);
+        //         Alert.alert('Erro', 'Não foi possível enviar o feedback.');
+        //     });
+
+        // Limpa os campos após o envio
+        setProfessorSelecionado(null);
+        setTitulo('');
+        setConteudo('');
+    };
+
     return (
         <ScrollView>
-            <HeaderSimples
-                titulo="FEEDBACK"
-            />
+            <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <View style={{
                     backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20
-
                 }}>
                     <View style={{ width: '100%', alignItems: 'flex-end', marginLeft: 12 }}>
                         <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
@@ -85,7 +120,6 @@ export default function Ocorrencia() {
                             barPercentage: 1.2,
                             fillShadowGradient: '#A9C1F7',
                             fillShadowGradientOpacity: 1,
-
                         }}
                         style={styles.chart}
                     />
@@ -108,7 +142,9 @@ export default function Ocorrencia() {
                             <CardProfessor
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
-                                id={professor.id} 
+                                id={professor.id}
+                                onPress={() => selecionarProfessor(professor)} // Passa a função para selecionar o professor
+                                selecionado={professorSelecionado?.id === professor.id} // Destaca o card selecionado
                             />
                         ))}
                     </View>
@@ -117,7 +153,9 @@ export default function Ocorrencia() {
                             <CardProfessor
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
-                                id={professor.id} 
+                                id={professor.id}
+                                onPress={() => selecionarProfessor(professor)}
+                                selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
                     </View>
@@ -126,43 +164,40 @@ export default function Ocorrencia() {
                             <CardProfessor
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
-                                id={professor.id} 
+                                id={professor.id}
+                                onPress={() => selecionarProfessor(professor)}
+                                selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: 20, marginBottom: 20 }}>
-                        <TextInput style={{ backgroundColor: perfilBackgroundColor, borderRadius: 10, width: 260, fontSize: 11, color: textColor }}
-                            placeholder='Escreva aqui seu feedback para o prof(a) Karla Dias'
-                            placeholderTextColor={textColor}
-                        />
-                        <TouchableOpacity style={{ backgroundColor: '#0077FF', padding: 7, borderRadius: 10 }}>
-                            <Text style={{ color: 'white' }}>
-                                Enviar
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-                <Modal visible={modalVisible} transparent animationType="fade">
-                    <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                        <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
-                            <FlatList
-                                data={tipos}
-                                keyExtractor={(item) => item}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={styles.modalItem}
-                                        onPress={() => {
-                                            setTipoSelecionado(item);
-                                            setModalVisible(false);
-                                        }}
-                                    >
-                                        <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
-                                    </TouchableOpacity>
-                                )}
-                            />
-                        </View>
+
+                    {/* Campos de Título e Conteúdo */}
+                    <TextInput
+                        style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor }]}
+                        placeholder="Título do Feedback"
+                        placeholderTextColor={textColor}
+                        value={titulo}
+                        onChangeText={setTitulo}
+                    />
+                    <TextInput
+                        style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor, height: 100 }]}
+                        placeholder={`Escreva aqui seu feedback para o prof(a) ${professorSelecionado ? professorSelecionado.nomeDocente : '...'}`}
+                        placeholderTextColor={textColor}
+                        multiline
+                        value={conteudo}
+                        onChangeText={setConteudo}
+                    />
+
+                    {/* Botão de Enviar */}
+                    <TouchableOpacity
+                        style={styles.botaoEnviar}
+                        onPress={enviarFeedback}
+                    >
+                        <Text style={{ color: 'white' }}>
+                            Enviar
+                        </Text>
                     </TouchableOpacity>
-                </Modal>
+                </View>
             </View>
         </ScrollView>
     );
@@ -185,86 +220,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    grupoText: {
-        marginLeft: 5
-    },
-    filtro: {
-        backgroundColor: '#8A8A8A',
-        flexDirection: 'row',
-        marginTop: 32,
-        justifyContent: 'space-between',
-        padding: 15,
-        borderRadius: 7
-    },
-    filtroTexto: {
-        fontSize: 16,
-        fontWeight: 'bold'
-    },
-    conteudo: {
-        marginTop: 35,
-        backgroundColor: '#FFF',
-        borderRadius: 8,
-        paddingBottom: 40,
-        padding: 10,
-    },
-    headerTabela: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        backgroundColor: '#8A8A8A',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
+    input: {
         borderRadius: 10,
-        marginBottom: 10
-    },
-    headerTexto: {
-        flex: 1,
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'white',
-        textAlign: 'center',
-    },
-    perfil: {
-        position: 'absolute',
-        flexDirection: 'row',
-        marginTop: -35,
-        marginLeft: 20,
-        alignItems: 'center'
-    },
-    barraAzul: {
-        width: '100%',
-        borderTopRightRadius: 16,
-        borderTopLeftRadius: 16,
-        height: 60
-    },
-    form: {
-        backgroundColor: 'white',
-        height: 'auto',
-        width: '100%',
-        borderBottomRightRadius: 10,
-        borderBottomLeftRadius: 10
-    },
-    botao: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#0077FF',
-        width: '100%',
         padding: 10,
-        borderRadius: 13,
-        justifyContent: 'space-between',
-        gap: 10,
-        marginBottom: 20,
+        marginTop: 20,
+        width: '100%',
     },
-    textoBotao: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 20,
-        marginRight: 10,
-        fontWeight: 'bold'
-    },
-    icone: {
-        width: 20,
-        height: 12,
-        marginTop: 0
+    botaoEnviar: {
+        backgroundColor: '#0077FF',
+        padding: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 20,
     },
     modalOverlay: {
         flex: 1,
@@ -287,9 +254,5 @@ const styles = StyleSheet.create({
     },
     modalText: {
         fontSize: 18,
-    },
-    container: {
-        width: '100%',
-        alignItems: 'center'
     },
 });
