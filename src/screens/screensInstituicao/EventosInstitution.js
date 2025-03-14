@@ -137,7 +137,7 @@ export default function EventosInstitution() {
 
             {/* Botão Flutuante para Adicionar Evento */}
             <FAB
-                style={styles.fab}
+                style={[styles.fab, {marginBottom: 50}]}
                 icon="plus"
                 color='white'
                 onPress={() => setModalVisible(true)}

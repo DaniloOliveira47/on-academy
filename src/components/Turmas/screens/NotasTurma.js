@@ -1,40 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import CardMateria from '../../Turmas/CardMateria';
 import CardNota from '../../Turmas/CardNota';
 import { useTheme } from '../../../path/ThemeContext';
-
-
-const alunos = [
-  { id: '1', nome: 'Alice Fernandes', matricula: '2025001', media: '87%' },
-  { id: '2', nome: 'Bianca Ferreira', matricula: '2025002', media: '72%' },
-  { id: '3', nome: 'Bruno Oliveira', matricula: '2025003', media: '75%' },
-  { id: '4', nome: 'Camila Souza', matricula: '2025004', media: '68%' },
-  { id: '5', nome: 'Daniel Pereira', matricula: '2025005', media: '62%' },
-  { id: '6', nome: 'Diego Santana', matricula: '2025006', media: '78%' },
-  { id: '7', nome: 'Eduardo Lima', matricula: '2025007', media: '82%' },
-  { id: '8', nome: 'Evelyn Moraes', matricula: '2025008', media: '89%' },
-  { id: '9', nome: 'Felipe Andrade', matricula: '2025009', media: '91%' },
-  { id: '10', nome: 'Fernanda Costa', matricula: '2025010', media: '63%' },
-  { id: '11', nome: 'Gabriel Martins', matricula: '2025011', media: '87%' },
-  { id: '12', nome: 'Giovanna Martins', matricula: '2025012', media: '90%' },
-  { id: '13', nome: 'Heitor Vasconcelos', matricula: '2025013', media: '84%' },
-  { id: '14', nome: 'Helena Rocha', matricula: '2025014', media: '77%' },
-  { id: '15', nome: 'Igor Almeida', matricula: '2025015', media: '91%' },
-  { id: '16', nome: 'Júlia Mendes', matricula: '2025016', media: '91%' },
-  { id: '17', nome: 'Kaua Ribeiro', matricula: '2025017', media: '86%' },
-  { id: '18', nome: 'Larissa Cardoso', matricula: '2025018', media: '82%' },
-  { id: '19', nome: 'Matheus Freitas', matricula: '2025019', media: '88%' },
-  { id: '20', nome: 'Natália Barbosa', matricula: '2025020', media: '79%' },
-  { id: '21', nome: 'Otávio Nunes', matricula: '2025021', media: '65%' },
-];
+import axios from 'axios';
 
 export default function NotasTurma() {
   const [modalVisible, setModalVisible] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const { isDarkMode } = useTheme();
+  const [alunos, setAlunos] = useState([]);
+  const [turmaInfo, setTurmaInfo] = useState({ nomeTurma: '', periodoTurma: '' });
+
+  useEffect(() => {
+    const fetchAlunos = async () => {
+      try {
+        const response = await axios.get('http://10.0.2.2:3000/api/class/students/4');
+        setTurmaInfo({
+          nomeTurma: response.data.nomeTurma,
+          periodoTurma: response.data.periodoTurma
+        });
+        setAlunos(response.data.students);
+      } catch (error) {
+        console.error('Erro ao buscar alunos:', error);
+      }
+    };
+
+    fetchAlunos();
+  }, []);
 
   const abrirModal = (aluno) => {
     setAlunoSelecionado(aluno);
@@ -43,18 +38,18 @@ export default function NotasTurma() {
 
   return (
     <ScrollView>
-      <View style={[styles.tela, {backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}]}>
+      <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', height: 800}]}>
         <HeaderSimples />
         <View style={{ padding: 10 }}>
           <View style={styles.linha}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
+              {turmaInfo.nomeTurma} - {turmaInfo.periodoTurma}
+            </Text>
             <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
           </View>
 
-
-          <View style={[styles.containerBranco, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
-
-            <View style={[styles.inputContainer, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
+          <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+            <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
               <TextInput
                 style={styles.input}
                 placeholder="Digite o nome ou código da turma"
@@ -63,22 +58,21 @@ export default function NotasTurma() {
               <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
             </View>
 
-
             <View style={styles.tableHeader}>
               <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
               <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
-              <Text style={[styles.headerText, { flex: 1 }]}>Média (%)</Text>
+              <Text style={[styles.headerText, { flex: 1 }]}>  Média(%)</Text>
               <Text style={[styles.headerText, { flex: 1 }]}>Notas</Text>
             </View>
 
             <FlatList
               data={alunos}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={styles.tableRow}>
-                  <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black'  }]}>{item.nome}</Text>
-                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black'  }]}>{item.matricula}</Text>
-                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black'  }]}>{item.media}</Text>
+                  <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>{item.nomeAluno}</Text>
+                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{item.identifierCode}</Text>
+                  <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>N/A</Text>
                   <TouchableOpacity style={styles.notasButton} onPress={() => abrirModal(item)}>
                     <Text style={styles.notasText}>Ver Notas</Text>
                   </TouchableOpacity>
@@ -91,7 +85,7 @@ export default function NotasTurma() {
         <Modal visible={modalVisible} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{alunoSelecionado?.nome}</Text>
+              <Text style={styles.modalTitle}>{alunoSelecionado?.nomeAluno}</Text>
               <View style={styles.contBoletim}>
                 <View style={styles.columnMateria}>
                   <CardMateria
@@ -141,9 +135,9 @@ export default function NotasTurma() {
 
 const styles = StyleSheet.create({
   tela: {
-    flex: 1,
+   
     backgroundColor: '#F0F7FF',
-    paddingBottom: 50
+    paddingBottom: 50,
   },
   contBoletim: {
     flexDirection: 'row',

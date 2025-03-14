@@ -192,8 +192,8 @@ export default function HomeDocente() {
                                 avisos.map((aviso) => (
                                     <Avisos
                                         key={aviso.id}
-                                        abreviacao={aviso.createdBy.getInitials}
-                                        nome={aviso.createdBy.nomeDocente}
+                                        abreviacao={aviso.initials}
+                                        nome={aviso.criadoPorNome}
                                         horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         texto={aviso.conteudo}
                                         aleatorio={gerarCorAleatoria()} // Passa a cor aleatória

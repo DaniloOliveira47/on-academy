@@ -27,16 +27,21 @@ export default function Turmas() {
                     return;
                 }
 
-                // Faz a requisição à API para buscar as turmas do professor
-                const response = await axios.get(`http://10.0.2.2:3000/api/teacher/${professorId}`);
+                // Faz a requisição à API para buscar todas as turmas
+                const response = await axios.get('http://10.0.2.2:3000/api/class');
                 console.log('Resposta da API:', response.data);
 
-                // Verifica se a resposta contém o array de turmas
-                if (response.data && Array.isArray(response.data.classes)) {
-                    setTurmas(response.data.classes); // Atualiza o estado com todas as turmas
-                    atualizarTurmasPagina(response.data.classes, 1); // Exibe as turmas da primeira página
+                // Filtra as turmas que pertencem ao professor com o ID armazenado
+                const turmasDoProfessor = response.data.filter(turma => 
+                    turma.teachers.some(teacher => teacher.id === parseInt(professorId))
+                );
+
+                // Verifica se há turmas filtradas
+                if (turmasDoProfessor.length > 0) {
+                    setTurmas(turmasDoProfessor); // Atualiza o estado com as turmas do professor
+                    atualizarTurmasPagina(turmasDoProfessor, 1); // Exibe as turmas da primeira página
                 } else {
-                    console.error('Resposta da API não contém um array de turmas:', response.data);
+                    console.log('Nenhuma turma encontrada para o professor com ID:', professorId);
                 }
             } catch (error) {
                 console.error('Erro ao buscar turmas:', error);
@@ -83,7 +88,7 @@ export default function Turmas() {
                                     key={turma.id}
                                     turma={turma.nomeTurma}
                                     numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`} // Número sequencial global
-                                    alunos={`${turma.quantidadeAlunos || 0} Alunos ativos`}
+                                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
                                     periodo={`Período: ${turma.periodoTurma}`}
                                     navegacao="NotasTurma"
                                 />
