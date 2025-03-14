@@ -22,7 +22,7 @@ export default function HomeDocente() {
         }
         return cor;
     };
-
+ 
     useEffect(() => {
         const fetchTurmas = async () => {
             try {
