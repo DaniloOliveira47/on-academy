@@ -4,11 +4,17 @@ import { Text, TouchableOpacity } from 'react-native';
 import { Image, StyleSheet, View } from 'react-native'
 import { useTheme } from '../../path/ThemeContext';
 import { color } from 'react-native-elements/dist/helpers';
-export default function CardAlunos({ nome }) {
+export default function CardAlunos({ nome, alunoId, navegacao }) {
     const { isDarkMode } = useTheme();
     const navigation = useNavigation();
+
+    const handleNavigate = () => {
+        // Navegar apenas com os parâmetros
+        navigation.navigate(navegacao, { alunoId }); // Agora a tela de destino é definida onde o componente é chamado
+    };
+
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('AlunoPerfil')} style={[styles.container, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+        <TouchableOpacity onPress={handleNavigate} style={[styles.container, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
             <View style={[styles.imageContainer, {borderColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>

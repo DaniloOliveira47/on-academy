@@ -8,7 +8,7 @@ import CardSelecao from '../../components/Turmas/CardSelecao';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 
-export default function AlunosFeedback() {
+export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../path/ThemeContext';
-import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions, ScrollView } from 'react-native'; // Adicione ScrollView aqui
 import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Header() {
+export default function HeaderDoc() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
@@ -45,10 +45,10 @@ export default function Header() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/teacher/${alunoId}`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
-        
+        console.error('Erro ao buscar dados:', error);
       }
     };
 
@@ -131,48 +131,51 @@ export default function Header() {
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
         </TouchableOpacity>
 
-        <View style={styles.menuItem}>
-          <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-              <View style={{ flexDirection: 'row', gap: 20 }}>
-                <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
-                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
-                </Text>
+        {/* Adicionando ScrollView aqui */}
+        <ScrollView style={styles.menuScrollView} contentContainerStyle={styles.menuContent}>
+          <View style={styles.menuItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
+              <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+                <View style={{ flexDirection: 'row', gap: 20 }}>
+                  <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
+                  <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                    {aluno ? aluno.nomeDocente : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
+                  </Text>
+                </View>
+                <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
               </View>
-              <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
-            </View>
-          </TouchableOpacity>
-        </View>
+            </TouchableOpacity>
+          </View>
 
-        <View style={[styles.menuItem, { height: 'auto' }]}>
-        <CustomCalendar events={events} />
-        </View>
+          <View style={[styles.menuItem, { height: 'auto' }]}>
+            <CustomCalendar events={events} />
+          </View>
 
-        <View style={styles.menuItem}>
-          <View style={[styles.contEventos, { backgroundColor: container }]}>
-            <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
-            <View>
-              {events.length > 0 ? (
-                events.map((event, index) => {
-                  const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-                  return (
-                    <ProximosEventos
-                      key={index}
-                      data={eventDateTime.getDate()}
-                      titulo={event.tituloEvento}
-                      subData={formatDate(eventDateTime)}
-                      periodo={formatTime(eventDateTime)}
-                      color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
-                    />
-                  );
-                })
-              ) : (
-                <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
-              )}
+          <View style={styles.menuItem}>
+            <View style={[styles.contEventos, { backgroundColor: container }]}>
+              <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
+              <View>
+                {events.length > 0 ? (
+                  events.map((event, index) => {
+                    const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                    return (
+                      <ProximosEventos
+                        key={index}
+                        data={eventDateTime.getDate()}
+                        titulo={event.tituloEvento}
+                        subData={formatDate(eventDateTime)}
+                        periodo={formatTime(eventDateTime)}
+                        color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                      />
+                    );
+                  })
+                ) : (
+                  <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </Animated.View>
     </>
   );
@@ -245,8 +248,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: Dimensions.get('window').width * 0.8,
-    height: '100%',
+    width: Dimensions.get('window').width * 0.8, // Largura fixa do menu
+    height: '100%', // Altura fixa do menu
     padding: 20,
     zIndex: 10,
     elevation: 5,
@@ -275,5 +278,11 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 25,
+  },
+  menuScrollView: {
+    flex: 1, // Faz com que o ScrollView ocupe todo o espaço disponível
+  },
+  menuContent: {
+    paddingBottom: 20, // Adiciona um padding no final para garantir que o conteúdo não fique cortado
   },
 });

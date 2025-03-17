@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
@@ -8,68 +8,89 @@ import { useTheme } from '../../path/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import CardSelecao from '../../components/Turmas/CardSelecao';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Turmas() {
-    const [paginaSelecionada, setPaginaSelecionada] = useState(1); // Estado para controlar a página atual
+    const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
-    const [turmas, setTurmas] = useState([]); // Estado para armazenar todas as turmas
-    const [turmasPagina, setTurmasPagina] = useState([]); // Estado para armazenar as turmas da página atual
+    const [turmas, setTurmas] = useState([]);
+    const [turmasPagina, setTurmasPagina] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigation = useNavigation();
 
-    const itensPorPagina = 3; // Limite de 3 cards por página
+    const itensPorPagina = 3;
 
     useEffect(() => {
         const fetchTurmas = async () => {
             try {
-                // Recupera o ID do professor do Async Storage
                 const professorId = await AsyncStorage.getItem('@user_id');
                 if (!professorId) {
-                    console.error('ID do professor não encontrado no Async Storage');
+                    setError('ID do professor não encontrado.');
+                    setLoading(false);
                     return;
                 }
 
-                // Faz a requisição à API para buscar todas as turmas
                 const response = await axios.get('http://10.0.2.2:3000/api/class');
-                console.log('Resposta da API:', response.data);
-
-                // Filtra as turmas que pertencem ao professor com o ID armazenado
-                const turmasDoProfessor = response.data.filter(turma => 
+                const turmasDoProfessor = response.data.filter(turma =>
                     turma.teachers.some(teacher => teacher.id === parseInt(professorId))
                 );
 
-                // Verifica se há turmas filtradas
                 if (turmasDoProfessor.length > 0) {
-                    setTurmas(turmasDoProfessor); // Atualiza o estado com as turmas do professor
-                    atualizarTurmasPagina(turmasDoProfessor, 1); // Exibe as turmas da primeira página
+                    setTurmas(turmasDoProfessor);
+                    atualizarTurmasPagina(turmasDoProfessor, 1);
                 } else {
-                    console.log('Nenhuma turma encontrada para o professor com ID:', professorId);
+                    setError('Nenhuma turma encontrada para o professor.');
                 }
             } catch (error) {
+                setError('Erro ao buscar turmas. Tente novamente mais tarde.');
                 console.error('Erro ao buscar turmas:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchTurmas();
     }, []);
 
-    // Função para atualizar as turmas da página atual
     const atualizarTurmasPagina = (todasTurmas, pagina) => {
         const inicio = (pagina - 1) * itensPorPagina;
         const fim = inicio + itensPorPagina;
-        const turmasDaPagina = todasTurmas.slice(inicio, fim); // Divide as turmas em grupos de 3
+        const turmasDaPagina = todasTurmas.slice(inicio, fim);
         setTurmasPagina(turmasDaPagina);
     };
 
-    // Função para mudar de página
     const mudarPagina = (pagina) => {
         setPaginaSelecionada(pagina);
         atualizarTurmasPagina(turmas, pagina);
     };
 
+    const handleNavigateToNotasTurma = (turmaId) => {
+        navigation.navigate('NotasStack', {
+            screen: 'NotasTurma',
+            params: { turmaId },
+        });
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+                <ActivityIndicator size="large" color="#1A85FF" />
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+                <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>{error}</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={{ backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', height: '100%' }}>
-            <HeaderSimples
-                titulo="TURMAS"
-            />
+            <HeaderSimples titulo="TURMAS" />
 
             <View style={styles.subTela}>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : 'white' }]}>
@@ -87,10 +108,11 @@ export default function Turmas() {
                                 <CardTurmas
                                     key={turma.id}
                                     turma={turma.nomeTurma}
-                                    numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`} // Número sequencial global
-                                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
+                                    numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`}
+                                    alunos={`${turma.quantidadeAlunos || 0} Alunos ativos`}
                                     periodo={`Período: ${turma.periodoTurma}`}
-                                    navegacao="NotasTurma"
+                                    navegacao="NotasTurma" // Nome da tela de destino
+                                    turmaId={turma.id} // Passa o ID da turma
                                 />
                             ))
                         ) : (
@@ -106,9 +128,9 @@ export default function Turmas() {
                                     selecionado={paginaSelecionada === numero}
                                     onPress={() => {
                                         if (numero === '>') {
-                                            mudarPagina(paginaSelecionada + 1); // Avança para a próxima página
+                                            mudarPagina(paginaSelecionada + 1);
                                         } else {
-                                            mudarPagina(numero); // Vai para a página específica
+                                            mudarPagina(numero);
                                         }
                                     }}
                                 />
@@ -122,9 +144,20 @@ export default function Turmas() {
 }
 
 const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
     tela: {
         padding: 25,
-        backgroundColor: '#F0F7FF'
+        backgroundColor: '#F0F7FF',
     },
     selecao: {
         flexDirection: 'row',
@@ -134,7 +167,7 @@ const styles = StyleSheet.create({
     cards: {
         width: '100%',
         padding: 10,
-        marginTop: 15
+        marginTop: 15,
     },
     subTela: {
         padding: 10,
@@ -147,7 +180,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: 'center',
         padding: 10,
-        marginTop: 20
+        marginTop: 20,
     },
     inputContainer: {
         flexDirection: 'row',
@@ -158,7 +191,7 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingHorizontal: 15,
         backgroundColor: '#FFF',
-        marginTop: 10
+        marginTop: 10,
     },
     icon: {
         marginRight: 10,
@@ -168,5 +201,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
         paddingVertical: 10,
-    }
+    },
 });

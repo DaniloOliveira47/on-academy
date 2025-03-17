@@ -5,7 +5,7 @@ import { useTheme } from '../../path/ThemeContext';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Perfil() {
+export default function PerfilDocente() {
   const { isDarkMode } = useTheme();
   const [dadosAluno, setDadosAluno] = useState(null);
 
@@ -16,7 +16,7 @@ export default function Perfil() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://10.0.2.2:3000/api/student/5`);
+          const response = await fetch(`http://10.0.2.2:3000/api/teacher/${userId}`);
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);
@@ -41,7 +41,7 @@ export default function Perfil() {
       <HeaderSimples titulo="PERFIL" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
+          <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, Prof.{dadosAluno ? dadosAluno.nomeDocente : 'Carregando...'}</Text>
         </View>
         <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
         <View style={[styles.form, {
@@ -55,19 +55,19 @@ export default function Perfil() {
               <View style={styles.linhaUser}>
                 <Image source={require('../../assets/image/Perfill.png')} />
                 <View style={styles.name}>
-                  <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nome}</Text>
-                  <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailAluno}</Text>
+                  <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nomeDocente}</Text>
+                  <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailDocente}</Text>
                 </View>
               </View>
-              <Campo label="Nome Completo" text={dadosAluno.nome} textColor={textColor} />
-              <Campo label="Email" text={dadosAluno.emailAluno} textColor={textColor} />
-              <Campo label="Nº Matrícula" text={dadosAluno.matriculaAluno} textColor={textColor} />
+              <Campo label="Nome Completo" text={dadosAluno.nomeDocente} textColor={textColor} />
+              <Campo label="Email" text={dadosAluno.emailDocente} textColor={textColor} />
+              <Campo label="Registro" text={dadosAluno.identifierCode} textColor={textColor} />
               <View style={styles.doubleCampo}>
                 <View style={styles.metadeCampo}>
-                  <Campo label="Telefone" text={dadosAluno.telefoneAluno} textColor={textColor} />
+                  <Campo label="Telefone" text={dadosAluno.telefoneDocente} textColor={textColor} />
                 </View>
                 <View style={styles.metadeCampo}>
-                  <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoAluno).toLocaleDateString()} textColor={textColor} />
+                  <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoDocente).toLocaleDateString()} textColor={textColor} />
                 </View>
               </View>
             </>
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   barraAzul: {
-    width: '100%',
+    width: 363,
     height: 60,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,

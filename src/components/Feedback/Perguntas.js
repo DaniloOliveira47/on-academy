@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useTheme } from '../../path/ThemeContext';
 
-export default function Perguntas({ numero }) {
+export default function Perguntas({ numero, text }) {
   const { isDarkMode } = useTheme();
   const textColor = isDarkMode ? '#FFF' : '#000';
   return (
@@ -11,7 +11,7 @@ export default function Perguntas({ numero }) {
         {numero}-
       </Text>
       <Text style={[styles.pergunta, {color: textColor}]}>
-        Nível de Engajamento (O quanto a aula prendeu a atenção e motivou a participação?)
+       {text}
       </Text>
     </View>
   )

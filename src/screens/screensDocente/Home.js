@@ -6,6 +6,7 @@ import Header from '../../components/Home/Header';
 import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
+import HeaderDoc from '../../components/Home/HeaderDoc';
 
 export default function HomeDocente() {
     const { isDarkMode } = useTheme();
@@ -102,7 +103,7 @@ export default function HomeDocente() {
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <Header isDarkMode={isDarkMode} />
+            <HeaderDoc isDarkMode={isDarkMode} />
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
                 <View style={styles.subtela}>

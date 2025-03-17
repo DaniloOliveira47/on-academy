@@ -5,7 +5,8 @@ import NotasTurma from '../components/Turmas/screens/NotasTurma';
 
 const Stack = createStackNavigator();
 
-export default function FeedbackStack() {
+export default function NotasStack(
+) {
     return (
         <Stack.Navigator>
             <Stack.Screen
