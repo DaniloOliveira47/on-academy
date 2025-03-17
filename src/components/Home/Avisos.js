@@ -5,9 +5,13 @@ import { useTheme } from '../../path/ThemeContext';
 export default function Avisos({ nome, horario, texto, abreviacao, aleatorio }) {
     const { isDarkMode } = useTheme();
     const contColor = isDarkMode ? '#FFF' : '#000';
+    const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const container = isDarkMode ? '#000' : '#FFF';
+    const text = isDarkMode ? '#FFF' : '#000';
+
 
     return (
-        <View style={[styles.card, { borderColor: contColor }]}>
+        <View style={[styles.card, { borderColor: contColor, backgroundColor: BackgroundColor }]}>
             {/* Cabeçalho da mensagem */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

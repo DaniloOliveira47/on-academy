@@ -146,7 +146,7 @@ export default function NotasTurma() {
     }
 
     return (
-        <View style={[styles.tela, { backgroundColor: '#F0F7FF' }]}>
+        <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
             <HeaderSimples />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
@@ -192,17 +192,17 @@ export default function NotasTurma() {
 
             <Modal visible={modalVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>{alunoSelecionado?.nomeAluno}</Text>
+                    <View style={[styles.modalContent, {backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}]}>
+                        <Text style={[styles.modalTitle, {color: isDarkMode ? 'white' : 'black'}]}>{alunoSelecionado?.nomeAluno}</Text>
                         <Picker
                             selectedValue={disciplinaSelecionada}
                             onValueChange={(itemValue) => {
                                 setDisciplinaSelecionada(itemValue);
                             }}
-                            style={styles.picker}
+                            style={[styles.picker, {color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}
                         >
                             {disciplinas.map((disciplina) => (
-                                <Picker.Item key={disciplina.id} label={disciplina.nomeDisciplina} value={disciplina.id} />
+                                <Picker.Item style={{color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}} key={disciplina.id} label={disciplina.nomeDisciplina} value={disciplina.id} />
                             ))}
                         </Picker>
 
@@ -243,7 +243,8 @@ export default function NotasTurma() {
                                 <Picker
                                     selectedValue={bimestreInput}
                                     onValueChange={(itemValue) => setBimestreInput(itemValue)}
-                                    style={styles.pickerBimestre}
+                                    style={[styles.pickerBimestre, {}]}
+                                  
                                 >
                                     <Picker.Item label="1" value={1} />
                                     <Picker.Item label="2" value={2} />
