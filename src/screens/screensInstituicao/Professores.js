@@ -1,27 +1,45 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, TextInput, View, ActivityIndicator } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import CardAlunos from '../../components/Turmas/CardAlunos';
 import CardSelecao from '../../components/Turmas/CardSelecao';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
+import axios from 'axios';
 
 export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
+    const [professores, setProfessores] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [professorSelecionado, setProfessorSelecionado] = useState(null);
+
+    useEffect(() => {
+        const fetchProfessores = async () => {
+            try {
+                const response = await axios.get('http://10.0.2.2:3000/api/teacher');
+                setProfessores(response.data);
+            } catch (error) {
+                console.error('Erro ao buscar professores:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfessores();
+    }, []);
+
     return (
         <View>
             <HeaderSimples />
-                <View style={[styles.tela, {backgroundColor: isDarkMode ?  '#141414' : '#F0F7FF' }]}>
-
+            <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
                     <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
                 </View>
-                <View style={[styles.container, {backgroundColor: isDarkMode ? '#000' : '#FFF'}]}>
-                    <View style={[styles.inputContainer, {backgroundColor: isDarkMode ? 'black' : 'white'}]}>
+                <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
                             style={styles.input}
                             placeholder="Digite o nome ou número da mátricula"
@@ -29,19 +47,22 @@ export default function ProfessoresFeedback() {
                         />
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
-                    <View style={styles.contColumn}>
-                        <View style={{flexDirection: 'column', gap: 40, marginTop: 40}}>
-                            <CardProfessor nome="Alice Fernandes" />
-                            <CardProfessor nome="Bianca Ferreira" />
-                            <CardProfessor nome="Marina Araujo" />
-                        </View>
-                        <View style={{flexDirection: 'column', gap: 40, marginTop: 40}}>
-                            <CardProfessor nome="Paola Silva" />
-                            <CardProfessor nome="Raissa Santos" />
-                            <CardProfessor nome="Tauany Mendes" />
-                        </View>
-                    </View>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#1A85FF" style={{ marginTop: 20 }} />
+                    ) : (
 
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
+                            {professores.slice(0, 2).map((professor, index) => (
+                                <CardProfessor
+                                    key={index}
+                                    nome={"Prof - " + professor.nomeDocente}
+                                    id={professor.id}
+                                    onPress={() => selecionarProfessor(professor)} // Passa a função para selecionar o professor
+                                    selecionado={professorSelecionado?.id === professor.id} // Destaca o card selecionado
+                                />
+                            ))}
+                        </View>
+                    )}
                     <View style={styles.selecao}>
                         {[1, 2, 3, '>'].map((numero, index) => (
                             <CardSelecao

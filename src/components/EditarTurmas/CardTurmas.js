@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../path/ThemeContext';
 import { Picker } from '@react-native-picker/picker';
 
-export default function CardTurmas({ turma, alunos, periodo, numero, navegacao }) {
+export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId }) {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
@@ -15,6 +15,11 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao }
     const [editPeriodo, setEditPeriodo] = useState(periodo);
     const [editCapacidade, setEditCapacidade] = useState("35");
     const [editSala, setEditSala] = useState("01");
+
+    const handleNavigate = () => {
+        // Navegar apenas com os parâmetros
+        navigation.navigate(navegacao, { turmaId }); // Agora a tela de destino é definida onde o componente é chamado
+    };
 
     return (
         <View style={[styles.card, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>            
@@ -34,7 +39,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao }
             </Text>
             
             <View style={styles.botoesContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate(navegacao)} style={styles.botao}>
+                <TouchableOpacity onPress={handleNavigate} style={styles.botao}>
                     <Text style={{ color: 'white', fontWeight: 'bold' }}>Visualizar Turma</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.iconeBotao}>

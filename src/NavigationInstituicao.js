@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
 
-import HomeScreen from './screens/screensDocente/Home';
+import HomeScreen from './screens/screensInstituicao/Home';
 
 import EventosScreen from './screens/screensInstituicao/EventosInstitution';
 import FeedbackStack from './screens/screensInstituicao/Professores';

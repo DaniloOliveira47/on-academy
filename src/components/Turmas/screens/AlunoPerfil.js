@@ -127,27 +127,27 @@ export default function AlunoPerfil({ route }) {
 
     // Função para renderizar cada item do carrossel
     // Função para renderizar cada item do carrossel
-const renderPergunta = (pergunta, index) => {
-    return (
-        <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
-            <Perguntas numero={(index + 1).toString()} text={pergunta} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
-                {[...Array(10)].map((_, i) => (
-                    <Avaliacao
-                        key={i}
-                        numero={(i + 1).toString()}
-                        selected={ratings[index] === i + 1} // Marca a avaliação selecionada
-                        onPress={() => {
-                            const newRatings = [...ratings];
-                            newRatings[index] = i + 1; // Atualiza o estado com a avaliação selecionada
-                            setRatings(newRatings);
-                        }}
-                    />
-                ))}
+    const renderPergunta = (pergunta, index) => {
+        return (
+            <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
+                <Perguntas numero={(index + 1).toString()} text={pergunta} />
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+                    {[...Array(10)].map((_, i) => (
+                        <Avaliacao
+                            key={i}
+                            numero={(i + 1).toString()}
+                            selected={ratings[index] === i + 1} // Marca a avaliação selecionada
+                            onPress={() => {
+                                const newRatings = [...ratings];
+                                newRatings[index] = i + 1; // Atualiza o estado com a avaliação selecionada
+                                setRatings(newRatings);
+                            }}
+                        />
+                    ))}
+                </View>
             </View>
-        </View>
-    );
-};
+        );
+    };
 
     return (
         <ScrollView>
