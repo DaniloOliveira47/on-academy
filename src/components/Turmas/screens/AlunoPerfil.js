@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Dimensions } from 'react-native';
 import Campo from '../../Perfil/Campo';
 import { useTheme } from '../../../path/ThemeContext';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import { BarChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 import Perguntas from '../../Feedback/Perguntas';
 import Avaliacao from '../../Feedback/Avaliacao';
 import axios from 'axios';
@@ -14,12 +13,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
-    const { alunoId } = route.params; // Recebe o ID do aluno como parâmetro
-    const [aluno, setAluno] = useState(null); // Estado para armazenar os dados do aluno
-    const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
-    const [error, setError] = useState(null); // Estado para armazenar erros
-    const [ratings, setRatings] = useState(Array(5).fill(0)); // Estado para armazenar as avaliações de cada pergunta
-    const [bimestre, setBimestre] = useState(1); // Estado para armazenar o bimestre selecionado
+    const { alunoId } = route.params;
+    const [aluno, setAluno] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [ratings, setRatings] = useState(Array(5).fill(0));
+    const [bimestre, setBimestre] = useState(1);
 
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -28,24 +27,22 @@ export default function AlunoPerfil({ route }) {
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const sombra = isDarkMode ? '#FFF' : '#000';
 
-    // Requisição para buscar os dados do aluno
     useEffect(() => {
         const fetchAluno = async () => {
             try {
                 const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
-                setAluno(response.data); // Armazena os dados do aluno
+                setAluno(response.data);
             } catch (error) {
                 setError('Erro ao carregar os dados do aluno. Tente novamente mais tarde.');
                 console.error('Erro ao buscar dados do aluno:', error);
             } finally {
-                setLoading(false); // Finaliza o carregamento
+                setLoading(false);
             }
         };
 
         fetchAluno();
     }, [alunoId]);
 
-    // Função para enviar o feedback
     const enviarFeedback = async () => {
         if (ratings.some(rating => rating === 0)) {
             Alert.alert('Erro', 'Por favor, avalie todas as perguntas antes de enviar.');
@@ -53,7 +50,7 @@ export default function AlunoPerfil({ route }) {
         }
 
         try {
-            const professorId = await AsyncStorage.getItem('@user_id'); // Substitua pelo ID do professor logado
+            const professorId = await AsyncStorage.getItem('@user_id');
             const feedbackData = {
                 resposta1: ratings[0],
                 resposta2: ratings[1],
@@ -74,7 +71,6 @@ export default function AlunoPerfil({ route }) {
         }
     };
 
-    // Exibir um indicador de carregamento enquanto os dados são buscados
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -83,7 +79,6 @@ export default function AlunoPerfil({ route }) {
         );
     }
 
-    // Exibir uma mensagem de erro se ocorrer um problema
     if (error) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -92,7 +87,6 @@ export default function AlunoPerfil({ route }) {
         );
     }
 
-    // Se não houver dados do aluno, exibir uma mensagem
     if (!aluno) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -101,7 +95,6 @@ export default function AlunoPerfil({ route }) {
         );
     }
 
-    // Dados para o gráfico
     const data = {
         labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
         datasets: [{
@@ -116,7 +109,6 @@ export default function AlunoPerfil({ route }) {
         }]
     };
 
-    // Perguntas para o carrossel
     const perguntas = [
         "Nível de Engajamento (O quanto a aula prendeu a atenção e motivou a participação?)",
         "Nível de Desempenho (O quanto o aluno demonstrou compreensão do conteúdo?)",
@@ -125,21 +117,19 @@ export default function AlunoPerfil({ route }) {
         "Nível de Comportamento (O quanto o aluno se comportou adequadamente?)",
     ];
 
-    // Função para renderizar cada item do carrossel
-    // Função para renderizar cada item do carrossel
     const renderPergunta = (pergunta, index) => {
         return (
-            <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
+            <View key={index} style={styles.containerPerguntas}>
                 <Perguntas numero={(index + 1).toString()} text={pergunta} />
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+                <View style={styles.avaliacaoContainer}>
                     {[...Array(10)].map((_, i) => (
                         <Avaliacao
                             key={i}
                             numero={(i + 1).toString()}
-                            selected={ratings[index] === i + 1} // Marca a avaliação selecionada
+                            selected={ratings[index] === i + 1}
                             onPress={() => {
                                 const newRatings = [...ratings];
-                                newRatings[index] = i + 1; // Atualiza o estado com a avaliação selecionada
+                                newRatings[index] = i + 1;
                                 setRatings(newRatings);
                             }}
                         />
@@ -232,6 +222,7 @@ export default function AlunoPerfil({ route }) {
                                 showsPagination={true}
                                 dotColor="#CCC"
                                 activeDotColor="#1E6BE6"
+                                style={styles.swiper}
                             >
                                 {perguntas.map((pergunta, index) => renderPergunta(pergunta, index))}
                             </Swiper>
@@ -279,7 +270,12 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         height: 'auto',
         marginTop: 15,
-        paddingBottom: 35
+        paddingBottom: 20
+    },
+    avaliacaoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
     grafico: {
         backgroundColor: 'white',
@@ -321,5 +317,8 @@ const styles = StyleSheet.create({
     doubleCampo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+    },
+    swiper: {
+        height: 200, // Ajuste a altura do Swiper conforme necessário
     },
 });

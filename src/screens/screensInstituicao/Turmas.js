@@ -30,6 +30,7 @@ export default function Turmas() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const [turmas, setTurmas] = useState([]);
     const [filtro, setFiltro] = useState('');
+    const [turmasFiltradas, setTurmasFiltradas] = useState([]);
 
     // Estados para os checkboxes de professores e disciplinas
     const [selectedProfessores, setSelectedProfessores] = useState([]);
@@ -37,19 +38,25 @@ export default function Turmas() {
     const [professores, setProfessores] = useState([]);
     const [disciplinas, setDisciplinas] = useState([]);
 
+    // Número de cards por página
+    const CARDS_POR_PAGINA = 3;
+
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
             const response = await axios.get('http://10.0.2.2:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
+                setTurmasFiltradas(response.data); // Inicializa as turmas filtradas
             } else {
                 console.error('Resposta da API não contém um array de turmas:', response.data);
                 setTurmas([]);
+                setTurmasFiltradas([]);
             }
         } catch (error) {
             console.error('Erro ao buscar turmas:', error);
             setTurmas([]);
+            setTurmasFiltradas([]);
         }
     };
 
@@ -121,10 +128,11 @@ export default function Turmas() {
                 turma.nomeTurma.toLowerCase().includes(texto.toLowerCase()) ||
                 turma.id.toString().includes(texto)
             );
-            setTurmas(turmasFiltradas);
+            setTurmasFiltradas(turmasFiltradas);
         } else {
-            fetchTurmas();
+            setTurmasFiltradas(turmas); // Mostra todas as turmas se o filtro estiver vazio
         }
+        setPaginaSelecionada(1); // Reseta a página para a primeira ao aplicar o filtro
     };
 
     // Função para lidar com a seleção dos checkboxes
@@ -144,6 +152,14 @@ export default function Turmas() {
         );
     };
 
+    // Calcula os índices dos cards a serem exibidos
+    const indiceInicial = (paginaSelecionada - 1) * CARDS_POR_PAGINA;
+    const indiceFinal = indiceInicial + CARDS_POR_PAGINA;
+    const turmasPaginaAtual = turmasFiltradas.slice(indiceInicial, indiceFinal);
+
+    // Calcula o número total de páginas
+    const totalPaginas = Math.ceil(turmasFiltradas.length / CARDS_POR_PAGINA);
+
     return (
         <View style={{ backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', flex: 1 }}>
             <HeaderSimples titulo="TURMAS" />
@@ -162,8 +178,8 @@ export default function Turmas() {
                     </View>
 
                     <View style={styles.cards}>
-                        {turmas.length > 0 ? (
-                            turmas.map((turma) => (
+                        {turmasPaginaAtual.length > 0 ? (
+                            turmasPaginaAtual.map((turma) => (
                                 <CardTurmas
                                     key={turma.id}
                                     turma={`${turma.nomeTurma}`}
@@ -188,19 +204,25 @@ export default function Turmas() {
                             <Icon name="plus" size={24} color="white" />
                         </TouchableOpacity>
                         <View style={styles.selecao}>
-                            {[1, 2, 3, '>'].map((numero, index) => (
+                            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numero) => (
                                 <CardSelecao
-                                    key={index}
+                                    key={numero}
                                     numero={numero}
                                     selecionado={paginaSelecionada === numero}
                                     onPress={() => setPaginaSelecionada(numero)}
                                 />
                             ))}
+                            {totalPaginas > paginaSelecionada && (
+                                <CardSelecao
+                                    numero=">"
+                                    selecionado={false}
+                                    onPress={() => setPaginaSelecionada(paginaSelecionada + 1)}
+                                />
+                            )}
                         </View>
                     </View>
                 </View>
             </View>
-
             <Modal visible={modalCriarVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
@@ -305,6 +327,51 @@ export default function Turmas() {
 }
 
 const styles = StyleSheet.create({
+    subTela: {
+        padding: 10,
+        paddingTop: 10,
+        flex: 1
+    },
+    selecao: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 0,
+    },
+    container: {
+        width: '100%',
+        borderRadius: 16,
+        padding: 10,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#1A85FF',
+        borderRadius: 25,
+        paddingHorizontal: 15,
+        marginBottom: 15
+    },
+    input: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 10,
+    },
+    icon: {
+        marginLeft: 10
+    },
+    cards: {
+        width: '100%',
+        padding: 5
+    },
+    botaoCriar: {
+        backgroundColor: '#1A85FF',
+        width: 56,
+        height: 56,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5
+    },
     subTela: {
         padding: 10,
         paddingTop: 10,

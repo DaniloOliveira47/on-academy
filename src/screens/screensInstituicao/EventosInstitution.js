@@ -148,7 +148,7 @@ export default function EventosInstitution() {
   return (
     <ScrollView>
       <HeaderSimples titulo="EVENTOS" />
-      <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
+      <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 70 }]}>
         <View style={{ marginTop: 0 }}>
           <Image style={styles.barraAzul} source={require('../../assets/image/barraAzul.png')} />
           <CustomCalendar events={events} onDayPress={handleDayPress} />
@@ -203,7 +203,7 @@ export default function EventosInstitution() {
 
       {/* Botão Flutuante para Adicionar Evento */}
       <FAB
-        style={[styles.fab, { marginBottom: 50 }]}
+        style={[styles.fab, { marginBottom: 70 }]}
         icon="plus"
         color="white"
         onPress={() => setModalVisible(true)}
@@ -326,6 +326,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     margin: 16,
+    
     right: 0,
     bottom: 0,
     backgroundColor: '#0077FF',
