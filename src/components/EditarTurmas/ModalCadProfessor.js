@@ -6,11 +6,11 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
+export default function CadastroProfessorModal({ visible, onClose }) {
     const [selectedImage, setSelectedImage] = useState(null);
-    const [nomeAluno, setNomeAluno] = useState('');
-    const [emailAluno, setEmailAluno] = useState('');
-    const [telefoneAluno, setTelefoneAluno] = useState('');
+    const [nomeDocente, setNomeDocente] = useState('');
+    const [emailDocente, setEmailDocente] = useState('');
+    const [telefoneDocente, setTelefoneDocente] = useState('');
     const [dataNascimento, setDataNascimento] = useState('');
     const [selectedBirthDate, setSelectedBirthDate] = useState(new Date());
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
@@ -46,17 +46,18 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
 
             const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
 
-            const alunoData = {
-                nomeAluno,
-                dataNascimentoAluno: dataFormatada,
-                emailAluno,
-                telefoneAluno,
-                turmaId,
+            const professorData = {
+                nomeDocente,
+                dataNascimentoDocente: dataFormatada,
+                emailDocente,
+                telefoneDocente,
+                // Inclua outras informações, como a disciplina, se necessário
+                disciplineId: [2], // Exemplo: Id da disciplina (pode ser alterado conforme necessidade)
             };
 
-            console.log('Dados do aluno a serem enviados:', alunoData); // Debug
+            console.log('Dados do professor a serem enviados:', professorData); // Debug
 
-            const response = await axios.post('http://10.0.2.2:3000/api/student', alunoData, {
+            const response = await axios.post('http://localhost:3000/api/teacher', professorData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -65,23 +66,28 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
             console.log('Resposta da API:', response.data); // Debug
 
             if (response.status === 201) {
-                Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
+                Alert.alert('Sucesso', 'Professor cadastrado com sucesso!');
                 onClose();
             }
         } catch (error) {
-            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message); // Debug
-            Alert.alert('Erro', 'Erro ao cadastrar aluno. Tente novamente.');
+            console.error('Erro ao cadastrar professor:', error.response ? error.response.data : error.message); // Debug
+            Alert.alert('Erro', 'Erro ao cadastrar professor. Tente novamente.');
         }
     };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <TouchableOpacity style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalContainer} onPress={onClose} activeOpacity={1}>
                 <Image
                     style={{ width: 350, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>
+                    {/* Botão de Fechar */}
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                        <Icon name="x" size={30} color="#000" />
+                    </TouchableOpacity>
+
                     <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                         {selectedImage ? (
                             <Image source={{ uri: selectedImage }} style={styles.profileImage} />
@@ -95,24 +101,24 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         style={styles.input}
                         placeholder="Nome Completo"
                         placeholderTextColor="#AAA"
-                        value={nomeAluno}
-                        onChangeText={setNomeAluno}
+                        value={nomeDocente}
+                        onChangeText={setNomeDocente}
                     />
                     <TextInput
                         style={styles.input}
                         placeholder="Email"
                         placeholderTextColor="#AAA"
                         keyboardType="email-address"
-                        value={emailAluno}
-                        onChangeText={setEmailAluno}
+                        value={emailDocente}
+                        onChangeText={setEmailDocente}
                     />
                     <TextInput
                         style={styles.input}
                         placeholder="Telefone"
                         placeholderTextColor="#AAA"
                         keyboardType="phone-pad"
-                        value={telefoneAluno}
-                        onChangeText={setTelefoneAluno}
+                        value={telefoneDocente}
+                        onChangeText={setTelefoneDocente}
                     />
 
                     <Text style={styles.label}>Data de Nascimento</Text>
@@ -141,7 +147,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                     )}
 
                     <TouchableOpacity style={styles.saveButton} onPress={handleCadastrar}>
-                        <Text style={styles.saveButtonText}>Salvar Aluno</Text>
+                        <Text style={styles.saveButtonText}>Salvar Professor</Text>
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -163,6 +169,13 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 10,
         padding: 20,
         alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        backgroundColor: 'transparent',
+        zIndex: 10,
     },
     imagePicker: {
         width: 100,

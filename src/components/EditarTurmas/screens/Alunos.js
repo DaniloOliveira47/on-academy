@@ -6,51 +6,67 @@ import { useTheme } from '../../../path/ThemeContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CadastroAlunoModal from '../ModalCadAluno';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Alunos() {
     const route = useRoute();
-    const { turmaId } = route.params || {}; // Recebe o ID da turma da navegação
-    const [alunos, setAlunos] = useState([]); // Estado para armazenar os alunos
-    const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
-    const [error, setError] = useState(null); // Estado para armazenar erros
-    const [filtro, setFiltro] = useState(''); // Estado para o filtro de busca
+    const { turmaId } = route.params || {};
+    const [alunos, setAlunos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [filtro, setFiltro] = useState('');
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
     const navigation = useNavigation();
 
-    // Função para buscar os alunos da turma
     const fetchAlunos = async () => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/students/${turmaId}`);
-            console.log('Resposta da API:', response.data);
+            const token = await AsyncStorage.getItem('@user_token');
+            if (!token) {
+                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+                return;
+            }
 
-            // Adiciona a média das notas ao aluno
+            if (!turmaId) {
+                Alert.alert('Erro', 'ID da turma não fornecido.');
+                return;
+            }
+
+            const url = `http://10.0.2.2:3000/api/class/students/${turmaId}`;
+            console.log("URL da requisição:", url); // Debug
+
+            const response = await axios.get(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log('Resposta da API:', response.data); // Debug
+
             const alunosComMedias = response.data.students.map((aluno) => {
                 if (aluno.notas && aluno.notas.length > 0) {
                     const totalNotas = aluno.notas.reduce((acc, curr) => acc + curr.valorNota, 0);
                     const media = totalNotas / aluno.notas.length;
-                    return { ...aluno, mediaNota: media.toFixed(2) }; // Mantém duas casas decimais
+                    return { ...aluno, mediaNota: media.toFixed(2) };
                 }
-                return { ...aluno, mediaNota: '-' }; // Caso não tenha notas
+                return { ...aluno, mediaNota: '-' };
             });
 
             setAlunos(alunosComMedias);
         } catch (error) {
+            console.error('Erro ao buscar alunos:', error.response ? error.response.data : error.message); // Debug
             setError('Erro ao buscar alunos. Tente novamente mais tarde.');
-            console.error('Erro ao buscar alunos:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    // Busca os alunos ao carregar o componente
     useEffect(() => {
         if (turmaId) {
             fetchAlunos();
         }
     }, [turmaId]);
 
-    // Função para filtrar alunos pelo nome ou matrícula
     const filtrarAlunos = (texto) => {
         setFiltro(texto);
         if (texto) {
@@ -60,7 +76,7 @@ export default function Alunos() {
             );
             setAlunos(alunosFiltrados);
         } else {
-            fetchAlunos(); // Recarrega todos os alunos se o filtro estiver vazio
+            fetchAlunos();
         }
     };
 
@@ -96,7 +112,7 @@ export default function Alunos() {
                             placeholder="Digite o nome ou código da turma"
                             placeholderTextColor="#756262"
                             value={filtro}
-                            onChangeText={filtrarAlunos} // Aplica o filtro ao digitar
+                            onChangeText={filtrarAlunos}
                         />
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
@@ -115,7 +131,10 @@ export default function Alunos() {
                                     <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>{aluno.nomeAluno}</Text>
                                     <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.identifierCode}</Text>
                                     <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.mediaNota}</Text>
-                                    <TouchableOpacity style={styles.notasButton} onPress={() => navigation.navigate('PerfilAluno', { alunoId: aluno.id })}>
+                                    <TouchableOpacity
+                                        style={styles.notasButton}
+                                        onPress={() => navigation.navigate('PerfilAluno', { alunoId: aluno.id })}
+                                    >
                                         <Text style={styles.notasText}>Visualizar</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -131,7 +150,7 @@ export default function Alunos() {
                         <TouchableOpacity style={styles.botaoCriar} onPress={() => setModalCriarVisible(true)}>
                             <Icon name="plus" size={24} color="white" />
                         </TouchableOpacity>
-                        <CadastroAlunoModal visible={modalCriarVisible} onClose={() => setModalCriarVisible(false)} />
+                        <CadastroAlunoModal visible={modalCriarVisible} onClose={() => setModalCriarVisible(false)} turmaId={turmaId} />
                     </View>
                 </View>
             </View>
@@ -151,7 +170,6 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         backgroundColor: '#0077FF',
-
     },
     loadingContainer: {
         flex: 1,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
@@ -8,13 +8,15 @@ import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import axios from 'axios';
 
+import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfessor';
+
 export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
     const [professores, setProfessores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
-
+    const [modalCriarVisible, setModalCriarVisible] = useState(false);
     useEffect(() => {
         const fetchProfessores = async () => {
             try {
@@ -35,8 +37,8 @@ export default function ProfessoresFeedback() {
             <HeaderSimples />
             <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 <View style={styles.linha}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
-                    <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Professores</Text>
+
                 </View>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
@@ -72,6 +74,12 @@ export default function ProfessoresFeedback() {
                                 onPress={() => setPaginaSelecionada(numero)}
                             />
                         ))}
+                    </View>
+                    <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
+                        <TouchableOpacity style={styles.botaoCriar} onPress={() => setModalCriarVisible(true)}>
+                            <Icon name="plus" size={24} color="white" />
+                        </TouchableOpacity>
+                        <CadastroProfessorModal visible={modalCriarVisible} onClose={() => setModalCriarVisible(false)}/>
                     </View>
                 </View>
             </View>
@@ -132,5 +140,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 30,
-    }
+    },
+    botaoCriar: {
+        width: 50, // Definindo um tamanho fixo para o botão
+        height: 50, // Tamanho fixo
+        backgroundColor: '#1A85FF', // Cor de fundo do botão
+        borderRadius: 10, // Tornando o botão redondo
+        justifyContent: 'center', // Alinhamento central do conteúdo
+        alignItems: 'center', // Alinhamento central
+        position: 'absolute', // Garantir que o botão fique sobre outros elementos
+        bottom: 0, // Distância da parte inferior da tela
+        right: 0, // Distância da parte direita da tela
+        elevation: 5, // Sombra para dar destaque
+    },
 });

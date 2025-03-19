@@ -41,6 +41,8 @@ export default function Turmas() {
     // Número de cards por página
     const CARDS_POR_PAGINA = 3;
 
+
+
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
@@ -336,6 +338,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 0,
+
     },
     container: {
         width: '100%',
@@ -419,28 +422,35 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        padding: 20
     },
     modalContent: {
         width: '90%',
-        maxHeight: '80%',
+        maxHeight: '85%',
         borderRadius: 15,
-        padding: 20
+        padding: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center'
     },
     modalInput: {
-        borderRadius: 10,
-        padding: 12,
+        borderRadius: 12,
+        padding: 14,
         marginBottom: 15,
         borderWidth: 1,
-        borderColor: '#E0E0E0'
+        borderColor: '#D1D1D1',
+        fontSize: 16
     },
     rowLabels: {
         flexDirection: 'row',
@@ -457,24 +467,29 @@ const styles = StyleSheet.create({
     modalButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 15
+        marginTop: 20
     },
     botaoAcao: {
         flex: 1,
-        padding: 12,
-        borderRadius: 8,
+        padding: 14,
+        borderRadius: 10,
         alignItems: 'center',
-        marginHorizontal: 5
+        marginHorizontal: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 6
     },
     textoBotao: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 16
+        fontSize: 17
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10
+        marginBottom: 12
     },
     checkboxRow: {
         flexDirection: 'row',
@@ -484,9 +499,9 @@ const styles = StyleSheet.create({
         width: '48%',
     },
     botaoSalvar: {
-        backgroundColor: '#1A85FF',
+        backgroundColor: '#007AFF',
     },
     botaoCancelar: {
-        backgroundColor: '#FF3B30',
+        backgroundColor: '#FF453A',
     },
 });

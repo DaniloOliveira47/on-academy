@@ -17,7 +17,8 @@ export default function AlunoPerfil({ route }) {
     const [aluno, setAluno] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [ratings, setRatings] = useState(Array(5).fill(0));
+    const [ratings, setRatings] = useState(Array(5).fill(0)); // Respostas atuais (em preenchimento)
+    const [graphData, setGraphData] = useState(Array(5).fill(0)); // Dados do gráfico (só muda com o bimestre)
     const [bimestre, setBimestre] = useState(1);
 
     const screenWidth = Dimensions.get('window').width - 40;
@@ -43,7 +44,43 @@ export default function AlunoPerfil({ route }) {
         fetchAluno();
     }, [alunoId]);
 
+    useEffect(() => {
+        if (alunoId) {
+            fetchFeedback();
+        }
+    }, [bimestre, alunoId]);
+
+    const fetchFeedback = async () => {
+        try {
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
+            const feedbacks = response.data;
+
+            // Filtra o feedback correspondente ao bimestre selecionado
+            const feedbackDoBimestre = feedbacks.find(feedback => feedback.bimestre === bimestre);
+
+            if (feedbackDoBimestre) {
+                // Atualiza os dados do gráfico com as respostas do bimestre selecionado
+                setGraphData([
+                    feedbackDoBimestre.resposta1,
+                    feedbackDoBimestre.resposta2,
+                    feedbackDoBimestre.resposta3,
+                    feedbackDoBimestre.resposta4,
+                    feedbackDoBimestre.resposta5,
+                ]);
+            } else {
+                // Se não houver feedback para o bimestre selecionado, reseta os dados do gráfico
+                setGraphData(Array(5).fill(0));
+            }
+
+            // Reseta as respostas atuais para zero
+            setRatings(Array(5).fill(0));
+        } catch (error) {
+            console.error('Erro ao carregar os feedbacks:', error);
+        }
+    };
+
     const enviarFeedback = async () => {
+        // Verifica se todas as perguntas foram respondidas
         if (ratings.some(rating => rating === 0)) {
             Alert.alert('Erro', 'Por favor, avalie todas as perguntas antes de enviar.');
             return;
@@ -62,13 +99,40 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
             };
 
+            console.log('Dados do feedback a serem enviados:', feedbackData);
+
             const response = await axios.post('http://10.0.2.2:3000/api/feedbackForm', feedbackData);
             Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
             console.log('Resposta do servidor:', response.data);
+
+            // Após enviar o feedback, atualiza os dados do gráfico
+            fetchFeedback();
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
-            console.error('Erro ao enviar feedback:', error);
+            console.error('Erro ao enviar feedback:', error.response ? error.response.data : error.message);
         }
+    };
+
+    const renderPergunta = (pergunta, index) => {
+        return (
+            <View key={index} style={styles.containerPerguntas}>
+                <Perguntas numero={(index + 1).toString()} text={pergunta} />
+                <View style={styles.avaliacaoContainer}>
+                    {[...Array(10)].map((_, i) => (
+                        <Avaliacao
+                            key={i}
+                            numero={(i + 1).toString()}
+                            selected={ratings[index] === i + 1}
+                            onPress={() => {
+                                const newRatings = [...ratings];
+                                newRatings[index] = i + 1; // Atualiza o valor da avaliação para a pergunta correspondente
+                                setRatings(newRatings);
+                            }}
+                        />
+                    ))}
+                </View>
+            </View>
+        );
     };
 
     if (loading) {
@@ -95,10 +159,11 @@ export default function AlunoPerfil({ route }) {
         );
     }
 
+    // Dados para o gráfico
     const data = {
         labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
         datasets: [{
-            data: [80, 50, 90, 70, 40],
+            data: graphData, // Usa os dados do gráfico (não as respostas atuais)
             colors: [
                 () => '#1E6BE6',
                 () => '#1E6BE6',
@@ -116,28 +181,6 @@ export default function AlunoPerfil({ route }) {
         "Nível de Atenção (O quanto o aluno se manteve focado durante a aula?)",
         "Nível de Comportamento (O quanto o aluno se comportou adequadamente?)",
     ];
-
-    const renderPergunta = (pergunta, index) => {
-        return (
-            <View key={index} style={styles.containerPerguntas}>
-                <Perguntas numero={(index + 1).toString()} text={pergunta} />
-                <View style={styles.avaliacaoContainer}>
-                    {[...Array(10)].map((_, i) => (
-                        <Avaliacao
-                            key={i}
-                            numero={(i + 1).toString()}
-                            selected={ratings[index] === i + 1}
-                            onPress={() => {
-                                const newRatings = [...ratings];
-                                newRatings[index] = i + 1;
-                                setRatings(newRatings);
-                            }}
-                        />
-                    ))}
-                </View>
-            </View>
-        );
-    };
 
     return (
         <ScrollView>
@@ -319,6 +362,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     swiper: {
-        height: 200, // Ajuste a altura do Swiper conforme necessário
+        height: 200,
     },
 });
