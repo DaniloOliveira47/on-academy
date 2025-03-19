@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importação do AsyncStorage
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
-import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View, Alert } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { Modal } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
@@ -53,31 +54,44 @@ export default function Ocorrencia() {
     };
 
     // Função para enviar o feedback
-    const enviarFeedback = () => {
+    const enviarFeedback = async () => {
         if (!professorSelecionado || !titulo || !conteudo) {
             Alert.alert('Erro', 'Preencha todos os campos antes de enviar.');
             return;
         }
 
-        const feedback = {
-            professorId: professorSelecionado.id,
-            titulo: titulo,
-            conteudo: conteudo,
-        };
+        try {
+            // Recupera o user_id do AsyncStorage
+            const user_id = await AsyncStorage.getItem('@user_id');
 
-        console.log('Feedback enviado:', feedback);
+            if (!user_id) {
+                Alert.alert('Erro', 'Usuário não autenticado.');
+                return;
+            }
 
-        // Aqui você pode fazer uma requisição POST para enviar o feedback
-        // axios.post('http://10.0.2.2:3000/api/feedback', feedback)
-        //     .then(response => {
-        //         Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
-        //     })
-        //     .catch(error => {
-        //         console.error('Erro ao enviar feedback:', error);
-        //         Alert.alert('Erro', 'Não foi possível enviar o feedback.');
-        //     });
+            const feedback = {
+                titulo: titulo,
+                conteudo: conteudo,
+                createdBy: { id: parseInt(user_id, 10) }, // Converte para número, se necessário
+                recipientTeacher: { id: professorSelecionado.id } // Id do professor selecionado
+            };
 
-        // Limpa os campos após o envio
+            console.log('Feedback enviado:', feedback);
+
+            // Envia o feedback para a API
+            const response = await axios.post('http://10.0.2.2:3000//api/feedbackStudent', feedback);
+
+            if (response.status === 200 || response.status === 201) {
+                Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
+            } else {
+                Alert.alert('Erro', 'Não foi possível enviar o feedback.');
+            }
+        } catch (error) {
+            console.error('Erro ao enviar feedback:', error);
+            Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
+        }
+
+        // Limpar os campos após o envio
         setProfessorSelecionado(null);
         setTitulo('');
         setConteudo('');

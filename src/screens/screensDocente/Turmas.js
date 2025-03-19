@@ -109,7 +109,7 @@ export default function Turmas() {
                                     key={turma.id}
                                     turma={turma.nomeTurma}
                                     numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`}
-                                    alunos={`${turma.quantidadeAlunos || 0} Alunos ativos`}
+                                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
                                     periodo={`Período: ${turma.periodoTurma}`}
                                     navegacao="NotasTurma" // Nome da tela de destino
                                     turmaId={turma.id} // Passa o ID da turma

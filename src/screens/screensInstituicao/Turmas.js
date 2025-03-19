@@ -186,7 +186,7 @@ export default function Turmas() {
                                     key={turma.id}
                                     turma={`${turma.nomeTurma}`}
                                     numero={`Nº${turma.id}`}
-                                    alunos={`${turma.quantidadeAlunos || 0} Alunos ativos`}
+                                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
                                     periodo={`Período: ${turma.periodoTurma}`}
                                     turmaId={turma.id}
                                     navegacao="Alunos"
