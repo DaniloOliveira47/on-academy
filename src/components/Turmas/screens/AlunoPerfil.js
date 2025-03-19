@@ -276,10 +276,9 @@ export default function AlunoPerfil({ route }) {
                                 >
                                     <Text style={{ color: 'white' }}>Enviar Respostas</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{ backgroundColor: '#D24C4C', width: 120, alignItems: 'center', borderRadius: 8, padding: 5 }}>
-                                    <Text style={{ color: 'white' }}>Cancelar</Text>
-                                </TouchableOpacity>
+
                             </View>
+
                         </View>
                     </View>
                 </View>

@@ -82,6 +82,9 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                        <Icon name="x" size={30} color="#000" />
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                         {selectedImage ? (
                             <Image source={{ uri: selectedImage }} style={styles.profileImage} />
@@ -163,6 +166,13 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 10,
         padding: 20,
         alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        backgroundColor: 'transparent',
+        zIndex: 10,
     },
     imagePicker: {
         width: 100,

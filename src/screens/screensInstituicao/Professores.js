@@ -37,7 +37,7 @@ export default function ProfessoresFeedback() {
             <HeaderSimples />
             <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 <View style={styles.linha}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Professores</Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>Professores</Text>
 
                 </View>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
