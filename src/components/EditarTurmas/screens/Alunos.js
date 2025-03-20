@@ -101,7 +101,7 @@ export default function Alunos() {
             <HeaderSimples />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>Turma A - 1º Ano</Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}></Text>
                     <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
                 </View>
 

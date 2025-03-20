@@ -22,12 +22,27 @@ export default function AlunoPerfil({ route }) {
     const [bimestre, setBimestre] = useState(1);
     const [conteudoFeedback, setConteudoFeedback] = useState(''); // Estado para o conteúdo do feedback
 
+    const fundoColor = isDarkMode ? '#33383E' : '#F0F7FF';
+    const textInputColor = isDarkMode ? '#FFF' : '#33383E';
+
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const sombra = isDarkMode ? '#FFF' : '#000';
+    const formatarData = (dataCompleta) => {
+        if (!dataCompleta) return ''; // Caso a data seja nula ou indefinida
+    
+        // Divide a data e o horário
+        const [data, horario] = dataCompleta.split(' ');
+    
+        // Divide a data em ano, mês e dia
+        const [ano, mes, dia] = data.split('-');
+    
+        // Reorganiza para o formato xx-xx-xxxx
+        return `${dia}/${mes}/${ano}`;
+    };
 
     useEffect(() => {
         const fetchAluno = async () => {
@@ -238,8 +253,30 @@ export default function AlunoPerfil({ route }) {
                         <Campo label="Email" text={aluno.emailAluno} textColor={textColor} />
                         <Campo label="Nº Matrícula" text={aluno.matriculaAluno} textColor={textColor} />
                         <View style={styles.doubleCampo}>
-                            <Campo label="Telefone" text={aluno.telefoneAluno} textColor={textColor} />
-                            <Campo label="Data de Nascimento" text={aluno.dataNascimentoAluno} textColor={textColor} />
+                            <View style={[styles.campo,]}>
+                                <Text style={[styles.label, { color: textColor }]}>
+                                    Telefone
+                                </Text>
+                                <View style={[styles.inputContainer, { backgroundColor: fundoColor }]}>
+                                    <Text
+                                        style={[styles.colorInput, { color: textInputColor }]}
+                                    >
+                                        {aluno.telefoneAluno}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={[styles.campo]}>
+                                <Text style={[styles.label, { color: textColor }]}>
+                                    Data de Nascimento
+                                </Text>
+                                <View style={[styles.inputContainer, { backgroundColor: fundoColor }]}>
+                                    <Text
+                                        style={[styles.colorInput, { color: textInputColor }]}
+                                    >
+                                        {formatarData(aluno.dataNascimentoAluno)} {/* Formata a data */}
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
                         <Campo label="Turma" text={aluno.turma.nomeTurma} textColor={textColor} />
                     </View>
@@ -339,6 +376,31 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    campo: {
+        marginTop: 15,
+
+    },
+    inline: {
+        flex: 1,
+        marginHorizontal: 5,
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F7FF',
+        borderRadius: 30,
+        padding: 10,
+        width: 150,
+        justifyContent: 'space-between',
+    },
+    colorInput: {
+        fontSize: 17,
+        flex: 1,
     },
     errorContainer: {
         flex: 1,

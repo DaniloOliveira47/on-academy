@@ -176,33 +176,45 @@ export default function NotasTurma() {
                     <FlatList
                         data={alunos}
                         keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <View style={styles.tableRow}>
-                                <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>{item.nomeAluno}</Text>
-                                <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{item.identifierCode}</Text>
-                                <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{item.mediaNota}</Text>
-                                <TouchableOpacity style={styles.notasButton} onPress={() => abrirModal(item)}>
-                                    <Text style={styles.notasText}>Ver Notas</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
+                        renderItem={({ item }) => {
+                            // Divide o nome completo e pega os dois primeiros nomes
+                            const nomeCompleto = item.nomeAluno.split(' ');
+                            const doisPrimeirosNomes = nomeCompleto.slice(0, 2).join(' ');
+
+                            return (
+                                <View style={styles.tableRow}>
+                                    <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>
+                                        {doisPrimeirosNomes} {/* Exibe apenas os dois primeiros nomes */}
+                                    </Text>
+                                    <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>
+                                        {item.identifierCode}
+                                    </Text>
+                                    <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>
+                                        {item.mediaNota}
+                                    </Text>
+                                    <TouchableOpacity style={styles.notasButton} onPress={() => abrirModal(item)}>
+                                        <Text style={styles.notasText}>Ver Notas</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            );
+                        }}
                     />
                 </View>
             </View>
 
             <Modal visible={modalVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
-                    <View style={[styles.modalContent, {backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}]}>
-                        <Text style={[styles.modalTitle, {color: isDarkMode ? 'white' : 'black'}]}>{alunoSelecionado?.nomeAluno}</Text>
+                    <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>{alunoSelecionado?.nomeAluno}</Text>
                         <Picker
                             selectedValue={disciplinaSelecionada}
                             onValueChange={(itemValue) => {
                                 setDisciplinaSelecionada(itemValue);
                             }}
-                            style={[styles.picker, {color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}
+                            style={[styles.picker, { color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}
                         >
                             {disciplinas.map((disciplina) => (
-                                <Picker.Item style={{color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}} key={disciplina.id} label={disciplina.nomeDisciplina} value={disciplina.id} />
+                                <Picker.Item style={{ color: isDarkMode ? 'white' : 'black', backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }} key={disciplina.id} label={disciplina.nomeDisciplina} value={disciplina.id} />
                             ))}
                         </Picker>
 
@@ -214,14 +226,14 @@ export default function NotasTurma() {
                             </View>
                             <View style={styles.columnNotas}>
                                 {disciplinas.map((disciplina) => {
-                                    const notaDisciplina = notasAluno.find(nota => 
-                                        nota.nomeDisciplina === disciplina.nomeDisciplina && 
+                                    const notaDisciplina = notasAluno.find(nota =>
+                                        nota.nomeDisciplina === disciplina.nomeDisciplina &&
                                         nota.bimestre === bimestreInput
                                     );
                                     return (
-                                        <CardNota 
-                                            key={`${disciplina.id}-${bimestreInput}`} 
-                                            nota={notaDisciplina ? notaDisciplina.nota : '-'} 
+                                        <CardNota
+                                            key={`${disciplina.id}-${bimestreInput}`}
+                                            nota={notaDisciplina ? notaDisciplina.nota : '-'}
                                         />
                                     );
                                 })}
@@ -244,7 +256,7 @@ export default function NotasTurma() {
                                     selectedValue={bimestreInput}
                                     onValueChange={(itemValue) => setBimestreInput(itemValue)}
                                     style={[styles.pickerBimestre, {}]}
-                                  
+
                                 >
                                     <Picker.Item label="1" value={1} />
                                     <Picker.Item label="2" value={2} />

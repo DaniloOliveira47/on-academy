@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../path/ThemeContext';
-import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
@@ -45,10 +45,10 @@ export default function HeaderIns() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/institution`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
-        
+
       }
     };
 
@@ -124,55 +124,60 @@ export default function HeaderIns() {
 
       {menuVisible && <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />}
 
+
       <Animated.View
         style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#141414' : '#1E6BE6' }]}
       >
-        <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
-          <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
-        </TouchableOpacity>
+        <ScrollView>
 
-        <View style={styles.menuItem}>
-          <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-              <View style={{ flexDirection: 'row', gap: 20 }}>
-                <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
-                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
-                </Text>
-              </View>
-              <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
-            </View>
+
+          <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
+            <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
           </TouchableOpacity>
-        </View>
 
-        <View style={[styles.menuItem, { height: 'auto' }]}>
-        <CustomCalendar events={events} />
-        </View>
+          <View style={styles.menuItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+              <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+                <View style={{ flexDirection: 'row', gap: 20 }}>
+                  <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
+                  <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                    {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
+                  </Text>
+                </View>
+                <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
+              </View>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.menuItem}>
-          <View style={[styles.contEventos, { backgroundColor: container }]}>
-            <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
-            <View>
-              {events.length > 0 ? (
-                events.map((event, index) => {
-                  const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-                  return (
-                    <ProximosEventos
-                      key={index}
-                      data={eventDateTime.getDate()}
-                      titulo={event.tituloEvento}
-                      subData={formatDate(eventDateTime)}
-                      periodo={formatTime(eventDateTime)}
-                      color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
-                    />
-                  );
-                })
-              ) : (
-                <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
-              )}
+          <View style={[styles.menuItem, { height: 'auto' }]}>
+            <CustomCalendar events={events} />
+          </View>
+
+          <View style={styles.menuItem}>
+            <View style={[styles.contEventos, { backgroundColor: container }]}>
+              <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
+              <View>
+                {events.length > 0 ? (
+                  events.map((event, index) => {
+                    const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                    return (
+                      <ProximosEventos
+                        key={index}
+                        data={eventDateTime.getDate()}
+                        titulo={event.tituloEvento}
+                        subData={formatDate(eventDateTime)}
+                        periodo={formatTime(eventDateTime)}
+                        color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                      />
+                    );
+                  })
+                ) : (
+                  <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </Animated.View>
     </>
   );
@@ -253,6 +258,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 10,
+    paddingBottom: 50
   },
   menuItem: {
     paddingVertical: 15,
