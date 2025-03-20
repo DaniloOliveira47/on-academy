@@ -6,14 +6,36 @@ import GraficoMedia from '../../components/Home/graficoMedia';
 import CardNota from '../../components/Home/cardNota';
 import { useTheme } from '../../path/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Avisos from '../../components/Home/Avisos';
 
 export default function Home() {
   const { isDarkMode } = useTheme();
   const [aluno, setAluno] = useState(null);
   const [bimestreSelecionado, setBimestreSelecionado] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [avisos, setAvisos] = useState([]); // Estado para os avisos
+
+  const gerarCorAleatoria = () => {
+    const letrasHex = '0123456789ABCDEF';
+    let cor = '#';
+    for (let i = 0; i < 6; i++) {
+        cor += letrasHex[Math.floor(Math.random() * 16)];
+    }
+    return cor;
+};
 
   useEffect(() => {
+
+    const fetchAvisos = async () => {
+      try {
+        const response = await axios.get('http://10.0.2.2:3000/api/reminder');
+        console.log('Avisos recebidos:', response.data);
+        setAvisos(response.data); // Atualiza o estado com os avisos
+      } catch (error) {
+        console.error('Erro ao buscar avisos:', error);
+      }
+    };
+
     const fetchAluno = async () => {
       try {
         // Recupera o ID do aluno do Async Storage
@@ -32,6 +54,7 @@ export default function Home() {
       }
     };
 
+    fetchAvisos();
     fetchAluno();
   }, []);
 
@@ -92,6 +115,29 @@ export default function Home() {
                 <Text style={{ textAlign: 'center', color: isDarkMode ? '#FFF' : '#000' }}>Nenhuma nota encontrada.</Text>
               )}
             </ScrollView>
+          </View>
+          <View style={{ backgroundColor: isDarkMode ? '#000' : '#FFF', width: '100%', borderRadius: 20, marginTop: 20 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10, color: isDarkMode ? '#FFF' : '#000' }}>
+              Avisos
+            </Text>
+            <View style={{ padding: 10 }}>
+              {avisos.length > 0 ? (
+                avisos.map((aviso) => (
+                  <Avisos
+                    key={aviso.id}
+                    abreviacao={aviso.initials}
+                    nome={aviso.criadoPorNome}
+                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    texto={aviso.conteudo}
+                    aleatorio={gerarCorAleatoria()} // Passa a cor aleatória
+                  />
+                ))
+              ) : (
+                <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>
+                  Nenhum aviso disponível.
+                </Text>
+              )}
+            </View>
           </View>
         </View>
       </ScrollView>

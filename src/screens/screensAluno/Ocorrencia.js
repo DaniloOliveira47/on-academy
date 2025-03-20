@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Importação do AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
-import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View, Alert } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View, Alert, Modal } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { Modal } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import { BarChart } from 'react-native-chart-kit';
@@ -12,16 +11,21 @@ import { BarChart } from 'react-native-chart-kit';
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
-    const [tipoSelecionado, setTipoSelecionado] = useState(" 1º Bim.");
+    const [tipoSelecionado, setTipoSelecionado] = useState("1º Bim.");
     const [professores, setProfessores] = useState([]);
-    const [professorSelecionado, setProfessorSelecionado] = useState(null); // Estado para o professor selecionado
-    const [titulo, setTitulo] = useState(''); // Estado para o título do feedback
-    const [conteudo, setConteudo] = useState(''); // Estado para o conteúdo do feedback
+    const [professorSelecionado, setProfessorSelecionado] = useState(null);
+    const [titulo, setTitulo] = useState('');
+    const [conteudo, setConteudo] = useState('');
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const screenWidth = Dimensions.get('window').width - 40;
 
+    const [userId, setUserId] = useState(null);
+
+    // Busca os professores ao carregar o componente
     useEffect(() => {
         axios.get('http://10.0.2.2:3000/api/teacher')
             .then(response => {
@@ -32,10 +36,69 @@ export default function Ocorrencia() {
             });
     }, []);
 
+    // Busca o userId do AsyncStorage
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const id = await AsyncStorage.getItem('@user_id');
+                setUserId(id);
+            } catch (error) {
+                console.error('Erro ao buscar userId:', error);
+            }
+        };
+
+        fetchUserId();
+    }, []);
+
+    // Busca os feedbacks do estudante
+    useEffect(() => {
+        if (userId) {
+            axios.get(`http://10.0.2.2:3000/api/student/feedback/${userId}`)
+                .then(response => {
+                    setFeedbacks(response.data);
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar feedbacks:', error);
+                });
+        }
+    }, [userId]);
+
+    // Filtra os feedbacks pelo bimestre selecionado
+    const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
+    // Calcula as médias das respostas para o gráfico
+    const calcularMedias = () => {
+        if (feedbacksFiltrados.length === 0) {
+            return [0, 0, 0, 0, 0];
+        }
+
+        const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
+            return {
+                resposta1: acc.resposta1 + feedback.resposta1,
+                resposta2: acc.resposta2 + feedback.resposta2,
+                resposta3: acc.resposta3 + feedback.resposta3,
+                resposta4: acc.resposta4 + feedback.resposta4,
+                resposta5: acc.resposta5 + feedback.resposta5,
+            };
+        }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
+
+        const medias = [
+            somaRespostas.resposta1 / feedbacksFiltrados.length,
+            somaRespostas.resposta2 / feedbacksFiltrados.length,
+            somaRespostas.resposta3 / feedbacksFiltrados.length,
+            somaRespostas.resposta4 / feedbacksFiltrados.length,
+            somaRespostas.resposta5 / feedbacksFiltrados.length,
+        ];
+
+        return medias;
+    };
+
+    const medias = calcularMedias();
+
     const data = {
         labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
         datasets: [{
-            data: [80, 50, 90, 70, 40],
+            data: medias,
             colors: [
                 () => '#1E6BE6',
                 () => '#1E6BE6',
@@ -46,22 +109,17 @@ export default function Ocorrencia() {
         }]
     };
 
-    const tipos = ["Aproveitamento", "Comportamento", "Conselho", "Evasão", "Frequência", "Orientação", "Saúde Mental"];
-
-    // Função para selecionar o professor
     const selecionarProfessor = (professor) => {
-        setProfessorSelecionado(professor);
+        setProfessorSelecionado(professor); // Define o professor selecionado
     };
 
-    // Função para enviar o feedback
     const enviarFeedback = async () => {
-        if (!professorSelecionado || !titulo || !conteudo) {
+        if (!professorSelecionado || !conteudo) {
             Alert.alert('Erro', 'Preencha todos os campos antes de enviar.');
             return;
         }
 
         try {
-            // Recupera o user_id do AsyncStorage
             const user_id = await AsyncStorage.getItem('@user_id');
 
             if (!user_id) {
@@ -70,16 +128,12 @@ export default function Ocorrencia() {
             }
 
             const feedback = {
-                titulo: titulo,
                 conteudo: conteudo,
-                createdBy: { id: parseInt(user_id, 10) }, // Converte para número, se necessário
-                recipientTeacher: { id: professorSelecionado.id } // Id do professor selecionado
+                createdBy: { id: parseInt(user_id, 10) },
+                recipientTeacher: { id: professorSelecionado.id } // Usa o ID do professor selecionado
             };
 
-            console.log('Feedback enviado:', feedback);
-
-            // Envia o feedback para a API
-            const response = await axios.post('http://10.0.2.2:3000//api/feedbackStudent', feedback);
+            const response = await axios.post('http://10.0.2.2:3000/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
@@ -91,7 +145,6 @@ export default function Ocorrencia() {
             Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
         }
 
-        // Limpar os campos após o envio
         setProfessorSelecionado(null);
         setTitulo('');
         setConteudo('');
@@ -101,21 +154,49 @@ export default function Ocorrencia() {
         <ScrollView>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                <View style={{
-                    backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20
-                }}>
+                <View style={{ backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20 }}>
                     <View style={{ width: '100%', alignItems: 'flex-end', marginLeft: 12 }}>
                         <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
                             <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
                                 Bimestre
                             </Text>
-                            <TouchableOpacity style={{ backgroundColor: perfilBackgroundColor, padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}>
+                            <TouchableOpacity
+                                style={{ backgroundColor: perfilBackgroundColor, padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+                                onPress={() => setModalVisible(true)}
+                            >
                                 <Text style={{ color: 'blue', fontSize: 18, fontWeight: 'bold' }}>
                                     v
                                 </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
+
+                    {/* Modal para seleção de bimestre */}
+                    <Modal
+                        visible={modalVisible}
+                        transparent={true}
+                        onRequestClose={() => setModalVisible(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                                {[1, 2, 3, 4].map((bimestre) => (
+                                    <TouchableOpacity
+                                        key={bimestre}
+                                        style={styles.modalItem}
+                                        onPress={() => {
+                                            setBimestreSelecionado(bimestre);
+                                            setModalVisible(false);
+                                        }}
+                                    >
+                                        <Text style={[styles.modalText, { color: textColor }]}>
+                                            {bimestre}º Bim.
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    </Modal>
+
                     <BarChart
                         data={data}
                         width={screenWidth * 0.99}
@@ -151,14 +232,17 @@ export default function Ocorrencia() {
                             Seus comentários ajudam os professores a ajustar métodos de ensino, tornando as aulas mais dinâmicas e eficazes. Seja claro e respeitoso em suas respostas, pois sua opinião contribui para um ambiente de aprendizado cada vez melhor para todos!
                         </Text>
                     </View>
+
+                    {/* Lista de professores */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
                         {professores.slice(0, 2).map((professor, index) => (
                             <CardProfessor
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
-                                onPress={() => selecionarProfessor(professor)} // Passa a função para selecionar o professor
-                                selecionado={professorSelecionado?.id === professor.id} // Destaca o card selecionado
+                                onPress={() => selecionarProfessor(professor)} // Seleciona o professor
+                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })} // Navega ao perfil
+                                selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
                     </View>
@@ -169,6 +253,7 @@ export default function Ocorrencia() {
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
                                 onPress={() => selecionarProfessor(professor)}
+                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })}
                                 selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
@@ -180,37 +265,34 @@ export default function Ocorrencia() {
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
                                 onPress={() => selecionarProfessor(professor)}
+                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })}
                                 selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
                     </View>
 
-                    {/* Campos de Título e Conteúdo */}
-                    <TextInput
-                        style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor }]}
-                        placeholder="Título do Feedback"
-                        placeholderTextColor={textColor}
-                        value={titulo}
-                        onChangeText={setTitulo}
-                    />
-                    <TextInput
-                        style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor, height: 100 }]}
-                        placeholder={`Escreva aqui seu feedback para o prof(a) ${professorSelecionado ? professorSelecionado.nomeDocente : '...'}`}
-                        placeholderTextColor={textColor}
-                        multiline
-                        value={conteudo}
-                        onChangeText={setConteudo}
-                    />
+                    {/* Input de feedback (aparece apenas quando um professor é selecionado) */}
+                    {professorSelecionado && (
+                        <>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor, height: 100 }]}
+                                placeholder={`Escreva aqui seu feedback para o prof(a) ${professorSelecionado.nomeDocente}`}
+                                placeholderTextColor={textColor}
+                                multiline
+                                value={conteudo}
+                                onChangeText={setConteudo}
+                            />
 
-                    {/* Botão de Enviar */}
-                    <TouchableOpacity
-                        style={styles.botaoEnviar}
-                        onPress={enviarFeedback}
-                    >
-                        <Text style={{ color: 'white' }}>
-                            Enviar
-                        </Text>
-                    </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.botaoEnviar}
+                                onPress={enviarFeedback}
+                            >
+                                <Text style={{ color: 'white' }}>
+                                    Enviar
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
             </View>
         </ScrollView>
@@ -240,6 +322,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         width: '100%',
     },
+
     botaoEnviar: {
         backgroundColor: '#0077FF',
         padding: 10,

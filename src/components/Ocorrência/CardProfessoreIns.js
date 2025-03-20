@@ -2,27 +2,26 @@ import React from 'react';
 import { Text, TouchableOpacity, View, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-export default function CardProfessor({ nome, id, onPress, selecionado, onVerPerfil }) {
+export default function CardProfessorIns({ nome, id }) { // Recebe o nome e o id como props
+    const navigation = useNavigation();
+
     return (
-        <TouchableOpacity
-            onPress={onPress} // Clique em todo o card para selecionar o professor
-            style={[styles.container, selecionado && styles.selecionado]}
-        >
+        <View style={styles.container}>
             <View style={styles.imageContainer}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
             <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000' }}>
-                {nome}
+                {nome} {/* Exibe o nome do professor */}
             </Text>
             <TouchableOpacity
-                onPress={onVerPerfil} // Clique no botão "Ver" para navegar ao perfil
+                onPress={() => navigation.navigate('ProfessorPerfil', { id })} // Navega passando o id
                 style={styles.botao}
             >
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>
                     Ver
                 </Text>
             </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
     );
 }
 
@@ -33,7 +32,6 @@ const styles = StyleSheet.create({
         height: 'auto',
         borderRadius: 16,
         alignItems: 'center',
-        paddingBottom: 10,
     },
     imageContainer: {
         backgroundColor: 'white',
@@ -55,9 +53,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginTop: 10,
         marginBottom: 10,
-    },
-    selecionado: {
-        borderColor: '#0077FF',
-        borderWidth: 2,
     },
 });

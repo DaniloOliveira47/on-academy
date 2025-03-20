@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Dimensions, TextInput } from 'react-native';
 import Campo from '../../Perfil/Campo';
 import { useTheme } from '../../../path/ThemeContext';
 import HeaderSimples from '../../Gerais/HeaderSimples';
@@ -20,6 +20,7 @@ export default function AlunoPerfil({ route }) {
     const [ratings, setRatings] = useState(Array(5).fill(0)); // Respostas atuais (em preenchimento)
     const [graphData, setGraphData] = useState(Array(5).fill(0)); // Dados do gráfico (só muda com o bimestre)
     const [bimestre, setBimestre] = useState(1);
+    const [conteudoFeedback, setConteudoFeedback] = useState(''); // Estado para o conteúdo do feedback
 
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -97,6 +98,7 @@ export default function AlunoPerfil({ route }) {
                 bimestre: bimestre,
                 createdBy: { id: professorId },
                 recipientStudent: { id: alunoId },
+                conteudo: conteudoFeedback, // Adiciona o conteúdo do feedback
             };
 
             console.log('Dados do feedback a serem enviados:', feedbackData);
@@ -110,6 +112,34 @@ export default function AlunoPerfil({ route }) {
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
             console.error('Erro ao enviar feedback:', error.response ? error.response.data : error.message);
+        }
+    };
+
+    const enviarFeedbackEscrito = async () => {
+        if (!conteudoFeedback.trim()) {
+            Alert.alert('Erro', 'Por favor, escreva algo antes de enviar.');
+            return;
+        }
+
+        try {
+            const professorId = await AsyncStorage.getItem('@user_id');
+            const feedbackData = {
+                conteudo: conteudoFeedback,
+                createdBy: { id: professorId },
+                recipientStudent: { id: alunoId },
+            };
+
+            console.log('Dados do feedback escrito a serem enviados:', feedbackData);
+
+            const response = await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData);
+            Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
+            console.log('Resposta do servidor:', response.data);
+
+            // Limpa o campo de feedback após o envio
+            setConteudoFeedback('');
+        } catch (error) {
+            Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
+            console.error('Erro ao enviar feedback escrito:', error.response ? error.response.data : error.message);
         }
     };
 
@@ -276,10 +306,27 @@ export default function AlunoPerfil({ route }) {
                                 >
                                     <Text style={{ color: 'white' }}>Enviar Respostas</Text>
                                 </TouchableOpacity>
-
                             </View>
-
                         </View>
+                    </View>
+
+                    {/* Input para escrever sobre o aluno */}
+                    <View style={[styles.feedbackContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.feedbackLabel, { color: textColor }]}>Escreva sobre esse aluno:</Text>
+                        <TextInput
+                            style={[styles.feedbackInput, { color: textColor, borderColor: textColor }]}
+                            placeholder="Digite seu feedback..."
+                            placeholderTextColor={textColor}
+                            multiline
+                            value={conteudoFeedback}
+                            onChangeText={setConteudoFeedback}
+                        />
+                        <TouchableOpacity
+                            style={[styles.botaoEnviar, { backgroundColor: barraAzulColor }]}
+                            onPress={enviarFeedbackEscrito}
+                        >
+                            <Text style={styles.textoBotaoEnviar}>Enviar Feedback Escrito</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -362,5 +409,32 @@ const styles = StyleSheet.create({
     },
     swiper: {
         height: 200,
+    },
+    feedbackContainer: {
+        marginTop: 20,
+        padding: 15,
+        borderRadius: 10,
+    },
+    feedbackLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    feedbackInput: {
+        borderWidth: 1,
+        borderRadius: 10,
+        padding: 10,
+        height: 100,
+        textAlignVertical: 'top',
+    },
+    botaoEnviar: {
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    textoBotaoEnviar: {
+        color: 'white',
+        fontWeight: 'bold',
     },
 });

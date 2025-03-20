@@ -9,6 +9,7 @@ import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import axios from 'axios';
 
 import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfessor';
+import CardProfessorIns from '../../components/Ocorrência/CardProfessoreIns';
 
 export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
@@ -55,7 +56,7 @@ export default function ProfessoresFeedback() {
 
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
                             {professores.slice(0, 2).map((professor, index) => (
-                                <CardProfessor
+                                <CardProfessorIns
                                     key={index}
                                     nome={"Prof - " + professor.nomeDocente}
                                     id={professor.id}

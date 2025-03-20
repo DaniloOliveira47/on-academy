@@ -28,6 +28,9 @@ export default function PerfilAluno() {
     const [modalEditVisible, setModalEditVisible] = useState(false);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
     const [ocorrencias, setOcorrencias] = useState([]);
+    const [feedbacks, setFeedbacks] = useState([]); // Estado para armazenar os feedbacks
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(1); // Estado para o bimestre selecionado
+    const [modalBimestreVisible, setModalBimestreVisible] = useState(false); // Estado para o modal de seleção de bimestre
 
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -35,20 +38,7 @@ export default function PerfilAluno() {
     const barraAzulColor = '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
 
-    const data = {
-        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
-        datasets: [{
-            data: [80, 50, 90, 70, 40],
-            colors: [
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6'
-            ]
-        }]
-    };
-
+    // Busca os dados do aluno
     const fetchAluno = async () => {
         try {
             const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
@@ -83,14 +73,71 @@ export default function PerfilAluno() {
         }
     };
 
+    // Busca os feedbacks do aluno
+    const fetchFeedbacks = async () => {
+        try {
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
+            setFeedbacks(response.data);
+        } catch (error) {
+            console.error('Erro ao buscar feedbacks:', error);
+        }
+    };
+
     useEffect(() => {
         if (alunoId) {
             fetchAluno();
+            fetchFeedbacks();
         } else {
             setError('ID do aluno não fornecido.');
             setLoading(false);
         }
     }, [alunoId]);
+
+    // Filtra os feedbacks pelo bimestre selecionado
+    const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
+    // Calcula as médias das respostas para o gráfico
+    const calcularMedias = () => {
+        if (feedbacksFiltrados.length === 0) {
+            return [0, 0, 0, 0, 0]; // Retorna zeros se não houver feedbacks
+        }
+
+        const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
+            return {
+                resposta1: acc.resposta1 + feedback.resposta1,
+                resposta2: acc.resposta2 + feedback.resposta2,
+                resposta3: acc.resposta3 + feedback.resposta3,
+                resposta4: acc.resposta4 + feedback.resposta4,
+                resposta5: acc.resposta5 + feedback.resposta5,
+            };
+        }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
+
+        const medias = [
+            somaRespostas.resposta1 / feedbacksFiltrados.length,
+            somaRespostas.resposta2 / feedbacksFiltrados.length,
+            somaRespostas.resposta3 / feedbacksFiltrados.length,
+            somaRespostas.resposta4 / feedbacksFiltrados.length,
+            somaRespostas.resposta5 / feedbacksFiltrados.length,
+        ];
+
+        return medias;
+    };
+
+    const medias = calcularMedias();
+
+    const data = {
+        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
+        datasets: [{
+            data: medias,
+            colors: [
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6',
+                () => '#1E6BE6'
+            ]
+        }]
+    };
 
     const handleEditSave = () => {
         setPerfil(perfilEdit);
@@ -171,6 +218,16 @@ export default function PerfilAluno() {
                             </View>
                         )}
                     />
+                    {/* Seleção de Bimestre */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
+                        <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            onPress={() => setModalBimestreVisible(true)}
+                        >
+                            <Text style={{ color: textColor, marginRight: 10 }}>Bimestre: {bimestreSelecionado}º</Text>
+                            <Icon name="chevron-down" size={20} color={textColor} />
+                        </TouchableOpacity>
+                    </View>
                     <BarChart
                         data={data}
                         width={screenWidth * 0.99}
@@ -194,6 +251,29 @@ export default function PerfilAluno() {
                     />
                 </View>
             </View>
+
+            {/* Modal de Seleção de Bimestre */}
+            <Modal visible={modalBimestreVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+                        {[1, 2, 3, 4].map((bimestre) => (
+                            <TouchableOpacity
+                                key={bimestre}
+                                style={styles.modalItem}
+                                onPress={() => {
+                                    setBimestreSelecionado(bimestre);
+                                    setModalBimestreVisible(false);
+                                }}
+                            >
+                                <Text style={[styles.modalText, { color: textColor }]}>
+                                    {bimestre}º Bimestre
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
 
             {/* Modal de Edição */}
             <Modal visible={modalEditVisible} transparent animationType="slide">
