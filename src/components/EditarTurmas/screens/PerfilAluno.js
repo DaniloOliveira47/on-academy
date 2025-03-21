@@ -5,7 +5,6 @@ import axios from 'axios';
 import Campo from '../../Perfil/Campo';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { BarChart } from 'react-native-chart-kit';
 import { useTheme } from '../../../path/ThemeContext';
 
 export default function PerfilAluno() {
@@ -31,6 +30,8 @@ export default function PerfilAluno() {
     const [feedbacks, setFeedbacks] = useState([]); // Estado para armazenar os feedbacks
     const [bimestreSelecionado, setBimestreSelecionado] = useState(1); // Estado para o bimestre selecionado
     const [modalBimestreVisible, setModalBimestreVisible] = useState(false); // Estado para o modal de seleção de bimestre
+    const [modalBarraVisible, setModalBarraVisible] = useState(false); // Estado para o modal da barra
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 }); // Estado para os dados da barra selecionada
 
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -125,19 +126,12 @@ export default function PerfilAluno() {
 
     const medias = calcularMedias();
 
-    const data = {
-        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
-        datasets: [{
-            data: medias,
-            colors: [
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6'
-            ]
-        }]
-    };
+    // Dados para o gráfico
+    const labels = ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'];
+    const barWidth = 30; // Largura de cada barra
+    const barMargin = 10; // Margem entre as barras
+    const maxBarHeight = 150; // Altura máxima das barras
+    const maxValue = Math.max(...medias); // Valor máximo para escalar as barras
 
     const handleEditSave = () => {
         setPerfil(perfilEdit);
@@ -147,6 +141,11 @@ export default function PerfilAluno() {
     const handleDelete = () => {
         console.log('Perfil excluído');
         setModalDeleteVisible(false);
+    };
+
+    const handleBarraClick = (label, value) => {
+        setBarraSelecionada({ label, value });
+        setModalBarraVisible(true);
     };
 
     if (loading) {
@@ -189,7 +188,6 @@ export default function PerfilAluno() {
                         <Campo label="Data de Nascimento" text={perfil.nascimento} textColor={textColor} isInline={true} />
                     </View>
                     <View style={styles.inlineFieldsContainer}>
-                        <Campo label="Senha" text={perfil.senha} textColor={textColor} isPassword={true} isInline={true} />
                         <Campo label="Turma" text={perfil.turma} textColor={textColor} isInline={true} />
                     </View>
                     <View style={styles.buttonContainer}>
@@ -201,7 +199,7 @@ export default function PerfilAluno() {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={[styles.tabelaContainer, { backgroundColor: formBackgroundColor }]}>
+                <View style={[styles.tabelaContainer, { backgroundColor: formBackgroundColor, marginBottom: 50 }]}>
                     <View style={[styles.tabelaHeader, { backgroundColor: '#F0F7FF' }]}>
                         <Text style={[styles.tabelaHeaderText, { color: 'black' }]}>Ocorrência</Text>
                         <Text style={[styles.tabelaHeaderText, { color: 'black' }]}>Turma</Text>
@@ -218,37 +216,32 @@ export default function PerfilAluno() {
                             </View>
                         )}
                     />
-                    {/* Seleção de Bimestre */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
-                        <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center' }}
-                            onPress={() => setModalBimestreVisible(true)}
-                        >
-                            <Text style={{ color: textColor, marginRight: 10 }}>Bimestre: {bimestreSelecionado}º</Text>
-                            <Icon name="chevron-down" size={20} color={textColor} />
-                        </TouchableOpacity>
+                    <View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20, width: '100%' }}>
+                            <View
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F7FF', borderTopRightRadius: 10, borderTopLeftRadius: 10, padding: 8 }}
+                            >
+                                <Text style={{ color: textColor, marginRight: 10 }}>Bimestre: {bimestreSelecionado}º</Text>
+                                <TouchableOpacity onPress={() => setModalBimestreVisible(true)}><Icon name="chevron-down" size={20} color={textColor} /></TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View style={[styles.chartContainer, { backgroundColor: perfilBackgroundColor, paddingBottom: 0, borderTopLeftRadius: 10, borderBottomRightRadius: 10, borderBottomLeftRadius: 10 }]}>
+                            <View style={styles.chart}>
+                                {medias.map((value, index) => {
+                                    const barHeight = (value / maxValue) * maxBarHeight;
+                                    return (
+                                        <TouchableOpacity key={index} onPress={() => handleBarraClick(labels[index], value)}>
+                                            <View style={styles.barContainer}>
+                                                <View style={[styles.bar, { height: barHeight }]} />
+                                                <Text style={[styles.barLabel, { color: textColor }]}>{labels[index]}</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
                     </View>
-                    <BarChart
-                        data={data}
-                        width={screenWidth * 0.99}
-                        height={200}
-                        yAxisSuffix="%"
-                        fromZero
-                        showBarTops={false}
-                        withCustomBarColorFromData={true}
-                        flatColor={true}
-                        chartConfig={{
-                            backgroundGradientFrom: perfilBackgroundColor,
-                            backgroundGradientTo: perfilBackgroundColor,
-                            decimalPlaces: 0,
-                            color: () => '#1E6BE6',
-                            labelColor: () => textColor,
-                            barPercentage: 1.2,
-                            fillShadowGradient: '#A9C1F7',
-                            fillShadowGradientOpacity: 1,
-                        }}
-                        style={[styles.chart, { borderTopWidth: 2, color: textColor }]}
-                    />
                 </View>
             </View>
 
@@ -353,6 +346,21 @@ export default function PerfilAluno() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Modal para Detalhes da Barra */}
+            <Modal visible={modalBarraVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Valor</Text>
+                        <Text style={[styles.modalText, { color: textColor }]}>
+                            {barraSelecionada.value.toFixed(2)}
+                        </Text>
+                        <TouchableOpacity style={styles.cancelButton} onPress={() => setModalBarraVisible(false)}>
+                            <Text style={styles.buttonText}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -400,6 +408,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: 15,
     },
+    modalText: {
+        fontSize: 20
+    },
     iconeBotao: {
         padding: 10,
     },
@@ -411,14 +422,15 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         backgroundColor: '#FFF',
-        padding: 20,
         borderRadius: 12,
         width: '80%',
+        padding: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 10,
+        alignItems:'center'
     },
     modalTitle: {
         fontSize: 20,
@@ -453,6 +465,11 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         width: '45%',
         alignItems: 'center',
+    },
+    linhaUser: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10
     },
     deleteButton: {
         backgroundColor: 'red',
@@ -503,9 +520,29 @@ const styles = StyleSheet.create({
         width: '30%',
         textAlign: 'center',
     },
-    chart: {
-        width: '100%',
-        justifyContent: 'center',
+    chartContainer: {
         alignItems: 'center',
+        justifyContent: 'center',
     },
+    chart: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        height: 'auto',
+        padding: 10,
+    },
+    barContainer: {
+        alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    bar: {
+        width: 30,
+        backgroundColor: '#1E6BE6',
+        borderRadius: 5,
+    },
+    barLabel: {
+        marginTop: 5,
+        fontSize: 12,
+        textAlign: 'center',
+    },
+
 });
