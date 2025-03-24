@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Dimensions, TextInput } from 'react-native';
+import {
+    StyleSheet,
+    Text,
+    View,
+    Image,
+    TouchableOpacity,
+    ActivityIndicator,
+    ScrollView,
+    Alert,
+    Dimensions,
+    TextInput,
+    Modal
+} from 'react-native';
 import Campo from '../../Perfil/Campo';
 import { useTheme } from '../../../path/ThemeContext';
 import HeaderSimples from '../../Gerais/HeaderSimples';
-import { BarChart } from 'react-native-chart-kit';
 import Perguntas from '../../Feedback/Perguntas';
 import Avaliacao from '../../Feedback/Avaliacao';
 import axios from 'axios';
 import Swiper from 'react-native-swiper';
-import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
@@ -17,32 +28,34 @@ export default function AlunoPerfil({ route }) {
     const [aluno, setAluno] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [ratings, setRatings] = useState(Array(5).fill(0)); // Respostas atuais (em preenchimento)
-    const [graphData, setGraphData] = useState(Array(5).fill(0)); // Dados do gráfico (só muda com o bimestre)
-    const [bimestre, setBimestre] = useState(1);
-    const [conteudoFeedback, setConteudoFeedback] = useState(''); // Estado para o conteúdo do feedback
+    const [ratings, setRatings] = useState(Array(5).fill(0));
+    const [conteudoFeedback, setConteudoFeedback] = useState('');
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
+    const [professorSelecionado, setProfessorSelecionado] = useState(null);
+    const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
+    const [modalProfessorVisible, setModalProfessorVisible] = useState(false);
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [professores, setProfessores] = useState([]);
+    const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
+    const [semFeedbacks, setSemFeedbacks] = useState(false);
+    const scrollViewRef = React.useRef();
 
     const fundoColor = isDarkMode ? '#33383E' : '#F0F7FF';
     const textInputColor = isDarkMode ? '#FFF' : '#33383E';
-
-    const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const sombra = isDarkMode ? '#FFF' : '#000';
-    const formatarData = (dataCompleta) => {
-        if (!dataCompleta) return ''; // Caso a data seja nula ou indefinida
-    
-        // Divide a data e o horário
-        const [data, horario] = dataCompleta.split(' ');
-    
-        // Divide a data em ano, mês e dia
-        const [ano, mes, dia] = data.split('-');
-    
-        // Reorganiza para o formato xx-xx-xxxx
-        return `${dia}/${mes}/${ano}`;
-    };
+
+    // Dimensões e configurações do gráfico
+    const barWidth = 30;
+    const barMargin = 10;
+    const maxBarHeight = 150;
+    const labels = ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'];
+    const maxValue = 10;
 
     useEffect(() => {
         const fetchAluno = async () => {
@@ -62,41 +75,110 @@ export default function AlunoPerfil({ route }) {
 
     useEffect(() => {
         if (alunoId) {
-            fetchFeedback();
+            fetchFeedbacks();
         }
-    }, [bimestre, alunoId]);
+    }, [alunoId, bimestreSelecionado, professorSelecionado]);
 
-    const fetchFeedback = async () => {
+    const fetchFeedbacks = async () => {
         try {
             const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
-            const feedbacks = response.data;
+            setFeedbacks(response.data);
 
-            // Filtra o feedback correspondente ao bimestre selecionado
-            const feedbackDoBimestre = feedbacks.find(feedback => feedback.bimestre === bimestre);
+            const professoresUnicos = [];
+            const professoresMap = new Map();
 
-            if (feedbackDoBimestre) {
-                // Atualiza os dados do gráfico com as respostas do bimestre selecionado
-                setGraphData([
-                    feedbackDoBimestre.resposta1,
-                    feedbackDoBimestre.resposta2,
-                    feedbackDoBimestre.resposta3,
-                    feedbackDoBimestre.resposta4,
-                    feedbackDoBimestre.resposta5,
-                ]);
-            } else {
-                // Se não houver feedback para o bimestre selecionado, reseta os dados do gráfico
-                setGraphData(Array(5).fill(0));
-            }
+            response.data.forEach(feedback => {
+                if (feedback.createdByDTO && !professoresMap.has(feedback.createdByDTO.id)) {
+                    professoresMap.set(feedback.createdByDTO.id, true);
+                    professoresUnicos.push(feedback.createdByDTO);
+                }
+            });
 
-            // Reseta as respostas atuais para zero
-            setRatings(Array(5).fill(0));
+            setProfessores(professoresUnicos);
+            atualizarDadosGrafico(response.data);
         } catch (error) {
             console.error('Erro ao carregar os feedbacks:', error);
         }
     };
 
+    const atualizarDadosGrafico = (feedbacksData) => {
+        let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
+        if (professorSelecionado) {
+            feedbacksFiltrados = feedbacksFiltrados.filter(
+                feedback => feedback.createdByDTO.id === professorSelecionado.id
+            );
+
+            if (feedbacksFiltrados.length > 0) {
+                const feedback = feedbacksFiltrados[0];
+                setDadosGrafico([
+                    feedback.resposta1,
+                    feedback.resposta2,
+                    feedback.resposta3,
+                    feedback.resposta4,
+                    feedback.resposta5
+                ]);
+                setSemFeedbacks(false);
+                return;
+            }
+        }
+
+        if (feedbacksFiltrados.length === 0) {
+            setSemFeedbacks(true);
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            return;
+        }
+
+        setSemFeedbacks(false);
+
+        const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
+            return {
+                resposta1: acc.resposta1 + feedback.resposta1,
+                resposta2: acc.resposta2 + feedback.resposta2,
+                resposta3: acc.resposta3 + feedback.resposta3,
+                resposta4: acc.resposta4 + feedback.resposta4,
+                resposta5: acc.resposta5 + feedback.resposta5,
+            };
+        }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
+
+        const novasMedias = [
+            somaRespostas.resposta1 / feedbacksFiltrados.length,
+            somaRespostas.resposta2 / feedbacksFiltrados.length,
+            somaRespostas.resposta3 / feedbacksFiltrados.length,
+            somaRespostas.resposta4 / feedbacksFiltrados.length,
+            somaRespostas.resposta5 / feedbacksFiltrados.length,
+        ];
+
+        setDadosGrafico(novasMedias);
+    };
+
+    const formatarData = (dataCompleta) => {
+        if (!dataCompleta) return '';
+        const [data, horario] = dataCompleta.split(' ');
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`;
+    };
+
+    const handleBarraClick = (label, value) => {
+        if (value === 0) return; // Não mostra modal para barras com valor zero
+        setBarraSelecionada({ label, value });
+        setModalBarraVisible(true);
+    };
+
+    const handleSelecionarProfessor = (professor) => {
+        setProfessorSelecionado(professor);
+        setModalProfessorVisible(false);
+    };
+
+    const handleLimparFiltroProfessor = () => {
+        setProfessorSelecionado(null);
+    };
+
+    const scrollParaFormulario = () => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+    };
+
     const enviarFeedback = async () => {
-        // Verifica se todas as perguntas foram respondidas
         if (ratings.some(rating => rating === 0)) {
             Alert.alert('Erro', 'Por favor, avalie todas as perguntas antes de enviar.');
             return;
@@ -110,23 +192,20 @@ export default function AlunoPerfil({ route }) {
                 resposta3: ratings[2],
                 resposta4: ratings[3],
                 resposta5: ratings[4],
-                bimestre: bimestre,
+                bimestre: bimestreSelecionado,
                 createdBy: { id: professorId },
                 recipientStudent: { id: alunoId },
-                conteudo: conteudoFeedback, // Adiciona o conteúdo do feedback
+                conteudo: conteudoFeedback,
             };
 
-            console.log('Dados do feedback a serem enviados:', feedbackData);
-
-            const response = await axios.post('http://10.0.2.2:3000/api/feedbackForm', feedbackData);
+            await axios.post('http://10.0.2.2:3000/api/feedbackForm', feedbackData);
             Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
-            console.log('Resposta do servidor:', response.data);
 
-            // Após enviar o feedback, atualiza os dados do gráfico
-            fetchFeedback();
+            fetchFeedbacks();
+            setRatings(Array(5).fill(0));
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
-            console.error('Erro ao enviar feedback:', error.response ? error.response.data : error.message);
+            console.error('Erro ao enviar feedback:', error);
         }
     };
 
@@ -144,23 +223,18 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
             };
 
-            console.log('Dados do feedback escrito a serem enviados:', feedbackData);
-
-            const response = await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData);
+            await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData);
             Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
-            console.log('Resposta do servidor:', response.data);
-
-            // Limpa o campo de feedback após o envio
             setConteudoFeedback('');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
-            console.error('Erro ao enviar feedback escrito:', error.response ? error.response.data : error.message);
+            console.error('Erro ao enviar feedback escrito:', error);
         }
     };
 
     const renderPergunta = (pergunta, index) => {
         return (
-            <View key={index} style={styles.containerPerguntas}>
+            <View key={index} style={[styles.containerPerguntas, {backgroundColor: perfilBackgroundColor}]}>
                 <Perguntas numero={(index + 1).toString()} text={pergunta} />
                 <View style={styles.avaliacaoContainer}>
                     {[...Array(10)].map((_, i) => (
@@ -170,7 +244,7 @@ export default function AlunoPerfil({ route }) {
                             selected={ratings[index] === i + 1}
                             onPress={() => {
                                 const newRatings = [...ratings];
-                                newRatings[index] = i + 1; // Atualiza o valor da avaliação para a pergunta correspondente
+                                newRatings[index] = i + 1;
                                 setRatings(newRatings);
                             }}
                         />
@@ -179,6 +253,14 @@ export default function AlunoPerfil({ route }) {
             </View>
         );
     };
+
+    const perguntas = [
+        "Nível de Engajamento (O quanto a aula prendeu a atenção e motivou a participação?)",
+        "Nível de Desempenho (O quanto o aluno demonstrou compreensão do conteúdo?)",
+        "Nível de Entrega (O quanto o aluno entregou as atividades propostas?)",
+        "Nível de Atenção (O quanto o aluno se manteve focado durante a aula?)",
+        "Nível de Comportamento (O quanto o aluno se comportou adequadamente?)",
+    ];
 
     if (loading) {
         return (
@@ -204,37 +286,15 @@ export default function AlunoPerfil({ route }) {
         );
     }
 
-    // Dados para o gráfico
-    const data = {
-        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
-        datasets: [{
-            data: graphData, // Usa os dados do gráfico (não as respostas atuais)
-            colors: [
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6'
-            ]
-        }]
-    };
-
-    const perguntas = [
-        "Nível de Engajamento (O quanto a aula prendeu a atenção e motivou a participação?)",
-        "Nível de Desempenho (O quanto o aluno demonstrou compreensão do conteúdo?)",
-        "Nível de Entrega (O quanto o aluno entregou as atividades propostas?)",
-        "Nível de Atenção (O quanto o aluno se manteve focado durante a aula?)",
-        "Nível de Comportamento (O quanto o aluno se comportou adequadamente?)",
-    ];
-
     return (
-        <ScrollView>
+        <ScrollView ref={scrollViewRef}>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <HeaderSimples titulo="PERFIL" />
                 <View style={{ padding: 15 }}>
                     <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 0 }]} source={require('../../../assets/image/barraAzul.png')} />
                     <View style={[styles.form, {
-                        backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
+                        backgroundColor: formBackgroundColor,
+                        shadowColor: isDarkMode ? '#FFF' : '#000',
                         shadowOpacity: 0.1,
                         shadowRadius: 4,
                         elevation: 3,
@@ -253,73 +313,132 @@ export default function AlunoPerfil({ route }) {
                         <Campo label="Email" text={aluno.emailAluno} textColor={textColor} />
                         <Campo label="Nº Matrícula" text={aluno.matriculaAluno} textColor={textColor} />
                         <View style={styles.doubleCampo}>
-                            <View style={[styles.campo,]}>
-                                <Text style={[styles.label, { color: textColor }]}>
-                                    Telefone
-                                </Text>
-                                <View style={[styles.inputContainer, { backgroundColor: fundoColor }]}>
-                                    <Text
-                                        style={[styles.colorInput, { color: textInputColor }]}
-                                    >
+                            <View style={[styles.campo]}>
+                                <Text style={[styles.label, { color: textColor }]}>Telefone</Text>
+                                <View style={[styles.inputContainer, { backgroundColor: perfilBackgroundColor }]}>
+                                    <Text style={[styles.colorInput, { color: textInputColor }]}>
                                         {aluno.telefoneAluno}
                                     </Text>
                                 </View>
                             </View>
                             <View style={[styles.campo]}>
-                                <Text style={[styles.label, { color: textColor }]}>
-                                    Data de Nascimento
-                                </Text>
-                                <View style={[styles.inputContainer, { backgroundColor: fundoColor }]}>
-                                    <Text
-                                        style={[styles.colorInput, { color: textInputColor }]}
-                                    >
-                                        {formatarData(aluno.dataNascimentoAluno)} {/* Formata a data */}
+                                <Text style={[styles.label, { color: textColor }]}>Data de Nascimento</Text>
+                                <View style={[styles.inputContainer, { backgroundColor: perfilBackgroundColor }]}>
+                                    <Text style={[styles.colorInput, { color: textInputColor }]}>
+                                        {formatarData(aluno.dataNascimentoAluno)}
                                     </Text>
                                 </View>
                             </View>
                         </View>
                         <Campo label="Turma" text={aluno.turma.nomeTurma} textColor={textColor} />
                     </View>
-                    <View style={[styles.grafico, { shadowColor: sombra, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5, backgroundColor: formBackgroundColor }]}>
-                        <View style={{ width: '100', alignItems: 'flex-start' }}>
-                            <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
-                                    Bimestre
+
+                    <View style={[styles.grafico, {
+                        shadowColor: sombra,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 5,
+                        backgroundColor: formBackgroundColor
+                    }]}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, width: '100%' }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: perfilBackgroundColor,
+                                padding: 8
+                            }}>
+                                <Text style={{ color: textColor, marginRight: 10 }}>Bimestre: {bimestreSelecionado}º</Text>
+                                <TouchableOpacity onPress={() => setModalBimestreVisible(true)}>
+                                    <Icon name="chevron-down" size={20} color={textColor} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: perfilBackgroundColor,
+                                borderTopRightRadius: 10,
+                                borderTopLeftRadius: 10,
+                                padding: 8
+                            }}>
+                                <Text style={{ color: textColor, marginRight: 10 }}>
+                                    {professorSelecionado ? professorSelecionado.nomeDocente : 'Todos Professores'}
                                 </Text>
-                                <Picker
-                                    selectedValue={bimestre}
-                                    onValueChange={(itemValue) => setBimestre(itemValue)}
-                                    style={{ width: 100, height: 50 }}
-                                >
-                                    <Picker.Item label="1" value={1} />
-                                    <Picker.Item label="2" value={2} />
-                                    <Picker.Item label="3" value={3} />
-                                    <Picker.Item label="4" value={4} />
-                                </Picker>
+                                <TouchableOpacity onPress={() => setModalProfessorVisible(true)}>
+                                    <Icon name="chevron-down" size={20} color={textColor} />
+                                </TouchableOpacity>
+                                {professorSelecionado && (
+                                    <TouchableOpacity
+                                        style={{ marginLeft: 10 }}
+                                        onPress={handleLimparFiltroProfessor}
+                                    >
+                                        <Icon name="times" size={20} color="red" />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
 
-                        <BarChart
-                            data={data}
-                            width={screenWidth * 0.99}
-                            height={200}
-                            yAxisSuffix="%"
-                            fromZero
-                            showBarTops={false}
-                            withCustomBarColorFromData={true}
-                            flatColor={true}
-                            chartConfig={{
-                                backgroundGradientFrom: perfilBackgroundColor,
-                                backgroundGradientTo: perfilBackgroundColor,
-                                decimalPlaces: 0,
-                                color: () => '#1E6BE6',
-                                labelColor: () => textColor,
-                                barPercentage: 1.2,
-                                fillShadowGradient: '#A9C1F7',
-                                fillShadowGradientOpacity: 1,
-                            }}
-                            style={styles.chart}
-                        />
+                        {semFeedbacks ? (
+                            <View style={styles.semFeedbacksContainer}>
+                                <Image
+                                    source={require('../../../assets/image/sem-feedback.png')}
+                                    style={styles.semFeedbacksImagem}
+                                />
+                                <Text style={[styles.semFeedbacksTitulo, { color: textColor }]}>
+                                    Nenhum feedback encontrado
+                                </Text>
+                                <Text style={[styles.semFeedbacksTexto, { color: textColor }]}>
+                                    {professorSelecionado
+                                        ? `O professor ${professorSelecionado.nomeDocente} ainda não enviou feedbacks para este bimestre.`
+                                        : `Nenhum professor enviou feedbacks para o ${bimestreSelecionado}º bimestre.`}
+                                </Text>
+
+
+                            </View>
+                        ) : (
+                            <>
+
+                                <View style={[styles.chartContainer, {
+                                    backgroundColor: perfilBackgroundColor,
+                                    paddingBottom: 0,
+                                    borderBottomRightRadius: 10,
+                                    borderBottomLeftRadius: 10,
+                                }]}>
+                                    <View>
+                                        <Text style={[styles.graficoTitulo, { color: textColor }]}>
+                                            {professorSelecionado ?
+                                                `Avaliação do Professor ${professorSelecionado.nomeDocente}` :
+                                                'Média Geral dos Professores'}
+                                        </Text>
+                                        <View style={styles.chart}>
+                                            {dadosGrafico.map((value, index) => {
+                                                const barHeight = (value / maxValue) * maxBarHeight;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={index}
+                                                        onPress={() => handleBarraClick(labels[index], value)}
+                                                        disabled={value === 0}
+                                                    >
+                                                        <View style={styles.barContainer}>
+                                                            <View style={[styles.bar, {
+                                                                height: barHeight,
+                                                                backgroundColor: value === 0 ? '#CCCCCC' : barraAzulColor
+                                                            }]} />
+                                                            <Text style={[styles.barLabel, {
+                                                                color: textColor,
+                                                                opacity: value === 0 ? 0.5 : 1
+                                                            }]}>{labels[index]}</Text>
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+
                         <View style={{ width: '100%', marginTop: 20 }}>
                             <Text style={{ color: '#0077FF', fontSize: 16, fontWeight: 'bold' }}>
                                 Dê seu feedback sobre o aluno(a)!
@@ -347,13 +466,16 @@ export default function AlunoPerfil({ route }) {
                         </View>
                     </View>
 
-                    {/* Input para escrever sobre o aluno */}
                     <View style={[styles.feedbackContainer, { backgroundColor: formBackgroundColor }]}>
                         <Text style={[styles.feedbackLabel, { color: textColor }]}>Escreva sobre esse aluno:</Text>
                         <TextInput
-                            style={[styles.feedbackInput, { color: textColor, borderColor: textColor }]}
+                            style={[styles.feedbackInput, {
+                                color: textColor,
+                                borderColor: textColor,
+                                backgroundColor: perfilBackgroundColor
+                            }]}
                             placeholder="Digite seu feedback..."
-                            placeholderTextColor={textColor}
+                            placeholderTextColor={isDarkMode ? '#AAA' : '#666'}
                             multiline
                             value={conteudoFeedback}
                             onChangeText={setConteudoFeedback}
@@ -367,6 +489,79 @@ export default function AlunoPerfil({ route }) {
                     </View>
                 </View>
             </View>
+
+            <Modal visible={modalBimestreVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+                        {[1, 2, 3, 4].map((bimestre) => (
+                            <TouchableOpacity
+                                key={bimestre}
+                                style={styles.modalItem}
+                                onPress={() => {
+                                    setBimestreSelecionado(bimestre);
+                                    setModalBimestreVisible(false);
+                                }}
+                            >
+                                <Text style={[styles.modalText, { color: textColor }]}>
+                                    {bimestre}º Bimestre
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal visible={modalProfessorVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+
+                        <TouchableOpacity
+                            style={styles.modalItem}
+                            onPress={() => {
+                                handleSelecionarProfessor(null);
+                            }}
+                        >
+                            <Text style={[styles.modalText, { color: textColor }]}>
+                                Todos Professores
+                            </Text>
+                        </TouchableOpacity>
+
+                        {professores.map((professor) => (
+                            <TouchableOpacity
+                                key={professor.id}
+                                style={styles.modalItem}
+                                onPress={() => {
+                                    handleSelecionarProfessor(professor);
+                                }}
+                            >
+                                <Text style={[styles.modalText, { color: textColor }]}>
+                                    {professor.nomeDocente}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal visible={modalBarraVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
+                        <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
+                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                            {barraSelecionada.value.toFixed(1)}
+                        </Text>
+                    
+                        <TouchableOpacity
+                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                            onPress={() => setModalBarraVisible(false)}
+                        >
+                            <Text style={[styles.buttonText, { color: '#1E6BE6' }]}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -379,7 +574,6 @@ const styles = StyleSheet.create({
     },
     campo: {
         marginTop: 15,
-
     },
     inline: {
         flex: 1,
@@ -434,12 +628,19 @@ const styles = StyleSheet.create({
         width: '100%',
         marginTop: 20,
         borderRadius: 10,
-        alignItems: 'flex-end'
+    },
+    graficoTitulo: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginVertical: 10,
     },
     chart: {
         width: '100%',
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        flexDirection: 'row',
+        padding: 10
     },
     barraAzul: {
         width: 382,
@@ -498,5 +699,102 @@ const styles = StyleSheet.create({
     textoBotaoEnviar: {
         color: 'white',
         fontWeight: 'bold',
+    },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        width: '80%',
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
+        alignItems: 'center'
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalItem: {
+        padding: 15,
+        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    modalText: {
+        fontSize: 16,
+        textAlign: 'center'
+    },
+    cancelButton: {
+        paddingVertical: 12,
+        borderRadius: 8,
+        width: '45%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontWeight: 'bold',
+    },
+    chartContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    barContainer: {
+        alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    bar: {
+        width: 30,
+        backgroundColor: '#1E6BE6',
+        borderRadius: 5,
+    },
+    barLabel: {
+        marginTop: 5,
+        fontSize: 12,
+        textAlign: 'center',
+    },
+    semFeedbacksContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+    },
+    semFeedbacksImagem: {
+        width: 150,
+        height: 150,
+        marginBottom: 20,
+        opacity: 0.7
+    },
+    semFeedbacksTitulo: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    semFeedbacksTexto: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+    botaoAdicionarFeedback: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        marginTop: 10,
+    },
+    textoBotaoAdicionar: {
+        color: 'white',
+        fontWeight: 'bold',
+        marginLeft: 10,
     },
 });

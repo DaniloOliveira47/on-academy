@@ -8,7 +8,7 @@ export default function Campo({ label, text, isPassword = false, isInline = fals
     const [showPassword, setShowPassword] = useState(false);
 
     const textColor = isDarkMode ? '#FFF' : '#000';
-    const fundoColor = isDarkMode ? '#33383E' : '#F0F7FF';
+    const fundoColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textInputColor = isDarkMode ? '#FFF' : '#33383E';
 
     return (
