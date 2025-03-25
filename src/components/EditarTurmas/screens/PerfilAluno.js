@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 10,
-        alignItems:'center'
+        alignItems: 'center'
     },
     modalTitle: {
         fontSize: 20,

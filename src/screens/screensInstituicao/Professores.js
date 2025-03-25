@@ -41,7 +41,7 @@ export default function ProfessoresFeedback() {
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>Professores</Text>
 
                 </View>
-                <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF', height: '100%' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
                             style={styles.input}
