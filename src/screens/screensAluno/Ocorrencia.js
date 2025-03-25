@@ -6,24 +6,21 @@ import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View, Alert, Modal
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
-import { BarChart } from 'react-native-chart-kit';
+import GraficoFeedback from '../../components/Gerais/GraficoFeedback'; // Importando o mesmo componente usado no AlunoPerfil
 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
-    const [tipoSelecionado, setTipoSelecionado] = useState("1º Bim.");
     const [professores, setProfessores] = useState([]);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
-    const [titulo, setTitulo] = useState('');
     const [conteudo, setConteudo] = useState('');
     const [feedbacks, setFeedbacks] = useState([]);
     const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
+    const [userId, setUserId] = useState(null);
+
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
-    const screenWidth = Dimensions.get('window').width - 40;
-
-    const [userId, setUserId] = useState(null);
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
@@ -67,7 +64,7 @@ export default function Ocorrencia() {
     const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
 
     // Calcula as médias das respostas para o gráfico
-    const calcularMedias = () => {
+    const calcularDadosGrafico = () => {
         if (feedbacksFiltrados.length === 0) {
             return [0, 0, 0, 0, 0];
         }
@@ -82,35 +79,19 @@ export default function Ocorrencia() {
             };
         }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
 
-        const medias = [
+        return [
             somaRespostas.resposta1 / feedbacksFiltrados.length,
             somaRespostas.resposta2 / feedbacksFiltrados.length,
             somaRespostas.resposta3 / feedbacksFiltrados.length,
             somaRespostas.resposta4 / feedbacksFiltrados.length,
             somaRespostas.resposta5 / feedbacksFiltrados.length,
         ];
-
-        return medias;
     };
 
-    const medias = calcularMedias();
-
-    const data = {
-        labels: ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'],
-        datasets: [{
-            data: medias,
-            colors: [
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6',
-                () => '#1E6BE6'
-            ]
-        }]
-    };
+    const dadosGrafico = calcularDadosGrafico();
 
     const selecionarProfessor = (professor) => {
-        setProfessorSelecionado(professor); // Define o professor selecionado
+        setProfessorSelecionado(professor);
     };
 
     const enviarFeedback = async () => {
@@ -130,13 +111,15 @@ export default function Ocorrencia() {
             const feedback = {
                 conteudo: conteudo,
                 createdBy: { id: parseInt(user_id, 10) },
-                recipientTeacher: { id: professorSelecionado.id } // Usa o ID do professor selecionado
+                recipientTeacher: { id: professorSelecionado.id }
             };
 
             const response = await axios.post('http://10.0.2.2:3000/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
+                setConteudo('');
+                setProfessorSelecionado(null);
             } else {
                 Alert.alert('Erro', 'Não foi possível enviar o feedback.');
             }
@@ -144,81 +127,52 @@ export default function Ocorrencia() {
             console.error('Erro ao enviar feedback:', error);
             Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
         }
-
-        setProfessorSelecionado(null);
-        setTitulo('');
-        setConteudo('');
     };
 
     return (
         <ScrollView>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                <View style={{ backgroundColor: formBackgroundColor, padding: 20, borderRadius: 20 }}>
-                    <View style={{ width: '100%', alignItems: 'flex-end', marginLeft: 12 }}>
-                        <View style={{ alignItems: 'center', flexDirection: 'row', gap: 5 }}>
-                            <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>
-                                Bimestre
-                            </Text>
-                            <TouchableOpacity
-                                style={{ backgroundColor: perfilBackgroundColor, padding: 8, width: 32, alignItems: 'center', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
-                                onPress={() => setModalVisible(true)}
-                            >
-                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: 'bold' }}>
-                                    v
-                                </Text>
-                            </TouchableOpacity>
+                {/* Componente de Gráfico Reutilizado */}
+                <GraficoFeedback
+                    dadosGrafico={dadosGrafico}
+                    bimestreSelecionado={bimestreSelecionado}
+                    onSelecionarBimestre={() => setModalVisible(true)}
+                    professorSelecionado={null} // Não há filtro por professor
+                    semFeedbacks={feedbacksFiltrados.length === 0}
+                    professores={[]} // Não precisa da lista de professores para filtrar
+                    onLimparFiltroProfessor={() => {}}
+                    onBarraClick={(label, value) => {
+                        if (value === 0) return;
+                        Alert.alert(label, `Valor: ${value.toFixed(1)}`);
+                    }}
+                />
+
+                {/* Modal para seleção de bimestre */}
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                            {[1, 2, 3, 4].map((bimestre) => (
+                                <TouchableOpacity
+                                    key={bimestre}
+                                    style={styles.modalItem}
+                                    onPress={() => {
+                                        setBimestreSelecionado(bimestre);
+                                        setModalVisible(false);
+                                    }}
+                                >
+                                    <Text style={[styles.modalText, { color: textColor }]}>
+                                        {bimestre}º Bim.
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     </View>
-
-                    {/* Modal para seleção de bimestre */}
-                    <Modal
-                        visible={modalVisible}
-                        transparent={true}
-                        onRequestClose={() => setModalVisible(false)}
-                    >
-                        <View style={styles.modalOverlay}>
-                            <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                                {[1, 2, 3, 4].map((bimestre) => (
-                                    <TouchableOpacity
-                                        key={bimestre}
-                                        style={styles.modalItem}
-                                        onPress={() => {
-                                            setBimestreSelecionado(bimestre);
-                                            setModalVisible(false);
-                                        }}
-                                    >
-                                        <Text style={[styles.modalText, { color: textColor }]}>
-                                            {bimestre}º Bim.
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
-                    </Modal>
-
-                    <BarChart
-                        data={data}
-                        width={screenWidth * 0.99}
-                        height={200}
-                        yAxisSuffix="%"
-                        fromZero
-                        showBarTops={false}
-                        withCustomBarColorFromData={true}
-                        flatColor={true}
-                        chartConfig={{
-                            backgroundGradientFrom: perfilBackgroundColor,
-                            backgroundGradientTo: perfilBackgroundColor,
-                            decimalPlaces: 0,
-                            color: () => '#1E6BE6',
-                            labelColor: () => textColor,
-                            barPercentage: 1.2,
-                            fillShadowGradient: '#A9C1F7',
-                            fillShadowGradientOpacity: 1,
-                        }}
-                        style={styles.chart}
-                    />
-                </View>
+                </Modal>
 
                 <View style={[styles.container2, { backgroundColor: formBackgroundColor }]}>
                     <Text style={{ marginTop: 5, fontSize: 18, color: '#0077FF', fontWeight: 'bold' }}>
@@ -240,8 +194,7 @@ export default function Ocorrencia() {
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
-                                onPress={() => selecionarProfessor(professor)} // Seleciona o professor
-                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })} // Navega ao perfil
+                                onPress={() => selecionarProfessor(professor)}
                                 selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
@@ -253,7 +206,6 @@ export default function Ocorrencia() {
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
                                 onPress={() => selecionarProfessor(professor)}
-                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })}
                                 selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
@@ -265,7 +217,6 @@ export default function Ocorrencia() {
                                 nome={"Prof - " + professor.nomeDocente}
                                 id={professor.id}
                                 onPress={() => selecionarProfessor(professor)}
-                                onVerPerfil={() => navigation.navigate('ProfessorPerfil', { id: professor.id })}
                                 selecionado={professorSelecionado?.id === professor.id}
                             />
                         ))}
@@ -275,20 +226,26 @@ export default function Ocorrencia() {
                     {professorSelecionado && (
                         <>
                             <TextInput
-                                style={[styles.input, { backgroundColor: perfilBackgroundColor, color: textColor, height: 100 }]}
+                                style={[styles.input, { 
+                                    backgroundColor: perfilBackgroundColor, 
+                                    color: textColor, 
+                                    height: 100,
+                                    borderColor: textColor,
+                                    borderWidth: 1
+                                }]}
                                 placeholder={`Escreva aqui seu feedback para o prof(a) ${professorSelecionado.nomeDocente}`}
-                                placeholderTextColor={textColor}
+                                placeholderTextColor={isDarkMode ? '#AAA' : '#666'}
                                 multiline
                                 value={conteudo}
                                 onChangeText={setConteudo}
                             />
 
                             <TouchableOpacity
-                                style={styles.botaoEnviar}
+                                style={[styles.botaoEnviar, { backgroundColor: '#1E6BE6' }]}
                                 onPress={enviarFeedback}
                             >
-                                <Text style={{ color: 'white' }}>
-                                    Enviar
+                                <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                                    Enviar Feedback
                                 </Text>
                             </TouchableOpacity>
                         </>
@@ -303,30 +260,22 @@ const styles = StyleSheet.create({
     tela: {
         padding: 15,
         marginBottom: 30,
-        backgroundColor: '#F0F7FF'
     },
     container2: {
-        backgroundColor: 'white',
-        padding: 10,
+        padding: 20,
         marginTop: 20,
         borderRadius: 10
-    },
-    chart: {
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     input: {
         borderRadius: 10,
         padding: 10,
         marginTop: 20,
         width: '100%',
+        textAlignVertical: 'top',
     },
-
     botaoEnviar: {
-        backgroundColor: '#0077FF',
-        padding: 10,
-        borderRadius: 10,
+        padding: 12,
+        borderRadius: 8,
         alignItems: 'center',
         marginTop: 20,
     },
