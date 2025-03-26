@@ -6,22 +6,35 @@ import { useTheme } from '../../path/ThemeContext';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Checkbox } from 'react-native-paper'; // Importando o Checkbox
+import { Checkbox } from 'react-native-paper';
 
 export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete }) {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
-    const [editTurma, setEditTurma] = useState(turma);
-    const [editAno, setEditAno] = useState("2025");
-    const [editPeriodo, setEditPeriodo] = useState(periodo);
-    const [editCapacidade, setEditCapacidade] = useState("35");
-    const [editSala, setEditSala] = useState("01");
-    const [isAtiva, setIsAtiva] = useState(true);
+    const [editTurma, setEditTurma] = useState('');
+    const [editAnoLetivo, setEditAnoLetivo] = useState('2025-01-01');
+    const [editPeriodo, setEditPeriodo] = useState('');
+    const [editCapacidade, setEditCapacidade] = useState('35');
+    const [editSala, setEditSala] = useState('01');
     const [selectedProfessores, setSelectedProfessores] = useState([]);
     const [selectedDisciplinas, setSelectedDisciplinas] = useState([]);
     const [professores, setProfessores] = useState([]);
     const [disciplinas, setDisciplinas] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Inicializa os estados com os dados da turma
+    useEffect(() => {
+        if (turma) {
+            setEditTurma(turma.nomeTurma || '');
+            setEditAnoLetivo(turma.anoLetivoTurma || '2025-01-01');
+            setEditPeriodo(turma.periodoTurma || periodo || 'Manhã');
+            setEditCapacidade(turma.capacidadeMaximaTurma?.toString() || '35');
+            setEditSala(turma.salaTurma?.toString() || '01');
+            setSelectedProfessores(turma.idTeacher || []);
+            setSelectedDisciplinas(turma.disciplineId || []);
+        }
+    }, [turma, periodo]);
 
     // Navega para outra tela com os dados da turma
     const handleNavigate = () => {
@@ -45,14 +58,22 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                     {
                         text: 'Excluir',
                         onPress: async () => {
-                            await axios.delete(`http://10.0.2.2:3000/api/class/${turmaId}`, {
-                                headers: {
-                                    Authorization: `Bearer ${token}`
-                                }
-                            });
+                            setIsLoading(true);
+                            try {
+                                await axios.delete(`http://10.0.2.2:3000/api/class/${turmaId}`, {
+                                    headers: {
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                });
 
-                            Alert.alert('Sucesso', 'Turma excluída com sucesso!');
-                            onDelete(turmaId); // Atualiza a lista de turmas na tela principal
+                                Alert.alert('Sucesso', 'Turma excluída com sucesso!');
+                                onDelete(turmaId);
+                            } catch (error) {
+                                console.error('Erro ao deletar turma:', error);
+                                Alert.alert('Erro', 'Erro ao deletar turma. Tente novamente.');
+                            } finally {
+                                setIsLoading(false);
+                            }
                         }
                     }
                 ]
@@ -65,6 +86,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     // Função para salvar as alterações da turma
     const salvarEdicao = async () => {
+        // Validação dos campos numéricos
+        if (isNaN(parseInt(editCapacidade)) || isNaN(parseInt(editSala))) {
+            Alert.alert('Erro', 'Capacidade e Sala devem ser números válidos');
+            return;
+        }
+
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
@@ -72,14 +99,16 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 return;
             }
 
+            setIsLoading(true);
+
             const dadosAtualizados = {
-                nome: editTurma,
-                ano: editAno,
-                periodo: editPeriodo,
-                capacidade: editCapacidade,
-                sala: editSala,
-                professores: selectedProfessores,
-                disciplinas: selectedDisciplinas
+                nomeTurma: editTurma,
+                anoLetivoTurma: editAnoLetivo,
+                periodoTurma: editPeriodo,
+                capacidadeMaximaTurma: parseInt(editCapacidade),
+                salaTurma: parseInt(editSala),
+                idTeacher: selectedProfessores,
+                disciplineId: selectedDisciplinas
             };
 
             await axios.put(`http://10.0.2.2:3000/api/class/${turmaId}`, dadosAtualizados, {
@@ -89,10 +118,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             });
 
             Alert.alert('Sucesso', 'Turma atualizada com sucesso!');
-            setModalVisible(false); // Fecha o modal após salvar
+            setModalVisible(false);
         } catch (error) {
             console.error('Erro ao atualizar turma:', error);
             Alert.alert('Erro', 'Erro ao atualizar turma. Tente novamente.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -140,7 +171,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         <View style={[styles.card, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
             <View style={styles.linha}>
                 <Text style={{ fontWeight: 'bold', fontSize: 17, color: isDarkMode ? 'white' : 'black' }}>
-                    {turma}
+                    {turma?.nomeTurma || turma}
                 </Text>
                 <Text style={{ fontWeight: 'bold', color: isDarkMode ? 'white' : 'black' }}>
                     {numero}
@@ -150,18 +181,32 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 {alunos}
             </Text>
             <Text style={[styles.subTexto, { color: isDarkMode ? 'white' : 'black' }]}>
-                {periodo}
+                {turma?.periodoTurma || periodo}
             </Text>
 
             <View style={styles.botoesContainer}>
-                <TouchableOpacity onPress={handleNavigate} style={styles.botao}>
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Visualizar Turma</Text>
+                <TouchableOpacity 
+                    onPress={handleNavigate} 
+                    style={styles.botao}
+                    disabled={isLoading}
+                >
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                        {isLoading ? 'Carregando...' : 'Visualizar Turma'}
+                    </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.iconeBotao}>
-                    <Icon name="edit" size={20} color={isDarkMode ? 'white' : 'black'} />
+                <TouchableOpacity 
+                    onPress={() => setModalVisible(true)} 
+                    style={styles.iconeBotao}
+                    disabled={isLoading}
+                >
+                    <Icon name="edit" size={20} color={isLoading ? 'gray' : (isDarkMode ? 'white' : 'black')} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={deletarTurma} style={styles.iconeBotao}>
-                    <Icon name="trash" size={20} color={isDarkMode ? 'red' : 'darkred'} />
+                <TouchableOpacity 
+                    onPress={deletarTurma} 
+                    style={styles.iconeBotao}
+                    disabled={isLoading}
+                >
+                    <Icon name="trash" size={20} color={isLoading ? 'gray' : (isDarkMode ? 'red' : 'darkred')} />
                 </TouchableOpacity>
             </View>
 
@@ -183,9 +228,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
                             <Picker
-                                selectedValue={editAno}
+                                selectedValue={editAnoLetivo.split('-')[0]}
                                 style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                onValueChange={(itemValue) => setEditAno(itemValue)}>
+                                onValueChange={(itemValue) => setEditAnoLetivo(`${itemValue}-01-01`)}>
                                 <Picker.Item label="2024" value="2024" />
                                 <Picker.Item label="2025" value="2025" />
                                 <Picker.Item label="2026" value="2026" />
@@ -233,7 +278,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                             <Checkbox
                                                 status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleProfessorSelect(professor.id)}
-                                                color={isDarkMode ? '#1A85FF' : '#007AFF'} // Cor personalizada
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                                disabled={isLoading}
                                             />
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
                                         </View>
@@ -247,7 +293,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                             <Checkbox
                                                 status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleDisciplinaSelect(disciplina.id)}
-                                                color={isDarkMode ? '#1A85FF' : '#007AFF'} // Cor personalizada
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                                disabled={isLoading}
                                             />
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
                                         </View>
@@ -257,11 +304,21 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         </ScrollView>
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoCancelar]} onPress={() => setModalVisible(false)}>
+                            <TouchableOpacity 
+                                style={[styles.botaoAcao, styles.botaoCancelar]} 
+                                onPress={() => setModalVisible(false)}
+                                disabled={isLoading}
+                            >
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoSalvar]} onPress={salvarEdicao}>
-                                <Text style={styles.textoBotao}>Salvar</Text>
+                            <TouchableOpacity 
+                                style={[styles.botaoAcao, styles.botaoSalvar, isLoading && { opacity: 0.6 }]} 
+                                onPress={salvarEdicao}
+                                disabled={isLoading}
+                            >
+                                <Text style={styles.textoBotao}>
+                                    {isLoading ? 'Salvando...' : 'Salvar'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>

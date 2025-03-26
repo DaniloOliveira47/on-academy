@@ -210,7 +210,7 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
             };
 
-            await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData);
+            await axios.post('http://10.0.2.2:3000/api/teacher/student', feedbackData);
             Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
             setConteudoFeedback('');
         } catch (error) {
