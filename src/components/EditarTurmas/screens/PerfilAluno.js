@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, TextInput, ScrollView, FlatList, ActivityIndicator, Dimensions } from 'react-native';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  Image, 
+  TouchableOpacity, 
+  Modal, 
+  TextInput, 
+  ScrollView, 
+  FlatList, 
+  ActivityIndicator, 
+  Dimensions,
+  Alert,
+  Platform
+} from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import Campo from '../../Perfil/Campo';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../path/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PerfilAluno() {
     const route = useRoute();
-    const { alunoId } = route.params; // Obtenha o ID do aluno da navegação
+    const { alunoId } = route.params;
     const { isDarkMode } = useTheme();
 
     const [loading, setLoading] = useState(true);
@@ -22,16 +39,17 @@ export default function PerfilAluno() {
         nascimento: '',
         turma: '',
         senha: '********',
+        foto: null,
     });
     const [perfilEdit, setPerfilEdit] = useState(perfil);
     const [modalEditVisible, setModalEditVisible] = useState(false);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
     const [ocorrencias, setOcorrencias] = useState([]);
-    const [feedbacks, setFeedbacks] = useState([]); // Estado para armazenar os feedbacks
-    const [bimestreSelecionado, setBimestreSelecionado] = useState(1); // Estado para o bimestre selecionado
-    const [modalBimestreVisible, setModalBimestreVisible] = useState(false); // Estado para o modal de seleção de bimestre
-    const [modalBarraVisible, setModalBarraVisible] = useState(false); // Estado para o modal da barra
-    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 }); // Estado para os dados da barra selecionada
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
+    const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
 
     const screenWidth = Dimensions.get('window').width - 40;
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -39,7 +57,137 @@ export default function PerfilAluno() {
     const barraAzulColor = '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
 
-    // Busca os dados do aluno
+    // Função para solicitar permissões
+    const requestPermissions = async () => {
+        if (Platform.OS !== 'web') {
+            const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+            const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            
+            if (cameraStatus !== 'granted') {
+                Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para esta funcionalidade');
+            }
+            if (libraryStatus !== 'granted') {
+                Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para esta funcionalidade');
+            }
+        }
+    };
+
+    useEffect(() => {
+        requestPermissions();
+        if (alunoId) {
+            fetchAluno();
+            fetchFeedbacks();
+        } else {
+            setError('ID do aluno não fornecido.');
+            setLoading(false);
+        }
+    }, [alunoId]);
+
+    const pickImage = async () => {
+        try {
+            setError(null);
+            
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+                base64: true,
+            });
+
+            console.log('Resultado do ImagePicker:', result);
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedAsset = result.assets[0];
+                if (selectedAsset.base64) {
+                    const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
+                    setPerfil(prev => ({...prev, foto: imageData}));
+                    await uploadImage(selectedAsset.base64);
+                } else if (selectedAsset.uri) {
+                    await processImage(selectedAsset.uri);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao selecionar imagem:', error);
+            setError('Erro ao selecionar imagem: ' + error.message);
+        }
+    };
+
+    const takePhoto = async () => {
+        try {
+            setError(null);
+            
+            let result = await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+                base64: true,
+            });
+
+            console.log('Resultado da Câmera:', result);
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedAsset = result.assets[0];
+                if (selectedAsset.base64) {
+                    const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
+                    setPerfil(prev => ({...prev, foto: imageData}));
+                    await uploadImage(selectedAsset.base64);
+                } else if (selectedAsset.uri) {
+                    await processImage(selectedAsset.uri);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao tirar foto:', error);
+            setError('Erro ao tirar foto: ' + error.message);
+        }
+    };
+
+    const processImage = async (uri) => {
+        try {
+            console.log('Processando imagem:', uri);
+            
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            if (!fileInfo.exists) {
+                throw new Error('Arquivo de imagem não encontrado');
+            }
+
+            const base64Image = await FileSystem.readAsStringAsync(uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            console.log('Imagem convertida para base64');
+            
+            const imageData = `data:image/jpeg;base64,${base64Image}`;
+            setPerfil(prev => ({...prev, foto: imageData}));
+            await uploadImage(base64Image);
+        } catch (error) {
+            console.error('Erro ao processar imagem:', error);
+            setError('Erro ao processar imagem: ' + error.message);
+        }
+    };
+
+    const uploadImage = async (base64Image) => {
+        try {
+            const token = await AsyncStorage.getItem('@user_token'); // Substitua pelo token real
+            
+            const response = await axios.post(
+                `http://10.0.2.2:3000/api/student/upload-image/${alunoId}`,
+                { image: base64Image },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            
+            console.log('Imagem enviada com sucesso:', response.data);
+        } catch (error) {
+            console.error('Erro ao enviar imagem:', error);
+            setError('Erro ao enviar imagem para o servidor');
+        }
+    };
+
     const fetchAluno = async () => {
         try {
             const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
@@ -50,9 +198,10 @@ export default function PerfilAluno() {
                     email: alunoData.emailAluno,
                     matricula: alunoData.matriculaAluno,
                     telefone: alunoData.telefoneAluno,
-                    nascimento: alunoData.dataNascimentoAluno.split(' ')[0], // Formata a data
+                    nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
                     turma: alunoData.turma.nomeTurma,
                     senha: '********',
+                    foto: alunoData.foto || null,
                 });
                 setPerfilEdit({
                     nome: alunoData.nome,
@@ -62,6 +211,7 @@ export default function PerfilAluno() {
                     nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
                     turma: alunoData.turma.nomeTurma,
                     senha: '********',
+                    foto: alunoData.foto || null,
                 });
             } else {
                 setError('Aluno não encontrado.');
@@ -74,7 +224,6 @@ export default function PerfilAluno() {
         }
     };
 
-    // Busca os feedbacks do aluno
     const fetchFeedbacks = async () => {
         try {
             const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
@@ -84,23 +233,9 @@ export default function PerfilAluno() {
         }
     };
 
-    useEffect(() => {
-        if (alunoId) {
-            fetchAluno();
-            fetchFeedbacks();
-        } else {
-            setError('ID do aluno não fornecido.');
-            setLoading(false);
-        }
-    }, [alunoId]);
-
-    // Filtra os feedbacks pelo bimestre selecionado
-    const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
-
-    // Calcula as médias das respostas para o gráfico
     const calcularMedias = () => {
         if (feedbacksFiltrados.length === 0) {
-            return [0, 0, 0, 0, 0]; // Retorna zeros se não houver feedbacks
+            return [0, 0, 0, 0, 0];
         }
 
         const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
@@ -124,14 +259,14 @@ export default function PerfilAluno() {
         return medias;
     };
 
+    const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
     const medias = calcularMedias();
 
-    // Dados para o gráfico
     const labels = ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'];
-    const barWidth = 30; // Largura de cada barra
-    const barMargin = 10; // Margem entre as barras
-    const maxBarHeight = 150; // Altura máxima das barras
-    const maxValue = Math.max(...medias); // Valor máximo para escalar as barras
+    const barWidth = 30;
+    const barMargin = 10;
+    const maxBarHeight = 150;
+    const maxValue = Math.max(...medias);
 
     const handleEditSave = () => {
         setPerfil(perfilEdit);
@@ -174,7 +309,38 @@ export default function PerfilAluno() {
                 />
                 <View style={[styles.form, { backgroundColor: formBackgroundColor }]}>
                     <View style={styles.linhaUser}>
-                        <Image source={require('../../../assets/image/Perfill.png')} />
+                        <TouchableOpacity onPress={() => {
+                            Alert.alert(
+                                "Alterar Foto",
+                                "Escolha uma opção",
+                                [
+                                    {
+                                        text: "Galeria",
+                                        onPress: pickImage,
+                                    },
+                                    {
+                                        text: "Câmera",
+                                        onPress: takePhoto,
+                                    },
+                                    {
+                                        text: "Cancelar",
+                                        style: "cancel",
+                                    },
+                                ]
+                            );
+                        }}>
+                            {perfil.foto ? (
+                                <Image 
+                                    source={{ uri: perfil.foto }} 
+                                    style={styles.profileImage}
+                                />
+                            ) : (
+                                <Image 
+                                    source={require('../../../assets/image/Perfill.png')} 
+                                    style={styles.profileImage}
+                                />
+                            )}
+                        </TouchableOpacity>
                         <View style={styles.name}>
                             <Text style={[styles.nome, { color: textColor }]}>{perfil.nome}</Text>
                             <Text style={[styles.email, { color: textColor }]}>{perfil.email}</Text>
@@ -351,12 +517,27 @@ export default function PerfilAluno() {
             <Modal visible={modalBarraVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Valor</Text>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>{barraSelecionada.label}</Text>
                         <Text style={[styles.modalText, { color: textColor }]}>
-                            {barraSelecionada.value.toFixed(2)}
+                            Valor: {barraSelecionada.value.toFixed(2)}
                         </Text>
                         <TouchableOpacity style={styles.cancelButton} onPress={() => setModalBarraVisible(false)}>
                             <Text style={styles.buttonText}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Modal de Erro */}
+            <Modal visible={!!error} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: 'red' }]}>Erro</Text>
+                        <Text style={[styles.modalText, { color: textColor }]}>{error}</Text>
+                        <TouchableOpacity 
+                            style={styles.cancelButton} 
+                            onPress={() => setError(null)}>
+                            <Text style={styles.buttonText}>OK</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -395,6 +576,7 @@ const styles = StyleSheet.create({
     },
     form: {
         padding: 25,
+        borderRadius: 10,
     },
     nome: {
         fontSize: 18,
@@ -421,7 +603,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContainer: {
-        backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
         padding: 20,
@@ -469,7 +650,8 @@ const styles = StyleSheet.create({
     linhaUser: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10
+        gap: 10,
+        marginBottom: 20,
     },
     deleteButton: {
         backgroundColor: 'red',
@@ -482,6 +664,8 @@ const styles = StyleSheet.create({
     modalButtonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 15,
     },
     inlineFieldsContainer: {
         flexDirection: 'row',
@@ -493,7 +677,6 @@ const styles = StyleSheet.create({
         padding: 25,
         paddingBottom: 20,
         borderRadius: 10,
-        backgroundColor: '#fff',
     },
     tabelaHeader: {
         flexDirection: 'row',
@@ -544,5 +727,24 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'center',
     },
-
+    profileImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 2,
+        borderColor: '#1E6BE6',
+    },
+    name: {
+        flex: 1,
+    },
+    modalItem: {
+        padding: 15,
+        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
 });

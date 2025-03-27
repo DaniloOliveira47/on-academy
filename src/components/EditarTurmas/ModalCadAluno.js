@@ -1,32 +1,17 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
-    const [selectedImage, setSelectedImage] = useState(null);
     const [nomeAluno, setNomeAluno] = useState('');
     const [emailAluno, setEmailAluno] = useState('');
     const [telefoneAluno, setTelefoneAluno] = useState('');
     const [dataNascimento, setDataNascimento] = useState('');
     const [selectedBirthDate, setSelectedBirthDate] = useState(new Date());
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
-        }
-    };
 
     const handleBirthDateChange = (event, date) => {
         setShowBirthDatePicker(false);
@@ -54,7 +39,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                 turmaId,
             };
 
-            console.log('Dados do aluno a serem enviados:', alunoData); // Debug
+            console.log('Dados do aluno a serem enviados:', alunoData);
 
             const response = await axios.post('http://10.0.2.2:3000/api/student', alunoData, {
                 headers: {
@@ -62,14 +47,20 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                 },
             });
 
-            console.log('Resposta da API:', response.data); // Debug
+            console.log('Resposta da API:', response.data);
 
             if (response.status === 201) {
                 Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
+                // Reset form
+                setNomeAluno('');
+                setEmailAluno('');
+                setTelefoneAluno('');
+                setSelectedBirthDate(new Date());
+                setDataNascimento('');
                 onClose();
             }
         } catch (error) {
-            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message); // Debug
+            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message);
             Alert.alert('Erro', 'Erro ao cadastrar aluno. Tente novamente.');
         }
     };
@@ -85,14 +76,14 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                         <Icon name="x" size={30} color="#000" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                        {selectedImage ? (
-                            <Image source={{ uri: selectedImage }} style={styles.profileImage} />
-                        ) : (
-                            <Icon name="camera" size={50} color="#1A85FF" />
-                        )}
-                    </TouchableOpacity>
-                    <Text style={styles.imageText}>Adicionar Imagem</Text>
+                    
+                    {/* Static profile image instead of image picker */}
+                    <View style={styles.profileImageContainer}>
+                        <Image 
+                            source={require('../../assets/image/Perfill.png')} 
+                            style={styles.profileImage}
+                        />
+                    </View>
 
                     <TextInput
                         style={styles.input}
@@ -174,25 +165,19 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         zIndex: 10,
     },
-    imagePicker: {
+    profileImageContainer: {
         width: 100,
         height: 100,
         borderRadius: 50,
         backgroundColor: '#F0F7FF',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: 15,
         overflow: 'hidden',
     },
     profileImage: {
         width: '100%',
         height: '100%',
-        borderRadius: 50,
-    },
-    imageText: {
-        fontSize: 14,
-        color: '#1A85FF',
-        marginBottom: 10,
     },
     input: {
         width: '100%',
@@ -208,11 +193,13 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: '#000',
         marginBottom: 5,
+        alignSelf: 'flex-start',
     },
     dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 15,
+        width: '100%',
     },
     dateInput: {
         flex: 1,

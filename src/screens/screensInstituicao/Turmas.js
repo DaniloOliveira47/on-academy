@@ -22,6 +22,7 @@ import { Checkbox } from 'react-native-paper';
 export default function Turmas() {
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
+    const [modalEditarVisible, setModalEditarVisible] = useState(false);
     const [novaTurma, setNovaTurma] = useState('');
     const [novoAno, setNovoAno] = useState('2025');
     const [novoPeriodo, setNovoPeriodo] = useState('Manhã');
@@ -31,6 +32,7 @@ export default function Turmas() {
     const [turmas, setTurmas] = useState([]);
     const [filtro, setFiltro] = useState('');
     const [turmasFiltradas, setTurmasFiltradas] = useState([]);
+    const [turmaEditando, setTurmaEditando] = useState(null);
 
     // Estados para os checkboxes de professores e disciplinas
     const [selectedProfessores, setSelectedProfessores] = useState([]);
@@ -41,15 +43,13 @@ export default function Turmas() {
     // Número de cards por página
     const CARDS_POR_PAGINA = 3;
 
-
-
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
             const response = await axios.get('http://10.0.2.2:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
-                setTurmasFiltradas(response.data); // Inicializa as turmas filtradas
+                setTurmasFiltradas(response.data);
             } else {
                 console.error('Resposta da API não contém um array de turmas:', response.data);
                 setTurmas([]);
@@ -87,16 +87,29 @@ export default function Turmas() {
         fetchDisciplinas();
     }, []);
 
+    // Função para abrir o modal de edição
+    const abrirModalEditar = (turma) => {
+        setTurmaEditando(turma);
+        setNovaTurma(turma.nomeTurma);
+        setNovoAno(new Date(turma.anoLetivoTurma).getFullYear().toString());
+        setNovoPeriodo(turma.periodoTurma);
+        setNovaCapacidade(turma.capacidadeMaximaTurma.toString());
+        setNovaSala(turma.salaTurma.toString());
+        setSelectedProfessores(turma.idTeacher || []);
+        setSelectedDisciplinas(turma.disciplineId || []);
+        setModalEditarVisible(true);
+    };
+
     // Função para criar uma nova turma
     const criarTurma = async () => {
         try {
-            const token = await AsyncStorage.getItem('@user_token'); // Token de autenticação
+            const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
                 console.error('Token não encontrado no Async Storage');
                 return;
             }
 
-            const anoLetivoTurma = `${novoAno}-01-01T00:00:00.000Z`; // Exemplo de data fixa
+            const anoLetivoTurma = `${novoAno}-01-01T00:00:00.000Z`;
 
             const turmaData = {
                 nomeTurma: novaTurma,
@@ -104,22 +117,71 @@ export default function Turmas() {
                 capacidadeMaximaTurma: parseInt(novaCapacidade),
                 salaTurma: parseInt(novaSala),
                 periodoTurma: novoPeriodo,
-                idTeacher: selectedProfessores, // IDs dos professores selecionados
-                disciplineId: selectedDisciplinas, // IDs das disciplinas selecionadas
+                idTeacher: selectedProfessores,
+                disciplineId: selectedDisciplinas,
             };
 
-            const response = await axios.post('http://10.0.2.2:3000/api/class', turmaData, {
+            await axios.post('http://10.0.2.2:3000/api/class', turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             Alert.alert('Sucesso', 'Turma criada com sucesso!');
             setModalCriarVisible(false);
+            limparCampos();
             fetchTurmas();
         } catch (error) {
             console.error('Erro ao criar turma:', error);
             Alert.alert('Erro', 'Erro ao criar turma. Tente novamente.');
         }
+    };
+
+    // Função para editar uma turma existente
+    const editarTurma = async () => {
+        try {
+            const token = await AsyncStorage.getItem('@user_token');
+            if (!token) {
+                console.error('Token não encontrado no Async Storage');
+                return;
+            }
+
+            const anoLetivoTurma = `${novoAno}-01-01T00:00:00.000Z`;
+
+            const turmaData = {
+                nomeTurma: novaTurma,
+                anoLetivoTurma: anoLetivoTurma,
+                capacidadeMaximaTurma: parseInt(novaCapacidade),
+                salaTurma: parseInt(novaSala),
+                periodoTurma: novoPeriodo,
+                idTeacher: selectedProfessores,
+                disciplineId: selectedDisciplinas,
+            };
+
+            await axios.put(`http://10.0.2.2:3000/api/class/${turmaEditando.id}`, turmaData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            Alert.alert('Sucesso', 'Turma atualizada com sucesso!');
+            setModalEditarVisible(false);
+            limparCampos();
+            fetchTurmas();
+        } catch (error) {
+            console.error('Erro ao editar turma:', error);
+            Alert.alert('Erro', 'Erro ao editar turma. Tente novamente.');
+        }
+    };
+
+    // Função para limpar os campos do formulário
+    const limparCampos = () => {
+        setNovaTurma('');
+        setNovoAno('2025');
+        setNovoPeriodo('Manhã');
+        setNovaCapacidade('');
+        setNovaSala('');
+        setSelectedProfessores([]);
+        setSelectedDisciplinas([]);
+        setTurmaEditando(null);
     };
 
     // Função para filtrar turmas pelo nome ou código
@@ -132,9 +194,9 @@ export default function Turmas() {
             );
             setTurmasFiltradas(turmasFiltradas);
         } else {
-            setTurmasFiltradas(turmas); // Mostra todas as turmas se o filtro estiver vazio
+            setTurmasFiltradas(turmas);
         }
-        setPaginaSelecionada(1); // Reseta a página para a primeira ao aplicar o filtro
+        setPaginaSelecionada(1);
     };
 
     // Função para lidar com a seleção dos checkboxes
@@ -190,6 +252,7 @@ export default function Turmas() {
                                     periodo={`Período: ${turma.periodoTurma}`}
                                     turmaId={turma.id}
                                     navegacao="Alunos"
+                                    onEditPress={() => abrirModalEditar(turma)}
                                 />
                             ))
                         ) : (
@@ -225,6 +288,8 @@ export default function Turmas() {
                     </View>
                 </View>
             </View>
+
+            {/* Modal para criar nova turma */}
             <Modal visible={modalCriarVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
@@ -283,7 +348,6 @@ export default function Turmas() {
                                 />
                             </View>
 
-                            {/* Checkboxes para selecionar professores e disciplinas */}
                             <View style={styles.checkboxRow}>
                                 <View style={styles.checkboxColumn}>
                                     <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione os Professores</Text>
@@ -292,6 +356,7 @@ export default function Turmas() {
                                             <Checkbox
                                                 status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleProfessorSelect(professor.id)}
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
                                             />
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
                                         </View>
@@ -305,6 +370,7 @@ export default function Turmas() {
                                             <Checkbox
                                                 status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleDisciplinaSelect(disciplina.id)}
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
                                             />
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
                                         </View>
@@ -314,11 +380,119 @@ export default function Turmas() {
                         </ScrollView>
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoCancelar]} onPress={() => setModalCriarVisible(false)}>
+                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoCancelar]} onPress={() => {
+                                setModalCriarVisible(false);
+                                limparCampos();
+                            }}>
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.botaoAcao, styles.botaoSalvar]} onPress={criarTurma}>
                                 <Text style={styles.textoBotao}>Criar Turma</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Modal para editar turma */}
+            <Modal visible={modalEditarVisible} animationType="slide" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Editar Turma</Text>
+
+                        <ScrollView>
+                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Turma</Text>
+                            <TextInput
+                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                value={novaTurma}
+                                onChangeText={setNovaTurma}
+                                placeholder="Digite o nome da turma"
+                                placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                            />
+
+                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
+                            <Picker
+                                selectedValue={novoAno}
+                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                onValueChange={(itemValue) => setNovoAno(itemValue)}>
+                                <Picker.Item label="2024" value="2024" />
+                                <Picker.Item label="2025" value="2025" />
+                                <Picker.Item label="2026" value="2026" />
+                            </Picker>
+
+                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
+                            <Picker
+                                selectedValue={novoPeriodo}
+                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
+                                <Picker.Item label="Manhã" value="Manhã" />
+                                <Picker.Item label="Tarde" value="Tarde" />
+                                <Picker.Item label="Noite" value="Noite" />
+                            </Picker>
+
+                            <View style={styles.rowLabels}>
+                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Capacidade Máxima</Text>
+                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Nº da Sala</Text>
+                            </View>
+                            <View style={styles.rowInputs}>
+                                <TextInput
+                                    style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                    value={novaCapacidade}
+                                    onChangeText={setNovaCapacidade}
+                                    keyboardType="numeric"
+                                    placeholder="Ex: 35"
+                                    placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                />
+                                <TextInput
+                                    style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                    value={novaSala}
+                                    onChangeText={setNovaSala}
+                                    keyboardType="numeric"
+                                    placeholder="Ex: 101"
+                                    placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                />
+                            </View>
+
+                            <View style={styles.checkboxRow}>
+                                <View style={styles.checkboxColumn}>
+                                    <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione os Professores</Text>
+                                    {professores.map((professor) => (
+                                        <View key={professor.id} style={styles.checkboxContainer}>
+                                            <Checkbox
+                                                status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
+                                                onPress={() => handleProfessorSelect(professor.id)}
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                            />
+                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+
+                                <View style={styles.checkboxColumn}>
+                                    <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
+                                    {disciplinas.map((disciplina) => (
+                                        <View key={disciplina.id} style={styles.checkboxContainer}>
+                                            <Checkbox
+                                                status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
+                                                onPress={() => handleDisciplinaSelect(disciplina.id)}
+                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                            />
+                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoCancelar]} onPress={() => {
+                                setModalEditarVisible(false);
+                                limparCampos();
+                            }}>
+                                <Text style={styles.textoBotao}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.botaoAcao, styles.botaoSalvar]} onPress={editarTurma}>
+                                <Text style={styles.textoBotao}>Salvar Alterações</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -329,52 +503,6 @@ export default function Turmas() {
 }
 
 const styles = StyleSheet.create({
-    subTela: {
-        padding: 10,
-        paddingTop: 10,
-        flex: 1
-    },
-    selecao: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 0,
-
-    },
-    container: {
-        width: '100%',
-        borderRadius: 16,
-        padding: 10,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#1A85FF',
-        borderRadius: 25,
-        paddingHorizontal: 15,
-        marginBottom: 15
-    },
-    input: {
-        flex: 1,
-        fontSize: 16,
-        paddingVertical: 10,
-    },
-    icon: {
-        marginLeft: 10
-    },
-    cards: {
-        width: '100%',
-        padding: 5
-    },
-    botaoCriar: {
-        backgroundColor: '#1A85FF',
-        width: 56,
-        height: 56,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 5
-    },
     subTela: {
         padding: 10,
         paddingTop: 10,
