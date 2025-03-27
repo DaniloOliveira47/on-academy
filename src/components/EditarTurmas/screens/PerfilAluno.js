@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  Image, 
-  TouchableOpacity, 
-  Modal, 
-  TextInput, 
-  ScrollView, 
-  FlatList, 
-  ActivityIndicator, 
-  Dimensions,
-  Alert,
-  Platform
+import {
+    StyleSheet,
+    Text,
+    View,
+    Image,
+    TouchableOpacity,
+    Modal,
+    TextInput,
+    ScrollView,
+    FlatList,
+    ActivityIndicator,
+    Dimensions,
+    Alert,
+    Platform
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
@@ -31,6 +31,7 @@ export default function PerfilAluno() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [hasProfileImage, setHasProfileImage] = useState(false);
     const [perfil, setPerfil] = useState({
         nome: '',
         email: '',
@@ -42,7 +43,6 @@ export default function PerfilAluno() {
         foto: null,
     });
     const [perfilEdit, setPerfilEdit] = useState(perfil);
-    const [modalEditVisible, setModalEditVisible] = useState(false);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
     const [ocorrencias, setOcorrencias] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
@@ -50,19 +50,27 @@ export default function PerfilAluno() {
     const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
     const [modalBarraVisible, setModalBarraVisible] = useState(false);
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
-
-    const screenWidth = Dimensions.get('window').width - 40;
+    const [imageError, setImageError] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
 
-    // Função para solicitar permissões
+    // Função para obter o token de autenticação
+    const getAuthToken = async () => {
+        const token = await AsyncStorage.getItem('@user_token');
+        if (!token) {
+            throw new Error('Token de autenticação não encontrado');
+        }
+        return token;
+    };
+
     const requestPermissions = async () => {
         if (Platform.OS !== 'web') {
             const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
             const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            
+
             if (cameraStatus !== 'granted') {
                 Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para esta funcionalidade');
             }
@@ -77,16 +85,47 @@ export default function PerfilAluno() {
         if (alunoId) {
             fetchAluno();
             fetchFeedbacks();
+            // Remova esta linha
+            // checkProfileImage();
         } else {
             setError('ID do aluno não fornecido.');
             setLoading(false);
         }
     }, [alunoId]);
 
+    const checkProfileImage = async () => {
+        try {
+            const token = await getAuthToken();
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/image/${alunoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+
+            if (response.data && response.data.imageUrl) {
+                setPerfil(prev => ({ ...prev, foto: response.data.imageUrl }));
+                setHasProfileImage(true);
+                setImageError(false);
+            } else {
+                setHasProfileImage(false);
+                setImageError(true);
+            }
+        } catch (error) {
+            console.error('Erro ao verificar imagem:', error);
+            setHasProfileImage(false);
+            setImageError(true);
+
+            if (error.response && error.response.status === 401) {
+                setError('Sessão expirada. Por favor, faça login novamente.');
+            }
+        }
+    };
+
     const pickImage = async () => {
         try {
             setError(null);
-            
+            setImageError(false);
+
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -95,13 +134,11 @@ export default function PerfilAluno() {
                 base64: true,
             });
 
-            console.log('Resultado do ImagePicker:', result);
-
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({...prev, foto: imageData}));
+                    setPerfil(prev => ({ ...prev, foto: imageData }));
                     await uploadImage(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
                     await processImage(selectedAsset.uri);
@@ -109,14 +146,15 @@ export default function PerfilAluno() {
             }
         } catch (error) {
             console.error('Erro ao selecionar imagem:', error);
-            setError('Erro ao selecionar imagem: ' + error.message);
+            setImageError(true);
+            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
         }
     };
 
     const takePhoto = async () => {
         try {
             setError(null);
-            
+
             let result = await ImagePicker.launchCameraAsync({
                 allowsEditing: true,
                 aspect: [1, 1],
@@ -124,13 +162,11 @@ export default function PerfilAluno() {
                 base64: true,
             });
 
-            console.log('Resultado da Câmera:', result);
-
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({...prev, foto: imageData}));
+                    setPerfil(prev => ({ ...prev, foto: imageData }));
                     await uploadImage(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
                     await processImage(selectedAsset.uri);
@@ -144,8 +180,6 @@ export default function PerfilAluno() {
 
     const processImage = async (uri) => {
         try {
-            console.log('Processando imagem:', uri);
-            
             const fileInfo = await FileSystem.getInfoAsync(uri);
             if (!fileInfo.exists) {
                 throw new Error('Arquivo de imagem não encontrado');
@@ -154,11 +188,9 @@ export default function PerfilAluno() {
             const base64Image = await FileSystem.readAsStringAsync(uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-            
-            console.log('Imagem convertida para base64');
-            
+
             const imageData = `data:image/jpeg;base64,${base64Image}`;
-            setPerfil(prev => ({...prev, foto: imageData}));
+            setPerfil(prev => ({ ...prev, foto: imageData }));
             await uploadImage(base64Image);
         } catch (error) {
             console.error('Erro ao processar imagem:', error);
@@ -168,8 +200,8 @@ export default function PerfilAluno() {
 
     const uploadImage = async (base64Image) => {
         try {
-            const token = await AsyncStorage.getItem('@user_token'); // Substitua pelo token real
-            
+            const token = await getAuthToken();
+
             const response = await axios.post(
                 `http://10.0.2.2:3000/api/student/upload-image/${alunoId}`,
                 { image: base64Image },
@@ -180,17 +212,26 @@ export default function PerfilAluno() {
                     },
                 }
             );
-            
-            console.log('Imagem enviada com sucesso:', response.data);
+
+            setHasProfileImage(true);
+            setImageError(false);
+            // Atualiza os dados do aluno para pegar a nova URL da imagem
+            fetchAluno();
         } catch (error) {
             console.error('Erro ao enviar imagem:', error);
-            setError('Erro ao enviar imagem para o servidor');
+            setImageError(true);
+            Alert.alert('Erro', 'Não foi possível enviar a imagem. Tente novamente mais tarde.');
         }
     };
 
     const fetchAluno = async () => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+            const token = await getAuthToken();
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (response.data) {
                 const alunoData = response.data;
                 setPerfil({
@@ -201,7 +242,7 @@ export default function PerfilAluno() {
                     nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
                     turma: alunoData.turma.nomeTurma,
                     senha: '********',
-                    foto: alunoData.foto || null,
+                    foto: alunoData.imageUrl || null, // Usando imageUrl diretamente da resposta
                 });
                 setPerfilEdit({
                     nome: alunoData.nome,
@@ -211,14 +252,22 @@ export default function PerfilAluno() {
                     nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
                     turma: alunoData.turma.nomeTurma,
                     senha: '********',
-                    foto: alunoData.foto || null,
+                    foto: alunoData.imageUrl || null, // Usando imageUrl diretamente da resposta
                 });
+
+                // Atualiza o estado da imagem
+                setHasProfileImage(!!alunoData.imageUrl);
+                setImageError(!alunoData.imageUrl);
             } else {
                 setError('Aluno não encontrado.');
             }
         } catch (error) {
             console.error('Erro ao buscar dados do aluno:', error);
-            setError('Erro ao carregar dados do aluno.');
+            if (error.response && error.response.status === 401) {
+                setError('Sessão expirada. Por favor, faça login novamente.');
+            } else {
+                setError('Erro ao carregar dados do aluno.');
+            }
         } finally {
             setLoading(false);
         }
@@ -226,10 +275,18 @@ export default function PerfilAluno() {
 
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
+            const token = await getAuthToken();
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             setFeedbacks(response.data);
         } catch (error) {
             console.error('Erro ao buscar feedbacks:', error);
+            if (error.response && error.response.status === 401) {
+                setError('Sessão expirada. Por favor, faça login novamente.');
+            }
         }
     };
 
@@ -259,6 +316,51 @@ export default function PerfilAluno() {
         return medias;
     };
 
+    const atualizarAluno = async () => {
+        try {
+            setLoading(true);
+            const token = await getAuthToken();
+
+            const response = await axios.put(
+                `http://10.0.2.2:3000/api/student/${alunoId}`,
+                {
+                    nome: perfilEdit.nome,
+                    emailAluno: perfilEdit.email,
+                    matriculaAluno: perfilEdit.matricula,
+                    telefoneAluno: perfilEdit.telefone,
+                    dataNascimentoAluno: perfilEdit.nascimento,
+                    turma: perfilEdit.turma,
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                }
+            );
+
+            if (response.status === 200) {
+                Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
+                fetchAluno(); // Atualiza os dados locais
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar aluno:', error);
+            let errorMessage = 'Erro ao atualizar os dados do aluno';
+
+            if (error.response) {
+                if (error.response.status === 401) {
+                    errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+                } else if (error.response.data && error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                }
+            }
+
+            Alert.alert('Erro', errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
     const medias = calcularMedias();
 
@@ -268,9 +370,14 @@ export default function PerfilAluno() {
     const maxBarHeight = 150;
     const maxValue = Math.max(...medias);
 
-    const handleEditSave = () => {
-        setPerfil(perfilEdit);
-        setModalEditVisible(false);
+    const handleEditSave = async () => {
+        try {
+            await atualizarAluno();
+            setPerfil(perfilEdit);
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Erro ao salvar alterações:', error);
+        }
     };
 
     const handleDelete = () => {
@@ -281,6 +388,14 @@ export default function PerfilAluno() {
     const handleBarraClick = (label, value) => {
         setBarraSelecionada({ label, value });
         setModalBarraVisible(true);
+    };
+
+    const toggleEdit = () => {
+        if (isEditing) {
+            // Se estava editando e cancelou, reseta os valores
+            setPerfilEdit(perfil);
+        }
+        setIsEditing(!isEditing);
     };
 
     if (loading) {
@@ -329,41 +444,110 @@ export default function PerfilAluno() {
                                 ]
                             );
                         }}>
-                            {perfil.foto ? (
-                                <Image 
-                                    source={{ uri: perfil.foto }} 
-                                    style={styles.profileImage}
-                                />
-                            ) : (
-                                <Image 
-                                    source={require('../../../assets/image/Perfill.png')} 
-                                    style={styles.profileImage}
-                                />
-                            )}
+                            <Image
+                                source={perfil.foto && !imageError ?
+                                    { uri: perfil.foto } :
+                                    require('../../../assets/image/Perfill.png')}
+                                style={styles.profileImage}
+                                onError={() => setImageError(true)}
+                            />
                         </TouchableOpacity>
                         <View style={styles.name}>
                             <Text style={[styles.nome, { color: textColor }]}>{perfil.nome}</Text>
                             <Text style={[styles.email, { color: textColor }]}>{perfil.email}</Text>
                         </View>
                     </View>
-                    <Campo label="Nome Completo" text={perfil.nome} textColor={textColor} />
-                    <Campo label="Email" text={perfil.email} textColor={textColor} />
-                    <Campo label="Nº Matrícula" text={perfil.matricula} textColor={textColor} />
+                    <Campo
+                        label="Nome Completo"
+                        text={perfil.nome}
+                        textColor={textColor}
+                        editable={isEditing}
+                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nome: text })}
+                        placeholder="Digite o nome completo"
+                    />
+
+                    <Campo
+                        label="Email"
+                        text={perfil.email}
+                        textColor={textColor}
+                        editable={isEditing}
+                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, email: text })}
+                        placeholder="Digite o email"
+                    />
+
+                    <Campo
+                        label="Nº Matrícula"
+                        text={perfil.matricula}
+                        textColor={textColor}
+                        editable={isEditing}
+                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, matricula: text })}
+                        placeholder="Digite a matrícula"
+                    />
+
                     <View style={styles.inlineFieldsContainer}>
-                        <Campo label="Telefone" text={perfil.telefone} textColor={textColor} isInline={true} />
-                        <Campo label="Data de Nascimento" text={perfil.nascimento} textColor={textColor} isInline={true} />
+                        <Campo
+                            label="Telefone"
+                            text={perfil.telefone}
+                            textColor={textColor}
+                            isInline={true}
+                            editable={isEditing}
+                            onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
+                            placeholder="Digite o telefone"
+                        />
+                        <Campo
+                            label="Data de Nascimento"
+                            text={perfil.nascimento}
+                            textColor={textColor}
+                            isInline={true}
+                            editable={isEditing}
+                            onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nascimento: text })}
+                            placeholder="DD/MM/AAAA"
+                        />
                     </View>
+
                     <View style={styles.inlineFieldsContainer}>
-                        <Campo label="Turma" text={perfil.turma} textColor={textColor} isInline={true} />
+                        <Campo
+                            label="Turma"
+                            text={perfil.turma}
+                            textColor={textColor}
+                            isInline={true}
+                            editable={isEditing}
+                            onChangeText={(text) => setPerfilEdit({ ...perfilEdit, turma: text })}
+                            placeholder="Digite a turma"
+                        />
                     </View>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity onPress={() => setModalEditVisible(true)} style={styles.iconeBotao}>
-                            <Icon name="edit" size={20} color={isDarkMode ? 'white' : 'black'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setModalDeleteVisible(true)} style={styles.iconeBotao}>
-                            <Icon name="trash" size={20} color={isDarkMode ? 'red' : 'darkred'} />
-                        </TouchableOpacity>
-                    </View>
+
+                    {isEditing ? (
+                        <View style={styles.editButtonsContainer}>
+                            <TouchableOpacity
+                                style={styles.saveButton}
+                                onPress={handleEditSave}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text style={styles.buttonText}>Salvar</Text>
+                                )}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={toggleEdit}
+                                disabled={loading}
+                            >
+                                <Text style={styles.buttonText}>Cancelar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity onPress={toggleEdit} style={styles.iconeBotao}>
+                                <Icon name="edit" size={20} color={isDarkMode ? 'white' : 'black'} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setModalDeleteVisible(true)} style={styles.iconeBotao}>
+                                <Icon name="trash" size={20} color={isDarkMode ? 'red' : 'darkred'} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
                 <View style={[styles.tabelaContainer, { backgroundColor: formBackgroundColor, marginBottom: 50 }]}>
                     <View style={[styles.tabelaHeader, { backgroundColor: '#F0F7FF' }]}>
@@ -434,68 +618,6 @@ export default function PerfilAluno() {
                 </View>
             </Modal>
 
-            {/* Modal de Edição */}
-            <Modal visible={modalEditVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Editar Perfil</Text>
-                        <View style={styles.modalInputContainer}>
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.nome}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nome: text })}
-                                placeholder="Nome Completo"
-                                placeholderTextColor={textColor}
-                            />
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.email}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, email: text })}
-                                placeholder="Email"
-                                placeholderTextColor={textColor}
-                            />
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.telefone}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
-                                placeholder="Telefone"
-                                placeholderTextColor={textColor}
-                            />
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.nascimento}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nascimento: text })}
-                                placeholder="Data de Nascimento"
-                                placeholderTextColor={textColor}
-                            />
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.senha}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, senha: text })}
-                                placeholder="Senha"
-                                placeholderTextColor={textColor}
-                                secureTextEntry
-                            />
-                            <TextInput
-                                style={[styles.input, { color: textColor, borderColor: textColor }]}
-                                value={perfilEdit.turma}
-                                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, turma: text })}
-                                placeholder="Turma"
-                                placeholderTextColor={textColor}
-                            />
-                        </View>
-                        <View style={styles.modalButtonsContainer}>
-                            <TouchableOpacity style={styles.saveButton} onPress={handleEditSave}>
-                                <Text style={styles.buttonText}>Salvar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalEditVisible(false)}>
-                                <Text style={styles.buttonText}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-
             {/* Modal de Exclusão */}
             <Modal visible={modalDeleteVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
@@ -534,8 +656,8 @@ export default function PerfilAluno() {
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
                         <Text style={[styles.modalTitle, { color: 'red' }]}>Erro</Text>
                         <Text style={[styles.modalText, { color: textColor }]}>{error}</Text>
-                        <TouchableOpacity 
-                            style={styles.cancelButton} 
+                        <TouchableOpacity
+                            style={styles.cancelButton}
                             onPress={() => setError(null)}>
                             <Text style={styles.buttonText}>OK</Text>
                         </TouchableOpacity>
@@ -552,6 +674,12 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         paddingBottom: 60,
+    },
+    editButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 20,
+        width: '100%',
     },
     loadingContainer: {
         flex: 1,
@@ -733,6 +861,7 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         borderWidth: 2,
         borderColor: '#1E6BE6',
+        resizeMode: 'cover',
     },
     name: {
         flex: 1,

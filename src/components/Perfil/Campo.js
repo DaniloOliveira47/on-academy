@@ -1,15 +1,31 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function Campo({ label, text, isPassword = false, isInline = false }) {
+export default function Campo({ 
+    label, 
+    text, 
+    isPassword = false, 
+    isInline = false, 
+    editable = false,
+    onChangeText,
+    textColor,
+    placeholder
+}) {
     const { isDarkMode } = useTheme();
     const [showPassword, setShowPassword] = useState(false);
+    const [value, setValue] = useState(text);
 
-    const textColor = isDarkMode ? '#FFF' : '#000';
     const fundoColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textInputColor = isDarkMode ? '#FFF' : '#33383E';
+
+    const handleChange = (text) => {
+        setValue(text);
+        if (onChangeText) {
+            onChangeText(text);
+        }
+    };
 
     return (
         <View style={[styles.campo, isInline && styles.inline]}>
@@ -17,12 +33,23 @@ export default function Campo({ label, text, isPassword = false, isInline = fals
                 {label}
             </Text>
             <View style={[styles.inputContainer, { backgroundColor: fundoColor }]}>
-                <Text
-                    style={[styles.colorInput, { color: textInputColor }]}
-                    numberOfLines={1}
-                >
-                    {isPassword && !showPassword ? '••••••••' : text}
-                </Text>
+                {editable ? (
+                    <TextInput
+                        style={[styles.colorInput, { color: textInputColor }]}
+                        value={value}
+                        onChangeText={handleChange}
+                        placeholder={placeholder}
+                        placeholderTextColor="#999"
+                        secureTextEntry={isPassword && !showPassword}
+                    />
+                ) : (
+                    <Text
+                        style={[styles.colorInput, { color: textInputColor }]}
+                        numberOfLines={1}
+                    >
+                        {isPassword && !showPassword ? '••••••••' : text}
+                    </Text>
+                )}
 
                 {isPassword && (
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -57,6 +84,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         padding: 10,
         justifyContent: 'space-between',
+        alignItems: 'center',
     },
     colorInput: {
         fontSize: 17,
