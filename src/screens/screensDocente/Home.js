@@ -16,11 +16,7 @@ export default function HomeDocente() {
     const [avisos, setAvisos] = useState([]); // Estado para os avisos
 
     const gerarCorAleatoria = () => {
-        const letrasHex = '0123456789ABCDEF';
-        let cor = '#';
-        for (let i = 0; i < 6; i++) {
-            cor += letrasHex[Math.floor(Math.random() * 16)];
-        }
+        let cor = '#0077FF';
         return cor;
     };
  
@@ -49,18 +45,22 @@ export default function HomeDocente() {
             }
         };
 
-        const fetchAvisos = async () => {
+        const fetchMessages = async () => {
             try {
-                const response = await axios.get('http://10.0.2.2:3000/api/reminder');
-                console.log('Avisos recebidos:', response.data);
-                setAvisos(response.data); // Atualiza o estado com os avisos
+                const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
+ 
+                data.sort((a, b) =>
+                    new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+                );
+ 
+                setAvisos(data);
             } catch (error) {
-                console.error('Erro ao buscar avisos:', error);
+                console.error('Erro ao carregar avisos:', error);
             }
         };
 
         fetchTurmas();
-        fetchAvisos();
+        fetchMessages();
     }, []);
 
     const enviarAviso = async () => {
@@ -195,7 +195,7 @@ export default function HomeDocente() {
                                         key={aviso.id}
                                         abreviacao={aviso.initials}
                                         nome={aviso.criadoPorNome}
-                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         texto={aviso.conteudo}
                                         aleatorio={gerarCorAleatoria()} // Passa a cor aleatória
                                     />

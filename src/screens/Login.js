@@ -89,7 +89,7 @@ export default function Login() {
       } else {
         Alert.alert('Erro', 'Erro de conexão. Verifique sua internet.');
       }
-      console.error(error);
+   
     }
   };
 
