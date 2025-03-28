@@ -13,6 +13,7 @@ import ProfessorPerfil from './screens/screensAluno/PerfilProfessor';
 import TurmasInstituicao from './screens/screensInstituicao/Turmas';
 import NavigationInstituicao from './NavigationInstituicao'
 import PerfilDocente from './screens/screensDocente/PerfilDocente';
+import PerfilProfessor from './components/EditarTurmas/screens/PerfilProfessor';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ export default function App() {
           <Stack.Screen name="PerfilDocente" component={PerfilDocente} />
           <Stack.Screen name="MainDoc" component={NavigationDocente} />
           <Stack.Screen name="NotasTurma" component={NotasTurma} />
+          <Stack.Screen name="PerfilProfessor" component={PerfilProfessor} />
           <Stack.Screen name="AlunosFeedback" component={AlunosFeedback} />
           <Stack.Screen name="AlunoPerfil" component={AlunoPerfil} />
           <Stack.Screen name="ProfessorPerfil" component={ProfessorPerfil} />

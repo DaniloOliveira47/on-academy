@@ -7,6 +7,7 @@ import HomeScreen from './screens/screensInstituicao/Home';
 import EventosScreen from './screens/screensInstituicao/EventosInstitution';
 import FeedbackStack from './screens/screensInstituicao/Professores';
 import NotasStack from './stacks/EditarTurmasStack'
+import ProfessoresStack from './stacks/ProfessoresStack';
 
 import { useTheme } from './path/ThemeContext';
 
@@ -56,7 +57,7 @@ export default function NavigationDocente() {
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Turmas" component={NotasStack} options={{ headerShown: false }} />
       <Tab.Screen name="Eventos" component={EventosScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="FeedbackTab" component={FeedbackStack} options={{ headerShown: false }} />
+      <Tab.Screen name="FeedbackTab" component={ProfessoresStack} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }

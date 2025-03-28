@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
@@ -7,7 +7,7 @@ import CardSelecao from '../../components/Turmas/CardSelecao';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import axios from 'axios';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfessor';
 import CardProfessorIns from '../../components/Ocorrência/CardProfessoreIns';
 
@@ -18,6 +18,9 @@ export default function ProfessoresFeedback() {
     const [loading, setLoading] = useState(true);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
+    const [modalCriarAlunoVisible, setModalCriarAlunoVisible] = useState(false);
+    const [turmaId, setTurmaId] = useState(null);
+
     useEffect(() => {
         const fetchProfessores = async () => {
             try {
@@ -33,13 +36,16 @@ export default function ProfessoresFeedback() {
         fetchProfessores();
     }, []);
 
+    const selecionarProfessor = (professor) => {
+        setProfessorSelecionado(professor);
+    };
+
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <HeaderSimples />
             <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>Professores</Text>
-
                 </View>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF', height: '100%' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
@@ -53,15 +59,14 @@ export default function ProfessoresFeedback() {
                     {loading ? (
                         <ActivityIndicator size="large" color="#1A85FF" style={{ marginTop: 20 }} />
                     ) : (
-
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
                             {professores.slice(0, 2).map((professor, index) => (
                                 <CardProfessorIns
                                     key={index}
                                     nome={"Prof - " + professor.nomeDocente}
                                     id={professor.id}
-                                    onPress={() => selecionarProfessor(professor)} // Passa a função para selecionar o professor
-                                    selecionado={professorSelecionado?.id === professor.id} // Destaca o card selecionado
+                                    onPress={() => selecionarProfessor(professor)}
+                                    selecionado={professorSelecionado?.id === professor.id}
                                 />
                             ))}
                         </View>
@@ -76,12 +81,28 @@ export default function ProfessoresFeedback() {
                             />
                         ))}
                     </View>
-                    <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
-                        <TouchableOpacity style={styles.botaoCriar} onPress={() => setModalCriarVisible(true)}>
+                    
+                    {/* Botões de criação no canto inferior direito */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', position: 'absolute', bottom: 20, right: 20 }}>
+                        {/* Botão para adicionar professor */}
+                        <TouchableOpacity 
+                            style={[styles.botaoCriar, { marginRight: 10 }]} 
+                            onPress={() => setModalCriarVisible(true)}
+                        >
                             <Icon name="plus" size={24} color="white" />
                         </TouchableOpacity>
-                        <CadastroProfessorModal visible={modalCriarVisible} onClose={() => setModalCriarVisible(false)}/>
+                        
+                        {/* Botão para adicionar aluno */}
+                
                     </View>
+                    
+                    {/* Modais */}
+                    <CadastroProfessorModal 
+                        visible={modalCriarVisible} 
+                        onClose={() => setModalCriarVisible(false)}
+                    />
+                    
+
                 </View>
             </View>
         </View>
@@ -101,13 +122,15 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         width: '100%',
         padding: 10,
-        borderRadius: 16
+        borderRadius: 16,
+        flex: 1
     },
     tela: {
         backgroundColor: '#F0F7FF',
         width: '100%',
         height: '100%',
-        padding: 10
+        padding: 10,
+        flex: 1
     },
     linha: {
         marginTop: -5,
@@ -143,15 +166,14 @@ const styles = StyleSheet.create({
         marginTop: 30,
     },
     botaoCriar: {
-        width: 50, // Definindo um tamanho fixo para o botão
-        height: 50, // Tamanho fixo
-        backgroundColor: '#1A85FF', // Cor de fundo do botão
-        borderRadius: 10, // Tornando o botão redondo
-        justifyContent: 'center', // Alinhamento central do conteúdo
-        alignItems: 'center', // Alinhamento central
-        position: 'absolute', // Garantir que o botão fique sobre outros elementos
-        bottom: 0, // Distância da parte inferior da tela
-        right: 0, // Distância da parte direita da tela
-        elevation: 5, // Sombra para dar destaque
+        width: 60,
+        height: 60,
+        backgroundColor: '#1A85FF',
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        marginBottom: 30,
+        
     },
 });

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
@@ -14,20 +14,35 @@ export default function CadastroProfessorModal({ visible, onClose }) {
     const [dataNascimento, setDataNascimento] = useState('');
     const [selectedBirthDate, setSelectedBirthDate] = useState(new Date());
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
+    const [disciplines, setDisciplines] = useState([]);
+    const [selectedDisciplines, setSelectedDisciplines] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
+    useEffect(() => {
+        if (visible) {
+            fetchDisciplines();
+        }
+    }, [visible]);
 
-        if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+    const fetchDisciplines = async () => {
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem('@user_token');
+            const response = await axios.get('http://10.0.2.2:3000/api/discipline', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setDisciplines(response.data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Erro ao buscar disciplinas:', error);
+            setLoading(false);
+            Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
         }
     };
 
+   
     const handleBirthDateChange = (event, date) => {
         setShowBirthDatePicker(false);
         if (date) {
@@ -36,7 +51,22 @@ export default function CadastroProfessorModal({ visible, onClose }) {
         }
     };
 
+    const toggleDiscipline = (disciplineId) => {
+        setSelectedDisciplines(prev => {
+            if (prev.includes(disciplineId)) {
+                return prev.filter(id => id !== disciplineId);
+            } else {
+                return [...prev, disciplineId];
+            }
+        });
+    };
+
     const handleCadastrar = async () => {
+        if (selectedDisciplines.length === 0) {
+            Alert.alert('Atenção', 'Selecione pelo menos uma disciplina');
+            return;
+        }
+
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
@@ -51,26 +81,31 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                 dataNascimentoDocente: dataFormatada,
                 emailDocente,
                 telefoneDocente,
-                // Inclua outras informações, como a disciplina, se necessário
-                disciplineId: [2], // Exemplo: Id da disciplina (pode ser alterado conforme necessidade)
+                disciplineId: selectedDisciplines,
             };
 
-            console.log('Dados do professor a serem enviados:', professorData); // Debug
+            console.log('Dados do professor a serem enviados:', professorData);
 
-            const response = await axios.post('http://localhost:3000/api/teacher', professorData, {
+            const response = await axios.post('http://10.0.2.2:3000/api/teacher', professorData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            console.log('Resposta da API:', response.data); // Debug
-
             if (response.status === 201) {
                 Alert.alert('Sucesso', 'Professor cadastrado com sucesso!');
+                // Limpar os campos após o cadastro
+                setNomeDocente('');
+                setEmailDocente('');
+                setTelefoneDocente('');
+                setDataNascimento('');
+                setSelectedBirthDate(new Date());
+                setSelectedImage(null);
+                setSelectedDisciplines([]);
                 onClose();
             }
         } catch (error) {
-            console.error('Erro ao cadastrar professor:', error.response ? error.response.data : error.message); // Debug
+            console.error('Erro ao cadastrar professor:', error.response ? error.response.data : error.message);
             Alert.alert('Erro', 'Erro ao cadastrar professor. Tente novamente.');
         }
     };
@@ -88,14 +123,6 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         <Icon name="x" size={30} color="#000" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                        {selectedImage ? (
-                            <Image source={{ uri: selectedImage }} style={styles.profileImage} />
-                        ) : (
-                            <Icon name="camera" size={50} color="#1A85FF" />
-                        )}
-                    </TouchableOpacity>
-                    <Text style={styles.imageText}>Adicionar Imagem</Text>
 
                     <TextInput
                         style={styles.input}
@@ -146,6 +173,29 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         />
                     )}
 
+                    <Text style={styles.label}>Disciplinas</Text>
+                    {loading ? (
+                        <Text>Carregando disciplinas...</Text>
+                    ) : (
+                        <ScrollView style={styles.disciplinesContainer} contentContainerStyle={styles.disciplinesContent}>
+                            {disciplines.map(discipline => (
+                                <TouchableOpacity
+                                    key={discipline.id}
+                                    style={[
+                                        styles.disciplineItem,
+                                        selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected
+                                    ]}
+                                    onPress={() => toggleDiscipline(discipline.id)}
+                                >
+                                    <Text style={styles.disciplineText}>{discipline.nomeDisciplina}</Text>
+                                    {selectedDisciplines.includes(discipline.id) && (
+                                        <Icon name="check" size={18} color="#1A85FF" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
+
                     <TouchableOpacity style={styles.saveButton} onPress={handleCadastrar}>
                         <Text style={styles.saveButtonText}>Salvar Professor</Text>
                     </TouchableOpacity>
@@ -169,6 +219,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 10,
         padding: 20,
         alignItems: 'center',
+        maxHeight: '80%',
     },
     closeButton: {
         position: 'absolute',
@@ -211,11 +262,13 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: '#000',
         marginBottom: 5,
+        alignSelf: 'flex-start',
     },
     dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 15,
+        width: '100%',
     },
     dateInput: {
         flex: 1,
@@ -223,6 +276,34 @@ const styles = StyleSheet.create({
     },
     dateIconButton: {
         padding: 10,
+    },
+    disciplinesContainer: {
+        width: '100%',
+        maxHeight: 150,
+        marginBottom: 15,
+    },
+    disciplinesContent: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start',
+    },
+    disciplineItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F0F7FF',
+        borderRadius: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        marginRight: 10,
+        marginBottom: 10,
+    },
+    disciplineItemSelected: {
+        backgroundColor: '#E1F0FF',
+        borderWidth: 1,
+        borderColor: '#1A85FF',
+    },
+    disciplineText: {
+        marginRight: 5,
     },
     saveButton: {
         width: '100%',

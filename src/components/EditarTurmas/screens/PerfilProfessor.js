@@ -10,7 +10,6 @@ import {
     ScrollView,
     FlatList,
     ActivityIndicator,
-    Dimensions,
     Alert,
     Platform
 } from 'react-native';
@@ -23,11 +22,10 @@ import { useTheme } from '../../../path/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import GraficoFeedback from '../../Gerais/GraficoFeedback'; // Import the graph component
 
-export default function PerfilAluno() {
+export default function PerfilProfessor() {
     const route = useRoute();
-    const { alunoId } = route.params;
+    const { professorId } = route.params;
     const { isDarkMode } = useTheme();
 
     const [loading, setLoading] = useState(true);
@@ -36,35 +34,23 @@ export default function PerfilAluno() {
     const [perfil, setPerfil] = useState({
         nome: '',
         email: '',
-        matricula: '',
+        codigoIdentificador: '',
         telefone: '',
         nascimento: '',
-        turma: '',
-        senha: '********',
-        foto: null,
+        disciplinas: [],
+        turmas: [],
+        feedbacks: [],
     });
     const [perfilEdit, setPerfilEdit] = useState(perfil);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
-    const [ocorrencias, setOcorrencias] = useState([]);
-    const [feedbacks, setFeedbacks] = useState([]);
-    const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
-    const [professorSelecionado, setProfessorSelecionado] = useState(null);
-    const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
-    const [modalProfessorVisible, setModalProfessorVisible] = useState(false);
-    const [modalBarraVisible, setModalBarraVisible] = useState(false);
-    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const [imageError, setImageError] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
-    const [semFeedbacks, setSemFeedbacks] = useState(false);
-    const [professores, setProfessores] = useState([]);
 
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
 
-    // Função para obter o token de autenticação
     const getAuthToken = async () => {
         const token = await AsyncStorage.getItem('@user_token');
         if (!token) {
@@ -89,142 +75,62 @@ export default function PerfilAluno() {
 
     useEffect(() => {
         requestPermissions();
-        if (alunoId) {
-            fetchAluno();
-            fetchFeedbacks();
+        if (professorId) {
+            fetchProfessor();
         } else {
-            setError('ID do aluno não fornecido.');
+            setError('ID do professor não fornecido.');
             setLoading(false);
         }
-    }, [alunoId]);
+    }, [professorId]);
 
-    useEffect(() => {
-        if (alunoId) {
-            fetchFeedbacks();
-        }
-    }, [alunoId, bimestreSelecionado, professorSelecionado]);
-
-    const fetchFeedbacks = async () => {
+    const fetchProfessor = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`, {
+            const response = await axios.get(`http://10.0.2.2:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            setFeedbacks(response.data);
+            
+            if (response.data) {
+                const professorData = response.data;
+                setPerfil({
+                    nome: professorData.nomeDocente,
+                    email: professorData.emailDocente,
+                    codigoIdentificador: professorData.identifierCode,
+                    telefone: professorData.telefoneDocente,
+                    nascimento: professorData.dataNascimentoDocente.split(' ')[0],
+                    disciplinas: professorData.disciplinas || [],
+                    turmas: professorData.classes || [],
+                    feedbacks: professorData.feedbacks || [],
+                    foto: professorData.imageUrl || null,
+                });
+                setPerfilEdit({
+                    nome: professorData.nomeDocente,
+                    email: professorData.emailDocente,
+                    codigoIdentificador: professorData.identifierCode,
+                    telefone: professorData.telefoneDocente,
+                    nascimento: professorData.dataNascimentoDocente.split(' ')[0],
+                    disciplinas: professorData.disciplinas || [],
+                    turmas: professorData.classes || [],
+                    feedbacks: professorData.feedbacks || [],
+                    foto: professorData.imageUrl || null,
+                });
 
-            const professoresUnicos = [];
-            const professoresMap = new Map();
-
-            response.data.forEach(feedback => {
-                if (feedback.createdByDTO && !professoresMap.has(feedback.createdByDTO.id)) {
-                    professoresMap.set(feedback.createdByDTO.id, true);
-                    professoresUnicos.push(feedback.createdByDTO);
-                }
-            });
-
-            setProfessores(professoresUnicos);
-            atualizarDadosGrafico(response.data);
-        } catch (error) {
-            console.error('Erro ao carregar os feedbacks:', error);
-            if (error.response && error.response.status === 401) {
-                setError('Sessão expirada. Por favor, faça login novamente.');
-            }
-        }
-    };
-
-    const atualizarDadosGrafico = (feedbacksData) => {
-        let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
-
-        if (professorSelecionado) {
-            feedbacksFiltrados = feedbacksFiltrados.filter(
-                feedback => feedback.createdByDTO.id === professorSelecionado.id
-            );
-
-            if (feedbacksFiltrados.length > 0) {
-                const feedback = feedbacksFiltrados[0];
-                setDadosGrafico([
-                    feedback.resposta1,
-                    feedback.resposta2,
-                    feedback.resposta3,
-                    feedback.resposta4,
-                    feedback.resposta5
-                ]);
-                setSemFeedbacks(false);
-                return;
-            }
-        }
-
-        if (feedbacksFiltrados.length === 0) {
-            setSemFeedbacks(true);
-            setDadosGrafico([0, 0, 0, 0, 0]);
-            return;
-        }
-
-        setSemFeedbacks(false);
-
-        const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
-            return {
-                resposta1: acc.resposta1 + feedback.resposta1,
-                resposta2: acc.resposta2 + feedback.resposta2,
-                resposta3: acc.resposta3 + feedback.resposta3,
-                resposta4: acc.resposta4 + feedback.resposta4,
-                resposta5: acc.resposta5 + feedback.resposta5,
-            };
-        }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
-
-        const novasMedias = [
-            somaRespostas.resposta1 / feedbacksFiltrados.length,
-            somaRespostas.resposta2 / feedbacksFiltrados.length,
-            somaRespostas.resposta3 / feedbacksFiltrados.length,
-            somaRespostas.resposta4 / feedbacksFiltrados.length,
-            somaRespostas.resposta5 / feedbacksFiltrados.length,
-        ];
-
-        setDadosGrafico(novasMedias);
-    };
-
-    const handleBarraClick = (label, value) => {
-        if (value === 0) return;
-        setBarraSelecionada({ label, value });
-        setModalBarraVisible(true);
-    };
-
-    const handleSelecionarProfessor = (professor) => {
-        setProfessorSelecionado(professor);
-        setModalProfessorVisible(false);
-    };
-
-    const handleLimparFiltroProfessor = () => {
-        setProfessorSelecionado(null);
-    };
-
-    const checkProfileImage = async () => {
-        try {
-            const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/image/${alunoId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-            });
-
-            if (response.data && response.data.imageUrl) {
-                setPerfil(prev => ({ ...prev, foto: response.data.imageUrl }));
-                setHasProfileImage(true);
-                setImageError(false);
+                setHasProfileImage(!!professorData.imageUrl);
+                setImageError(!professorData.imageUrl);
             } else {
-                setHasProfileImage(false);
-                setImageError(true);
+                setError('Professor não encontrado.');
             }
         } catch (error) {
-            console.error('Erro ao verificar imagem:', error);
-            setHasProfileImage(false);
-            setImageError(true);
-
+            console.error('Erro ao buscar dados do professor:', error);
             if (error.response && error.response.status === 401) {
                 setError('Sessão expirada. Por favor, faça login novamente.');
+            } else {
+                setError('Erro ao carregar dados do professor.');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -310,7 +216,7 @@ export default function PerfilAluno() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://10.0.2.2:3000/api/student/upload-image/${alunoId}`,
+                `http://10.0.2.2:3000/api/teacher/upload-image/${professorId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -322,7 +228,7 @@ export default function PerfilAluno() {
 
             setHasProfileImage(true);
             setImageError(false);
-            fetchAluno();
+            fetchProfessor();
         } catch (error) {
             console.error('Erro ao enviar imagem:', error);
             setImageError(true);
@@ -330,68 +236,18 @@ export default function PerfilAluno() {
         }
     };
 
-    const fetchAluno = async () => {
-        try {
-            const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.data) {
-                const alunoData = response.data;
-                setPerfil({
-                    nome: alunoData.nome,
-                    email: alunoData.emailAluno,
-                    matricula: alunoData.matriculaAluno,
-                    telefone: alunoData.telefoneAluno,
-                    nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
-                    turma: alunoData.turma.nomeTurma,
-                    senha: '********',
-                    foto: alunoData.imageUrl || null,
-                });
-                setPerfilEdit({
-                    nome: alunoData.nome,
-                    email: alunoData.emailAluno,
-                    matricula: alunoData.matriculaAluno,
-                    telefone: alunoData.telefoneAluno,
-                    nascimento: alunoData.dataNascimentoAluno.split(' ')[0],
-                    turma: alunoData.turma.nomeTurma,
-                    senha: '********',
-                    foto: alunoData.imageUrl || null,
-                });
-
-                setHasProfileImage(!!alunoData.imageUrl);
-                setImageError(!alunoData.imageUrl);
-            } else {
-                setError('Aluno não encontrado.');
-            }
-        } catch (error) {
-            console.error('Erro ao buscar dados do aluno:', error);
-            if (error.response && error.response.status === 401) {
-                setError('Sessão expirada. Por favor, faça login novamente.');
-            } else {
-                setError('Erro ao carregar dados do aluno.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const atualizarAluno = async () => {
+    const atualizarProfessor = async () => {
         try {
             setLoading(true);
             const token = await getAuthToken();
 
             const response = await axios.put(
-                `http://10.0.2.2:3000/api/student/${alunoId}`,
+                `http://10.0.2.2:3000/api/teacher/${professorId}`,
                 {
-                    nome: perfilEdit.nome,
-                    emailAluno: perfilEdit.email,
-                    matriculaAluno: perfilEdit.matricula,
-                    telefoneAluno: perfilEdit.telefone,
-                    dataNascimentoAluno: perfilEdit.nascimento,
-                    turma: perfilEdit.turma,
+                    nomeDocente: perfilEdit.nome,
+                    emailDocente: perfilEdit.email,
+                    telefoneDocente: perfilEdit.telefone,
+                    dataNascimentoDocente: perfilEdit.nascimento,
                 },
                 {
                     headers: {
@@ -402,12 +258,12 @@ export default function PerfilAluno() {
             );
 
             if (response.status === 200) {
-                Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
-                fetchAluno();
+                Alert.alert('Sucesso', 'Dados do professor atualizados com sucesso!');
+                fetchProfessor();
             }
         } catch (error) {
-            console.error('Erro ao atualizar aluno:', error);
-            let errorMessage = 'Erro ao atualizar os dados do aluno';
+            console.error('Erro ao atualizar professor:', error);
+            let errorMessage = 'Erro ao atualizar os dados do professor';
 
             if (error.response) {
                 if (error.response.status === 401) {
@@ -425,7 +281,7 @@ export default function PerfilAluno() {
 
     const handleEditSave = async () => {
         try {
-            await atualizarAluno();
+            await atualizarProfessor();
             setPerfil(perfilEdit);
             setIsEditing(false);
         } catch (error) {
@@ -463,7 +319,7 @@ export default function PerfilAluno() {
 
     return (
         <ScrollView style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-            <HeaderSimples titulo="PERFIL" />
+            <HeaderSimples titulo="PERFIL DO PROFESSOR" />
             <View style={{ padding: 15 }}>
                 <Image
                     style={[styles.barraAzul, { backgroundColor: barraAzulColor }]}
@@ -523,12 +379,11 @@ export default function PerfilAluno() {
                     />
 
                     <Campo
-                        label="Nº Matrícula"
-                        text={perfil.matricula}
+                        label="Código Identificador"
+                        text={perfil.codigoIdentificador}
                         textColor={textColor}
-                        editable={isEditing}
-                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, matricula: text })}
-                        placeholder="Digite a matrícula"
+                        editable={false} // Não editável
+                        placeholder="Código do professor"
                     />
 
                     <View style={styles.inlineFieldsContainer}>
@@ -552,16 +407,57 @@ export default function PerfilAluno() {
                         />
                     </View>
 
-                    <View style={styles.inlineFieldsContainer}>
-                        <Campo
-                            label="Turma"
-                            text={perfil.turma}
-                            textColor={textColor}
-                            isInline={true}
-                            editable={isEditing}
-                            onChangeText={(text) => setPerfilEdit({ ...perfilEdit, turma: text })}
-                            placeholder="Digite a turma"
-                        />
+                    {/* Seção de Disciplinas */}
+                    <View style={styles.sectionContainer}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Disciplinas</Text>
+                        {perfil.disciplinas.length > 0 ? (
+                            <View style={styles.itemsContainer}>
+                                {perfil.disciplinas.map((disciplina, index) => (
+                                    <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                                        <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
+                            <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma disciplina associada</Text>
+                        )}
+                    </View>
+
+                    {/* Seção de Turmas */}
+                    <View style={styles.sectionContainer}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Turmas</Text>
+                        {perfil.turmas.length > 0 ? (
+                            <View style={styles.itemsContainer}>
+                                {perfil.turmas.map((turma, index) => (
+                                    <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                                        <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
+                            <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma turma associada</Text>
+                        )}
+                    </View>
+
+                    {/* Seção de Feedbacks */}
+                    <View style={styles.sectionContainer}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Feedbacks Recebidos</Text>
+                        {perfil.feedbacks.length > 0 ? (
+                            <FlatList
+                                data={perfil.feedbacks}
+                                keyExtractor={(item) => item.id.toString()}
+                                renderItem={({ item }) => (
+                                    <View style={[styles.feedbackContainer, { backgroundColor: isDarkMode ? '#222' : '#F0F7FF' }]}>
+                                        <Text style={[styles.feedbackText, { color: textColor }]}>{item.conteudo}</Text>
+                                        <Text style={[styles.feedbackAuthor, { color: isDarkMode ? '#AAA' : '#666' }]}>
+                                            - {item.createdBy.nomeAluno}
+                                        </Text>
+                                    </View>
+                                )}
+                            />
+                        ) : (
+                            <Text style={[styles.noItemsText, { color: textColor }]}>Nenhum feedback recebido</Text>
+                        )}
                     </View>
 
                     {isEditing ? (
@@ -596,106 +492,7 @@ export default function PerfilAluno() {
                         </View>
                     )}
                 </View>
-
-                {/* Feedback Graph Section */}
-                <View style={[styles.grafico, { 
-                    backgroundColor: formBackgroundColor, 
-                    marginTop: 20,
-                    borderRadius: 10,
-                    padding: 15,
-                    shadowColor: isDarkMode ? '#FFF' : '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
-                }]}>
-                    <GraficoFeedback
-                        dadosGrafico={dadosGrafico}
-                        bimestreSelecionado={bimestreSelecionado}
-                        professorSelecionado={professorSelecionado}
-                        semFeedbacks={semFeedbacks}
-                        professores={professores}
-                        onSelecionarBimestre={() => setModalBimestreVisible(true)}
-                        onSelecionarProfessor={() => setModalProfessorVisible(true)}
-                        onLimparFiltroProfessor={handleLimparFiltroProfessor}
-                        onBarraClick={handleBarraClick}
-                    />
-                </View>
-
-                <View style={[styles.tabelaContainer, { backgroundColor: formBackgroundColor, marginBottom: 50 }]}>
-                    <View style={[styles.tabelaHeader, { backgroundColor: '#F0F7FF' }]}>
-                        <Text style={[styles.tabelaHeaderText, { color: 'black' }]}>Ocorrência</Text>
-                        <Text style={[styles.tabelaHeaderText, { color: 'black' }]}>Turma</Text>
-                        <Text style={[styles.tabelaHeaderText, { color: 'black' }]}>Data</Text>
-                    </View>
-                    <FlatList
-                        data={ocorrencias}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <View style={styles.tabelaRow}>
-                                <Text style={[styles.tabelaText, { color: textColor }]}>{item.ocorrencia}</Text>
-                                <Text style={[styles.tabelaText, { color: textColor }]}>{item.turma}</Text>
-                                <Text style={[styles.tabelaText, { color: textColor }]}>{item.data}</Text>
-                            </View>
-                        )}
-                    />
-                </View>
             </View>
-
-            {/* Modal de Seleção de Bimestre */}
-            <Modal visible={modalBimestreVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
-                        {[1, 2, 3, 4].map((bimestre) => (
-                            <TouchableOpacity
-                                key={bimestre}
-                                style={styles.modalItem}
-                                onPress={() => {
-                                    setBimestreSelecionado(bimestre);
-                                    setModalBimestreVisible(false);
-                                }}
-                            >
-                                <Text style={[styles.modalText, { color: textColor }]}>
-                                    {bimestre}º Bimestre
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Modal de Seleção de Professor */}
-            <Modal visible={modalProfessorVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
-                        <TouchableOpacity
-                            style={styles.modalItem}
-                            onPress={() => {
-                                handleSelecionarProfessor(null);
-                            }}
-                        >
-                            <Text style={[styles.modalText, { color: textColor }]}>
-                                Todos Professores
-                            </Text>
-                        </TouchableOpacity>
-                        {professores.map((professor) => (
-                            <TouchableOpacity
-                                key={professor.id}
-                                style={styles.modalItem}
-                                onPress={() => {
-                                    handleSelecionarProfessor(professor);
-                                }}
-                            >
-                                <Text style={[styles.modalText, { color: textColor }]}>
-                                    {professor.nomeDocente}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            </Modal>
 
             {/* Modal de Exclusão */}
             <Modal visible={modalDeleteVisible} transparent animationType="slide">
@@ -710,24 +507,6 @@ export default function PerfilAluno() {
                                 <Text style={styles.buttonText}>Cancelar</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Modal para Detalhes da Barra */}
-            <Modal visible={modalBarraVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
-                        <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
-                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
-                            {barraSelecionada.value.toFixed(1)}
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
-                            onPress={() => setModalBarraVisible(false)}
-                        >
-                            <Text style={[styles.buttonText, { color: '#1E6BE6' }]}>Fechar</Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -864,34 +643,6 @@ const styles = StyleSheet.create({
     iconeBotao: {
         padding: 10,
     },
-    tabelaContainer: {
-        marginTop: 20,
-        borderRadius: 10,
-        padding: 15,
-    },
-    tabelaHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 10,
-        borderTopLeftRadius: 10,
-        borderTopRightRadius: 10,
-    },
-    tabelaHeaderText: {
-        fontWeight: 'bold',
-        flex: 1,
-        textAlign: 'center',
-    },
-    tabelaRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-    },
-    tabelaText: {
-        flex: 1,
-        textAlign: 'center',
-    },
     modalBackdrop: {
         flex: 1,
         justifyContent: 'center',
@@ -930,7 +681,42 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         marginTop: 20,
     },
-    grafico: {
+    sectionContainer: {
         marginTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    itemsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    itemPill: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+    },
+    itemText: {
+        fontSize: 14,
+    },
+    noItemsText: {
+        fontStyle: 'italic',
+        color: '#666',
+    },
+    feedbackContainer: {
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    feedbackText: {
+        fontSize: 14,
+    },
+    feedbackAuthor: {
+        fontSize: 12,
+        marginTop: 4,
+        textAlign: 'right',
     },
 });
