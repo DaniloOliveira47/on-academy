@@ -1,21 +1,19 @@
 import React from 'react';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 
-export default function CardTurmas({ titulo, subTitulo }) {
+export default function CardTurmas({ titulo, subTitulo, onPress, isSelected }) {
   const { isDarkMode } = useTheme();
-  const colorScheme = useColorScheme();
-  const darkMode = isDarkMode ?? colorScheme === 'dark';
 
   return (
-    <View style={[styles.card, { backgroundColor: darkMode ? '#1E1E1E' : '#F0F7FF' }]}>
-      <Text style={[styles.titulo, { color: darkMode ? '#FFFFFF' : '#000000' }]}>
+    <TouchableOpacity onPress={onPress} style={[styles.card, isSelected && styles.selectedCard]}>
+      <Text style={[styles.titulo, { color: isSelected ? '#FFF' : '#000' }]}>
         {titulo}
       </Text>
-      <Text style={[styles.subTitulo, { color: darkMode ? '#BBBBBB' : '#8A8A8A' }]}>
+      <Text style={[styles.subTitulo, { color: isSelected ? '#FFF' : '#8A8A8A' }]}>
         {subTitulo}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -24,10 +22,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginTop: 10,
+    backgroundColor: '#F0F7FF',
+  },
+  selectedCard: {
+    backgroundColor: '#0077FF',
+    borderWidth: 2,
+    borderColor: '#0057CC',
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 5,
   },
   titulo: {
     fontSize: 17,
@@ -38,4 +42,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-

@@ -15,6 +15,13 @@ export default function HomeInstituicao() {
     const [turmas, setTurmas] = useState([]);
     const [conteudoAviso, setConteudoAviso] = useState('');
     const [avisos, setAvisos] = useState([]);
+    const [turmaSelecionada, setTurmaSelecionada] = useState(null);
+
+    const handleSelecionarTurma = (id) => {
+        setTurmaSelecionada(id);
+        console.log('Turma selecionada:', id);
+    };
+
 
     const gerarCorAleatoria = () => {
         let cor = '#0077FF';
@@ -59,6 +66,11 @@ export default function HomeInstituicao() {
 
     const enviarAviso = async () => {
         try {
+            if (!turmaSelecionada) {
+                Alert.alert('Aviso', 'Por favor, selecione uma turma.');
+                return;
+            }
+
             const instituicaoId = await AsyncStorage.getItem('@user_id');
             if (!instituicaoId) {
                 console.error('ID da instituição não encontrado no Async Storage');
@@ -70,23 +82,16 @@ export default function HomeInstituicao() {
                 return;
             }
 
-            if (turmas.length === 0) {
-                console.error('Nenhuma turma disponível para enviar o aviso.');
-                return;
-            }
+            const avisoData = {
+                conteudo: conteudoAviso,
+                createdBy: { id: parseInt(instituicaoId) },
+                classSt: { id: turmaSelecionada },
+            };
 
-            for (const turma of turmas) {
-                const avisoData = {
-                    conteudo: conteudoAviso,
-                    createdBy: { id: parseInt(instituicaoId) },
-                    classSt: { id: turma.id },
-                };
+            const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
+            console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
 
-                const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
-                console.log(`Aviso enviado para a turma ${turma.id}:`, response.data);
-            }
-
-            Alert.alert('Sucesso', 'Aviso enviado com sucesso para todas as turmas!');
+            Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
         } catch (error) {
             console.error('Erro ao enviar aviso:', error);
@@ -120,11 +125,9 @@ export default function HomeInstituicao() {
                     </View>
 
                     {/* Seção de turmas com ScrollView personalizado */}
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    <View style={[styles.contTurmas]}>
                         <Text style={styles.title}>Turmas</Text>
-                        <View style={[styles.customScrollView, {
-                            backgroundColor: isDarkMode ? '#1A1A1A' : '#E6F2FF'
-                        }]}>
+                        <View style={[styles.customScrollView]}>
                             <ScrollView
                                 style={styles.customScrollContent}
                                 showsVerticalScrollIndicator={false}
@@ -134,18 +137,21 @@ export default function HomeInstituicao() {
                                     turmas.map((turma, index) => (
                                         <CardTurmas
                                             key={turma.id}
-                                            titulo={`${turma.nomeTurma} `}
-                                            subTitulo={`Sala ${index + 1} `}
+                                            titulo={`${turma.nomeTurma}`}
+                                            subTitulo={`Sala ${index + 1}`}
+                                            isSelected={turmaSelecionada === turma.id}
+                                            onPress={() => handleSelecionarTurma(turma.id)}
                                         />
                                     ))
                                 ) : (
-                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                    <Text style={[styles.emptyMessage]}>
                                         Nenhuma turma disponível
                                     </Text>
                                 )}
                             </ScrollView>
                         </View>
                     </View>
+
 
                     {/* Seção de avisos */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
@@ -295,15 +301,10 @@ const styles = StyleSheet.create({
     customScrollView: {
         maxHeight: 200,
         borderRadius: 15,
-        borderWidth: 2,
-        borderColor: '#0077FF',
-        padding: 8,
+
+
         marginTop: 10,
-        shadowColor: '#0077FF',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+    
     },
     customScrollContent: {
         paddingRight: 10,

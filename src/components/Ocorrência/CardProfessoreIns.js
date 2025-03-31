@@ -14,7 +14,7 @@ export default function CardProfessorIns({ nome, id }) { // Recebe o nome e o id
                 {nome} {/* Exibe o nome do professor */}
             </Text>
             <TouchableOpacity
-                onPress={() => navigation.navigate('PerfilProfessor', { id })} // Navega passando o id
+               onPress={() => navigation.navigate('PerfilProfessor', { professorId: id })} // Navega passando o id
                 style={styles.botao}
             >
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>

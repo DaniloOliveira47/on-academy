@@ -14,12 +14,19 @@ export default function HomeDocente() {
     const [turmas, setTurmas] = useState([]);
     const [conteudoAviso, setConteudoAviso] = useState('');
     const [avisos, setAvisos] = useState([]); // Estado para os avisos
+    const [turmaSelecionada, setTurmaSelecionada] = useState(null);
+
+    const handleSelecionarTurma = (id) => {
+        setTurmaSelecionada(id);
+        console.log('Turma selecionada:', id);
+    };
+
 
     const gerarCorAleatoria = () => {
         let cor = '#0077FF';
         return cor;
     };
- 
+
     useEffect(() => {
         const fetchTurmas = async () => {
             try {
@@ -45,14 +52,15 @@ export default function HomeDocente() {
             }
         };
 
+
         const fetchMessages = async () => {
             try {
                 const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
- 
+
                 data.sort((a, b) =>
                     new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
                 );
- 
+
                 setAvisos(data);
             } catch (error) {
                 console.error('Erro ao carregar avisos:', error);
@@ -65,41 +73,39 @@ export default function HomeDocente() {
 
     const enviarAviso = async () => {
         try {
-            const professorId = await AsyncStorage.getItem('@user_id');
-            if (!professorId) {
-                console.error('ID do professor não encontrado no Async Storage');
+            if (!turmaSelecionada) {
+                Alert.alert('Aviso', 'Por favor, selecione uma turma.');
                 return;
             }
 
-            // Verifica se o conteúdo do aviso está vazio
+            const instituicaoId = await AsyncStorage.getItem('@user_id');
+            if (!instituicaoId) {
+                console.error('ID da instituição não encontrado no Async Storage');
+                return;
+            }
+
             if (!conteudoAviso.trim()) {
                 Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
                 return;
             }
 
-            if (turmas.length === 0) {
-                console.error('Nenhuma turma disponível para enviar o aviso.');
-                return;
-            }
+            const avisoData = {
+                conteudo: conteudoAviso,
+                createdBy: { id: parseInt(instituicaoId) },
+                classSt: { id: turmaSelecionada },
+            };
 
-            for (const turma of turmas) {
-                const avisoData = {
-                    conteudo: conteudoAviso, // Usa o conteúdo do estado
-                    createdBy: { id: parseInt(professorId) }, // ID do professor logado
-                    classSt: { id: turma.id }, // ID da turma
-                };
+            const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
+            console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
 
-                const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
-                console.log(`Aviso enviado para a turma ${turma.id}:`, response.data);
-            }
-
-            Alert.alert('Sucesso', 'Aviso enviado com sucesso para todas as turmas!');
-            setConteudoAviso(''); // Limpa o campo de texto após o envio
+            Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
+            setConteudoAviso('');
         } catch (error) {
             console.error('Erro ao enviar aviso:', error);
             Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
         }
     };
+
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -127,30 +133,28 @@ export default function HomeDocente() {
                     </View>
 
                     {/* Seção de turmas */}
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    <View style={[styles.contTurmas]}>
                         <Text style={styles.title}>Turmas</Text>
-                        <View style={styles.scrollWrapper}>
+                        <View style={[styles.customScrollView]}>
                             <ScrollView
-                                style={styles.scrollContainer}
-                                contentContainerStyle={styles.cards}
-                                nestedScrollEnabled={true}
+                                style={styles.customScrollContent}
                                 showsVerticalScrollIndicator={false}
-                                onScroll={Animated.event(
-                                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                                    { useNativeDriver: false }
-                                )}
-                                scrollEventThrottle={16}
+                                nestedScrollEnabled={true}
                             >
                                 {turmas.length > 0 ? (
                                     turmas.map((turma, index) => (
                                         <CardTurmas
                                             key={turma.id}
-                                            titulo={`${turma.nomeTurma} `}
-                                            subTitulo={`Sala ${index + 1} `}
+                                            titulo={`${turma.nomeTurma}`}
+                                            subTitulo={`Sala ${index + 1}`}
+                                            isSelected={turmaSelecionada === turma.id}
+                                            onPress={() => handleSelecionarTurma(turma.id)}
                                         />
                                     ))
                                 ) : (
-                                    <Text style={styles.emptyMessage}>Nenhuma turma disponível</Text>
+                                    <Text style={[styles.emptyMessage]}>
+                                        Nenhuma turma disponível
+                                    </Text>
                                 )}
                             </ScrollView>
                         </View>
