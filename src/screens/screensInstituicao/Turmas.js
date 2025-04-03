@@ -262,7 +262,7 @@ export default function Turmas() {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 30 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 650, padding: 20 }}>
                         <TouchableOpacity
                             style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}>
@@ -517,6 +517,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 16,
         padding: 10,
+        height: '100%'
     },
     inputContainer: {
         flexDirection: 'row',

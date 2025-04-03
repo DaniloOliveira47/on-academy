@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import CadastroAlunoModal from '../ModalCadAluno';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
 
 export default function Alunos() {
     const route = useRoute();
@@ -17,10 +18,16 @@ export default function Alunos() {
     const [filtro, setFiltro] = useState('');
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const navigation = useNavigation();
+    
+    // Estados para o gráfico de feedback
+    const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
+    const [totalFeedbacks, setTotalFeedbacks] = useState(0);
 
     const fetchAlunos = async () => {
         try {
+            setLoading(true);
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
                 Alert.alert('Erro', 'Token de autenticação não encontrado.');
@@ -33,7 +40,7 @@ export default function Alunos() {
             }
 
             const url = `http://10.0.2.2:3000/api/class/students/${turmaId}`;
-            console.log("URL da requisição:", url); // Debug
+            console.log("URL da requisição:", url);
 
             const response = await axios.get(url, {
                 headers: {
@@ -41,7 +48,7 @@ export default function Alunos() {
                 },
             });
 
-            console.log('Resposta da API:', response.data); // Debug
+            console.log('Resposta da API:', response.data);
 
             const alunosComMedias = response.data.students.map((aluno) => {
                 if (aluno.notas && aluno.notas.length > 0) {
@@ -53,19 +60,76 @@ export default function Alunos() {
             });
 
             setAlunos(alunosComMedias);
+            setError(null);
         } catch (error) {
-            console.error('Erro ao buscar alunos:', error.response ? error.response.data : error.message); // Debug
+            console.error('Erro ao buscar alunos:', error.response ? error.response.data : error.message);
             setError('Erro ao buscar alunos. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
         }
     };
 
+    // Função para buscar as médias dos feedbacks da turma
+    const fetchMediasFeedbacks = async () => {
+        try {
+            const token = await AsyncStorage.getItem('@user_token');
+            const response = await axios.get(`http://10.0.2.2:3000/api/class/feedback/${turmaId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            
+            const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
+            
+            setDadosGrafico([
+                mediaResposta1,
+                mediaResposta2,
+                mediaResposta3,
+                mediaResposta4,
+                mediaResposta5
+            ]);
+            setTotalFeedbacks(totalFeedbacks);
+        } catch (error) {
+            console.error('Erro ao carregar as médias dos feedbacks:', error);
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            setTotalFeedbacks(0);
+        }
+    };
+
     useEffect(() => {
         if (turmaId) {
             fetchAlunos();
+            fetchMediasFeedbacks(); // Carrega os dados do gráfico de feedback
         }
     }, [turmaId]);
+
+    const handleCreateAluno = async (alunoData) => {
+        try {
+            setIsCreating(true);
+            const token = await AsyncStorage.getItem('@user_token');
+            if (!token) {
+                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+                return;
+            }
+
+            const response = await axios.post('http://10.0.2.2:3000/api/student', alunoData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.status === 201) {
+                Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
+                await fetchAlunos(); // Atualiza a lista de alunos
+                setModalCriarVisible(false); // Fecha o modal
+            }
+        } catch (error) {
+            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message);
+            Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.');
+        } finally {
+            setIsCreating(false);
+        }
+    };
 
     const filtrarAlunos = (texto) => {
         setFiltro(texto);
@@ -92,6 +156,15 @@ export default function Alunos() {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
                 <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>{error}</Text>
+                <TouchableOpacity 
+                    style={styles.retryButton} 
+                    onPress={() => {
+                        fetchAlunos();
+                        fetchMediasFeedbacks();
+                    }}
+                >
+                    <Text style={styles.retryButtonText}>Tentar novamente</Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -106,11 +179,14 @@ export default function Alunos() {
                 </View>
 
                 <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+                    {/* Gráfico de Feedback da Turma */}
+                    
+
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { color: isDarkMode ? 'white' : 'black' }]}
                             placeholder="Digite o nome ou código da turma"
-                            placeholderTextColor="#756262"
+                            placeholderTextColor={isDarkMode ? '#AAA' : '#756262'}
                             value={filtro}
                             onChangeText={filtrarAlunos}
                         />
@@ -147,10 +223,30 @@ export default function Alunos() {
                     </ScrollView>
 
                     <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
-                        <TouchableOpacity style={styles.botaoCriar} onPress={() => setModalCriarVisible(true)}>
-                            <Icon name="plus" size={24} color="white" />
+                        <TouchableOpacity 
+                            style={styles.botaoCriar} 
+                            onPress={() => setModalCriarVisible(true)}
+                            disabled={isCreating}
+                        >
+                            {isCreating ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Icon name="plus" size={24} color="white" />
+                            )}
                         </TouchableOpacity>
-                        <CadastroAlunoModal visible={modalCriarVisible} onClose={() => setModalCriarVisible(false)} turmaId={turmaId} />
+                        <View style={styles.graficoContainer}>
+                        <GraficoFeedbackTurma
+                            dadosGrafico={dadosGrafico}
+                            totalFeedbacks={totalFeedbacks}
+                        />
+                    </View>
+                        <CadastroAlunoModal 
+                            visible={modalCriarVisible} 
+                            onClose={() => setModalCriarVisible(false)} 
+                            turmaId={turmaId}
+                            isCreating={isCreating}
+                            onCreate={handleCreateAluno}
+                        />
                     </View>
                 </View>
             </View>
@@ -182,6 +278,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
     },
+    retryButton: {
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: '#1A85FF',
+        borderRadius: 5,
+    },
+    retryButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
     containerBranco: {
         backgroundColor: '#FFF',
         borderRadius: 15,
@@ -198,6 +304,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        padding: 10,
+    },
+    graficoContainer: {
+        marginBottom: 20,
         padding: 10,
     },
     inputContainer: {
@@ -217,7 +327,6 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
         paddingVertical: 10,
     },
     tableHeader: {
@@ -240,7 +349,6 @@ const styles = StyleSheet.create({
     },
     rowText: {
         fontSize: 14,
-        color: '#333',
         textAlign: 'center',
     },
     notasButton: {

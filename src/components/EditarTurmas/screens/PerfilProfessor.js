@@ -44,7 +44,6 @@ const formatarData = (dataString) => {
 
         return `${dia}/${mes}/${ano}`;
     } catch (error) {
-        console.error('Erro ao formatar data:', error);
         return '';
     }
 };
@@ -55,6 +54,7 @@ export default function PerfilProfessor() {
     const { isDarkMode } = useTheme();
 
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
     const [hasProfileImage, setHasProfileImage] = useState(false);
     const [perfil, setPerfil] = useState({
@@ -157,7 +157,6 @@ export default function PerfilProfessor() {
                 setError('Professor não encontrado.');
             }
         } catch (error) {
-            console.error('Erro ao buscar dados do professor:', error);
             if (error.response && error.response.status === 401) {
                 setError('Sessão expirada. Por favor, faça login novamente.');
             } else {
@@ -183,7 +182,6 @@ export default function PerfilProfessor() {
             setAllDisciplinas(disciplinasResponse.data || []);
 
         } catch (error) {
-            console.error('Erro ao buscar turmas/disciplinas:', error);
             Alert.alert('Erro', 'Não foi possível carregar as turmas e disciplinas disponíveis');
         }
     };
@@ -225,7 +223,6 @@ export default function PerfilProfessor() {
                 }
             }
         } catch (error) {
-            console.error('Erro ao selecionar imagem:', error);
             setImageError(true);
             Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
         }
@@ -253,7 +250,6 @@ export default function PerfilProfessor() {
                 }
             }
         } catch (error) {
-            console.error('Erro ao tirar foto:', error);
             setError('Erro ao tirar foto: ' + error.message);
         }
     };
@@ -273,7 +269,6 @@ export default function PerfilProfessor() {
             setPerfil(prev => ({ ...prev, foto: imageData }));
             await uploadImage(base64Image);
         } catch (error) {
-            console.error('Erro ao processar imagem:', error);
             setError('Erro ao processar imagem: ' + error.message);
         }
     };
@@ -297,7 +292,6 @@ export default function PerfilProfessor() {
             setImageError(false);
             fetchProfessor();
         } catch (error) {
-            console.error('Erro ao enviar imagem:', error);
             setImageError(true);
             Alert.alert('Erro', 'Não foi possível enviar a imagem. Tente novamente mais tarde.');
         }
@@ -305,25 +299,33 @@ export default function PerfilProfessor() {
 
     const handleEditSave = async () => {
         try {
-            setLoading(true);
+            setUpdating(true);
             const token = await getAuthToken();
 
-            // Converter data dd/mm/aaaa para formato ISO (aaaa-mm-dd)
+            if (!perfilEdit.nome || !perfilEdit.email) {
+                Alert.alert('Erro', 'Nome e email são campos obrigatórios');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(perfilEdit.email)) {
+                Alert.alert('Erro', 'Por favor, insira um email válido');
+                return;
+            }
+
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
             const formattedDate = `${ano}-${mes}-${dia}T00:00:00.000Z`;
 
-            // Montar os dados para enviar
             const dadosParaEnviar = {
                 nomeDocente: perfilEdit.nome,
                 dataNascimentoDocente: formattedDate,
                 emailDocente: perfilEdit.email,
                 telefoneDocente: perfilEdit.telefone,
                 identifierCode: perfilEdit.codigoIdentificador,
-                disciplineId: selectedDisciplinas.length > 0 ? selectedDisciplinas : null, // Verificação para remover
-                classId: selectedTurmas.length > 0 ? selectedTurmas : null, // Verificação para remover
+                disciplineId: selectedDisciplinas.length > 0 ? selectedDisciplinas : null,
+                classId: selectedTurmas.length > 0 ? selectedTurmas : null,
             };
 
-            // Requisição para atualizar o professor
             const response = await axios.put(
                 `http://10.0.2.2:3000/api/teacher/${professorId}`,
                 dadosParaEnviar,
@@ -341,49 +343,40 @@ export default function PerfilProfessor() {
                 setIsEditing(false);
             }
         } catch (error) {
-            console.error('Erro ao atualizar professor:', error.response?.data || error);
             Alert.alert(
                 'Erro',
                 error.response?.data?.message || 'Erro ao atualizar os dados do professor'
             );
         } finally {
-            setLoading(false);
+            setUpdating(false);
         }
     };
 
-
-
-    
-        const handleDelete = async () => {
-            try {
-                setLoading(true);
-                const token = await getAuthToken();
-                
-                const response = await axios.delete(`http://10.0.2.2:3000/api/teacher/${professorId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-        
-                if (response.status === 200) {
-                    console.log('Perfil excluído com sucesso');
-                    Alert.alert('Sucesso', 'Professor excluído com sucesso!');
-                    // Aqui você pode adicionar navegação de volta para a lista de professores ou outra ação pós-exclusão
-                    // Exemplo: navigation.goBack();
+    const handleDelete = async () => {
+        try {
+            setLoading(true);
+            const token = await getAuthToken();
+            
+            const response = await axios.delete(`http://10.0.2.2:3000/api/teacher/${professorId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            } catch (error) {
-                console.error('Erro ao excluir professor:', error);
-                Alert.alert(
-                    'Erro', 
-                    error.response?.data?.message || 'Não foi possível excluir o professor'
-                );
-            } finally {
-                setLoading(false);
-                setModalDeleteVisible(false);
-            }
-        };
+            });
     
+            if (response.status === 200) {
+                Alert.alert('Sucesso', 'Professor excluído com sucesso!');
+            }
+        } catch (error) {
+            Alert.alert(
+                'Erro', 
+                error.response?.data?.message || 'Não foi possível excluir o professor'
+            );
+        } finally {
+            setLoading(false);
+            setModalDeleteVisible(false);
+        }
+    };
 
     const toggleEdit = async () => {
         if (!isEditing) {
@@ -485,36 +478,60 @@ export default function PerfilProfessor() {
     
         return (
             <>
-                {feedbacks.length > 0 && (
-                    <View style={[styles.feedbackOuterContainer, { backgroundColor: '#F0F7FF' }]}>
-                        <Text style={styles.sectionTitle}>Feedbacks Recebidos ({feedbacks.length})</Text>
+                <View style={[styles.feedbackOuterContainer, { backgroundColor: perfilBackgroundColor }]}>
+                    <Text style={[styles.sectionTitle, { color: textColor }]}>
+                        Feedbacks Recebidos ({feedbacks.length})
+                    </Text>
     
+                    {feedbacks.length > 0 ? (
                         <View style={styles.feedbackContainer}>
-                            <View style={styles.feedbackHeader}>
+                            <View style={[styles.feedbackHeader, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
                                 <View style={styles.feedbackHeaderCell}>
-                                    <Text style={styles.feedbackHeaderText}>Criado por</Text>
+                                    <Text style={[styles.feedbackHeaderText, { color: textColor }]}>Criado por</Text>
                                 </View>
                                 <View style={styles.feedbackHeaderCell}>
-                                    <Text style={styles.feedbackHeaderText}>Feedback</Text>
+                                    <Text style={[styles.feedbackHeaderText, { color: textColor }]}>Feedback</Text>
                                 </View>
                             </View>
     
                             <ScrollView style={styles.feedbackBody}>
                                 {feedbacks.map((item, index) => (
-                                    <FeedbackItem key={index} item={item} onPress={openFeedbackModal} />
+                                    <FeedbackItem 
+                                        key={index} 
+                                        item={item} 
+                                        onPress={openFeedbackModal} 
+                                        textColor={textColor}
+                                    />
                                 ))}
                             </ScrollView>
                         </View>
-                    </View>
-                )}
+                    ) : (
+                        <View style={styles.noFeedbackContainer}>
+                            <MaterialIcons 
+                                name="feedback" 
+                                size={40} 
+                                color={isDarkMode ? '#666' : '#999'} 
+                            />
+                            <Text style={[styles.noFeedbackText, { color: isDarkMode ? '#AAA' : '#888' }]}>
+                                Nenhum feedback recebido ainda
+                            </Text>
+                        </View>
+                    )}
+                </View>
     
-                {/* Modal Personalizado */}
                 <Modal visible={modalVisible} transparent animationType="fade">
                     <View style={styles.modalBackdrop}>
-                        <View style={styles.feedbackModalContainer}>
-                            <Text style={styles.feedbackModalTitle}>Feedback de {selectedFeedback?.createdBy.nomeAluno}</Text>
-                            <Text style={styles.feedbackModalText}>{selectedFeedback?.conteudo}</Text>
-                            <TouchableOpacity style={styles.closeFeedbackButton} onPress={() => setModalVisible(false)}>
+                        <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
+                            <Text style={[styles.feedbackModalTitle, { color: textColor }]}>
+                                Feedback de {selectedFeedback?.createdBy.nomeAluno}
+                            </Text>
+                            <Text style={[styles.feedbackModalText, { color: textColor }]}>
+                                {selectedFeedback?.conteudo}
+                            </Text>
+                            <TouchableOpacity 
+                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]} 
+                                onPress={() => setModalVisible(false)}
+                            >
                                 <Text style={styles.buttonText}>Fechar</Text>
                             </TouchableOpacity>
                         </View>
@@ -524,41 +541,25 @@ export default function PerfilProfessor() {
         );
     };
 
-    const FeedbackModal = () => (
-        <Modal visible={!!selectedFeedback} transparent animationType="fade">
-            <View style={styles.modalBackdrop}>
-                <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
-                    <Text style={[styles.feedbackModalTitle, { color: textColor }]}>
-                        Feedback de {selectedFeedback?.createdBy?.nomeAluno || 'Anônimo'}
-                    </Text>
-                    <Text style={[styles.feedbackModalText, { color: textColor }]}>
-                        {selectedFeedback?.conteudo}
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.closeFeedbackButton}
-                        onPress={() => setSelectedFeedback(null)}>
-                        <Text style={styles.buttonText}>Fechar</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </Modal>
-    );
-
-    const FeedbackItem = ({ item, onPress }) => {
+    const FeedbackItem = ({ item, onPress, textColor }) => {
         return (
             <View style={styles.feedbackRow}>
-                {/* Coluna 1: Nome do estudante */}
                 <View style={styles.feedbackCell}>
-                    <Text style={styles.feedbackText}>{item.createdBy.nomeAluno}</Text>
+                    <Text style={[styles.feedbackText, { color: textColor }]}>
+                        {item.createdBy.nomeAluno}
+                    </Text>
                 </View>
 
-                {/* Coluna 2: Ícone para abrir o modal */}
-                <TouchableOpacity style={styles.feedbackCellIcon} onPress={() => onPress(item)}>
-                    <MaterialIcons name="feedback" size={24} color="#1E6BE6" />
+                <TouchableOpacity 
+                    style={styles.feedbackCellIcon} 
+                    onPress={() => onPress(item)}
+                >
+                    <MaterialIcons name="feedback" size={24} color={barraAzulColor} />
                 </TouchableOpacity>
             </View>
         );
     };
+
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -621,8 +622,30 @@ export default function PerfilProfessor() {
                             />
                         </TouchableOpacity>
                         <View style={styles.name}>
-                            <Text style={[styles.nome, { color: textColor }]}>{perfil.nome}</Text>
-                            <Text style={[styles.email, { color: textColor }]}>{perfil.email}</Text>
+                            {isEditing ? (
+                                <>
+                                    <TextInput
+                                        style={[styles.editNome, { color: textColor }]}
+                                        value={perfilEdit.nome}
+                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nome: text })}
+                                        placeholder="Nome do professor"
+                                        placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                    />
+                                    <TextInput
+                                        style={[styles.editEmail, { color: textColor }]}
+                                        value={perfilEdit.email}
+                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, email: text })}
+                                        placeholder="Email do professor"
+                                        placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                        keyboardType="email-address"
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={[styles.nome, { color: textColor }]}>{perfil.nome}</Text>
+                                    <Text style={[styles.email, { color: textColor }]}>{perfil.email}</Text>
+                                </>
+                            )}
                         </View>
                     </View>
 
@@ -636,17 +659,25 @@ export default function PerfilProfessor() {
                     />
 
                     <View style={styles.inlineFieldsContainer}>
-                        <Campo
-                            label="Telefone"
-                            text={perfil.telefone}
-                            textColor={textColor}
-                            isInline={true}
-                            editable={isEditing}
-                            onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
-                            placeholder="Digite o telefone"
-                            fixedWidth={width * 0.45}
-                        />
-                        <View style={[styles.inline, { width: width * 0.45, marginTop: 12 }]}>
+                        <View style={[styles.inline, { width: width * 0.45 }]}>
+                            <Text style={[styles.label, { color: textColor }]}>Telefone</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.inputContainer, { color: textColor }]}
+                                    value={perfilEdit.telefone}
+                                    onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
+                                    placeholder="Digite o telefone"
+                                    placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                />
+                            ) : (
+                                <View style={styles.inputContainer}>
+                                    <Text style={[styles.colorInput, { color: textColor }]}>
+                                        {perfil.telefone || 'Não informado'}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        <View style={[styles.inline, { width: width * 0.45 }]}>
                             <Text style={[styles.label, { color: textColor }]}>Data de Nascimento</Text>
                             {isEditing ? (
                                 <>
@@ -723,9 +754,9 @@ export default function PerfilProfessor() {
                             <TouchableOpacity
                                 style={styles.saveButton}
                                 onPress={handleEditSave}
-                                disabled={loading}
+                                disabled={updating}
                             >
-                                {loading ? (
+                                {updating ? (
                                     <ActivityIndicator color="white" />
                                 ) : (
                                     <Text style={styles.buttonText}>Salvar</Text>
@@ -734,7 +765,7 @@ export default function PerfilProfessor() {
                             <TouchableOpacity
                                 style={styles.cancelButton}
                                 onPress={toggleEdit}
-                                disabled={loading}
+                                disabled={updating}
                             >
                                 <Text style={styles.buttonText}>Cancelar</Text>
                             </TouchableOpacity>
@@ -754,8 +785,6 @@ export default function PerfilProfessor() {
                 <FeedbackSection feedbacks={perfil.feedbacks} />
 
             </View>
-
-            <FeedbackModal />
 
             <Modal visible={modalDeleteVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
@@ -848,13 +877,28 @@ const styles = StyleSheet.create({
     },
     name: {
         marginTop: 15,
+        flex: 1,
     },
     nome: {
         fontSize: 18,
         fontWeight: 'bold',
     },
+    editNome: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        borderBottomWidth: 1,
+        borderBottomColor: '#1E6BE6',
+        paddingBottom: 5,
+        marginBottom: 5,
+    },
     email: {
         fontSize: 15,
+    },
+    editEmail: {
+        fontSize: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1E6BE6',
+        paddingBottom: 5,
     },
     inlineFieldsContainer: {
         flexDirection: 'row',
@@ -978,7 +1022,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        backgroundColor: '#FFF'
     },
     feedbackContainer: {
         borderWidth: 1,
@@ -991,7 +1034,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#DDD',
-        backgroundColor: '#E1F0FF',
     },
     feedbackHeaderCell: {
         flex: 1,
@@ -1012,7 +1054,8 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#EEE',
         alignItems: 'center',
-        marginRight: 65, gap: 60
+        marginRight: 65, 
+        gap: 60
     },
     feedbackCell: {
         flex: 1,
@@ -1026,12 +1069,6 @@ const styles = StyleSheet.create({
     feedbackText: {
         fontSize: 14,
         textAlign: 'center',
-    },
-    modalBackdrop: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     feedbackModalContainer: {
         backgroundColor: '#FFF',
@@ -1061,11 +1098,26 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
     },
-    buttonText: {
+    calendarIcon: {
+        marginRight: 10,
+    },
+    editingIndicator: {
+        padding: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    editingIndicatorText: {
         color: 'white',
         fontWeight: 'bold',
     },
-    calendarIcon: {
-        marginRight: 10,
+    noFeedbackContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    noFeedbackText: {
+        marginTop: 10,
+        fontSize: 16,
+        textAlign: 'center',
     },
 });

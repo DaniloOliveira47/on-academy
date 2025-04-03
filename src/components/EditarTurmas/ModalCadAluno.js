@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
+export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreating, onCreate }) {
     const [nomeAluno, setNomeAluno] = useState('');
     const [emailAluno, setEmailAluno] = useState('');
     const [telefoneAluno, setTelefoneAluno] = useState('');
@@ -23,12 +23,6 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
 
     const handleCadastrar = async () => {
         try {
-            const token = await AsyncStorage.getItem('@user_token');
-            if (!token) {
-                Alert.alert('Erro', 'Token de autenticação não encontrado.');
-                return;
-            }
-
             const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
 
             const alunoData = {
@@ -39,26 +33,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                 turmaId,
             };
 
-            console.log('Dados do aluno a serem enviados:', alunoData);
-
-            const response = await axios.post('http://10.0.2.2:3000/api/student', alunoData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            console.log('Resposta da API:', response.data);
-
-            if (response.status === 201) {
-                Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
-                // Reset form
-                setNomeAluno('');
-                setEmailAluno('');
-                setTelefoneAluno('');
-                setSelectedBirthDate(new Date());
-                setDataNascimento('');
-                onClose();
-            }
+            await onCreate(alunoData);
         } catch (error) {
             console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message);
             Alert.alert('Erro', 'Erro ao cadastrar aluno. Tente novamente.');
@@ -67,14 +42,21 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <TouchableOpacity style={styles.modalContainer}>
+            <TouchableOpacity 
+                style={styles.modalContainer}
+                activeOpacity={1}
+            >
                 <Image
                     style={{ width: 350, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>
-                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <Icon name="x" size={30} color="#000" />
+                    <TouchableOpacity 
+                        style={styles.closeButton} 
+                        onPress={onClose}
+                        disabled={isCreating}
+                    >
+                        <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
                     </TouchableOpacity>
                     
                     {/* Static profile image instead of image picker */}
@@ -91,6 +73,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         placeholderTextColor="#AAA"
                         value={nomeAluno}
                         onChangeText={setNomeAluno}
+                        editable={!isCreating}
                     />
                     <TextInput
                         style={styles.input}
@@ -99,6 +82,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         keyboardType="email-address"
                         value={emailAluno}
                         onChangeText={setEmailAluno}
+                        editable={!isCreating}
                     />
                     <TextInput
                         style={styles.input}
@@ -107,6 +91,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         keyboardType="phone-pad"
                         value={telefoneAluno}
                         onChangeText={setTelefoneAluno}
+                        editable={!isCreating}
                     />
 
                     <Text style={styles.label}>Data de Nascimento</Text>
@@ -120,9 +105,10 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         />
                         <TouchableOpacity
                             style={styles.dateIconButton}
-                            onPress={() => setShowBirthDatePicker(true)}
+                            onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                            disabled={isCreating}
                         >
-                            <Icon name="calendar" size={24} color="#1A85FF" />
+                            <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
                         </TouchableOpacity>
                     </View>
                     {showBirthDatePicker && (
@@ -134,8 +120,19 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId }) {
                         />
                     )}
 
-                    <TouchableOpacity style={styles.saveButton} onPress={handleCadastrar}>
-                        <Text style={styles.saveButtonText}>Salvar Aluno</Text>
+                    <TouchableOpacity 
+                        style={[
+                            styles.saveButton,
+                            isCreating && styles.saveButtonDisabled
+                        ]} 
+                        onPress={handleCadastrar}
+                        disabled={isCreating}
+                    >
+                        {isCreating ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                            <Text style={styles.saveButtonText}>Salvar Aluno</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -215,6 +212,9 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 10,
+    },
+    saveButtonDisabled: {
+        backgroundColor: '#8FBFFF',
     },
     saveButtonText: {
         color: '#FFF',

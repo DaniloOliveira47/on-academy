@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function CadastroProfessorModal({ visible, onClose }) {
-    const [selectedImage, setSelectedImage] = useState(null);
+export default function CadastroProfessorModal({ visible, onClose, onCreate, isCreating }) {
     const [nomeDocente, setNomeDocente] = useState('');
     const [emailDocente, setEmailDocente] = useState('');
     const [telefoneDocente, setTelefoneDocente] = useState('');
@@ -16,17 +14,24 @@ export default function CadastroProfessorModal({ visible, onClose }) {
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
     const [disciplines, setDisciplines] = useState([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loadingDisciplines, setLoadingDisciplines] = useState(false);
 
     useEffect(() => {
         if (visible) {
             fetchDisciplines();
+            // Limpa os campos quando o modal é aberto
+            setNomeDocente('');
+            setEmailDocente('');
+            setTelefoneDocente('');
+            setDataNascimento('');
+            setSelectedBirthDate(new Date());
+            setSelectedDisciplines([]);
         }
     }, [visible]);
 
     const fetchDisciplines = async () => {
         try {
-            setLoading(true);
+            setLoadingDisciplines(true);
             const token = await AsyncStorage.getItem('@user_token');
             const response = await axios.get('http://10.0.2.2:3000/api/discipline', {
                 headers: {
@@ -34,15 +39,14 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                 },
             });
             setDisciplines(response.data);
-            setLoading(false);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);
-            setLoading(false);
             Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
+        } finally {
+            setLoadingDisciplines(false);
         }
     };
 
-   
     const handleBirthDateChange = (event, date) => {
         setShowBirthDatePicker(false);
         if (date) {
@@ -52,6 +56,7 @@ export default function CadastroProfessorModal({ visible, onClose }) {
     };
 
     const toggleDiscipline = (disciplineId) => {
+        if (isCreating) return;
         setSelectedDisciplines(prev => {
             if (prev.includes(disciplineId)) {
                 return prev.filter(id => id !== disciplineId);
@@ -61,68 +66,43 @@ export default function CadastroProfessorModal({ visible, onClose }) {
         });
     };
 
-    const handleCadastrar = async () => {
+    const handleSubmit = async () => {
         if (selectedDisciplines.length === 0) {
             Alert.alert('Atenção', 'Selecione pelo menos uma disciplina');
             return;
         }
 
-        try {
-            const token = await AsyncStorage.getItem('@user_token');
-            if (!token) {
-                Alert.alert('Erro', 'Token de autenticação não encontrado.');
-                return;
-            }
+        const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
+        const professorData = {
+            nomeDocente,
+            dataNascimentoDocente: dataFormatada,
+            emailDocente,
+            telefoneDocente,
+            disciplineId: selectedDisciplines,
+        };
 
-            const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
-
-            const professorData = {
-                nomeDocente,
-                dataNascimentoDocente: dataFormatada,
-                emailDocente,
-                telefoneDocente,
-                disciplineId: selectedDisciplines,
-            };
-
-            console.log('Dados do professor a serem enviados:', professorData);
-
-            const response = await axios.post('http://10.0.2.2:3000/api/teacher', professorData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.status === 201) {
-                Alert.alert('Sucesso', 'Professor cadastrado com sucesso!');
-                // Limpar os campos após o cadastro
-                setNomeDocente('');
-                setEmailDocente('');
-                setTelefoneDocente('');
-                setDataNascimento('');
-                setSelectedBirthDate(new Date());
-                setSelectedImage(null);
-                setSelectedDisciplines([]);
-                onClose();
-            }
-        } catch (error) {
-            console.error('Erro ao cadastrar professor:', error.response ? error.response.data : error.message);
-            Alert.alert('Erro', 'Erro ao cadastrar professor. Tente novamente.');
-        }
+        await onCreate(professorData);
     };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <TouchableOpacity style={styles.modalContainer} onPress={onClose} activeOpacity={1}>
+            <TouchableOpacity 
+                style={styles.modalContainer} 
+                
+                activeOpacity={1}
+            >
                 <Image
                     style={{ width: 350, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>
-                    {/* Botão de Fechar */}
-                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <Icon name="x" size={30} color="#000" />
+                    <TouchableOpacity 
+                        style={styles.closeButton} 
+                        onPress={onClose}
+                        disabled={isCreating}
+                    >
+                        <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
                     </TouchableOpacity>
-
 
                     <TextInput
                         style={styles.input}
@@ -130,6 +110,7 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         placeholderTextColor="#AAA"
                         value={nomeDocente}
                         onChangeText={setNomeDocente}
+                        editable={!isCreating}
                     />
                     <TextInput
                         style={styles.input}
@@ -138,6 +119,7 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         keyboardType="email-address"
                         value={emailDocente}
                         onChangeText={setEmailDocente}
+                        editable={!isCreating}
                     />
                     <TextInput
                         style={styles.input}
@@ -146,6 +128,7 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         keyboardType="phone-pad"
                         value={telefoneDocente}
                         onChangeText={setTelefoneDocente}
+                        editable={!isCreating}
                     />
 
                     <Text style={styles.label}>Data de Nascimento</Text>
@@ -159,9 +142,10 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         />
                         <TouchableOpacity
                             style={styles.dateIconButton}
-                            onPress={() => setShowBirthDatePicker(true)}
+                            onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                            disabled={isCreating}
                         >
-                            <Icon name="calendar" size={24} color="#1A85FF" />
+                            <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
                         </TouchableOpacity>
                     </View>
                     {showBirthDatePicker && (
@@ -174,8 +158,8 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                     )}
 
                     <Text style={styles.label}>Disciplinas</Text>
-                    {loading ? (
-                        <Text>Carregando disciplinas...</Text>
+                    {loadingDisciplines ? (
+                        <ActivityIndicator size="small" color="#1A85FF" />
                     ) : (
                         <ScrollView style={styles.disciplinesContainer} contentContainerStyle={styles.disciplinesContent}>
                             {disciplines.map(discipline => (
@@ -183,9 +167,11 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                                     key={discipline.id}
                                     style={[
                                         styles.disciplineItem,
-                                        selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected
+                                        selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
+                                        isCreating && styles.disabledItem
                                     ]}
                                     onPress={() => toggleDiscipline(discipline.id)}
+                                    disabled={isCreating}
                                 >
                                     <Text style={styles.disciplineText}>{discipline.nomeDisciplina}</Text>
                                     {selectedDisciplines.includes(discipline.id) && (
@@ -196,8 +182,19 @@ export default function CadastroProfessorModal({ visible, onClose }) {
                         </ScrollView>
                     )}
 
-                    <TouchableOpacity style={styles.saveButton} onPress={handleCadastrar}>
-                        <Text style={styles.saveButtonText}>Salvar Professor</Text>
+                    <TouchableOpacity 
+                        style={[
+                            styles.saveButton,
+                            isCreating && styles.saveButtonDisabled
+                        ]} 
+                        onPress={handleSubmit}
+                        disabled={isCreating}
+                    >
+                        {isCreating ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                            <Text style={styles.saveButtonText}>Salvar Professor</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -227,26 +224,6 @@ const styles = StyleSheet.create({
         right: 0,
         backgroundColor: 'transparent',
         zIndex: 10,
-    },
-    imagePicker: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#F0F7FF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 5,
-        overflow: 'hidden',
-    },
-    profileImage: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 50,
-    },
-    imageText: {
-        fontSize: 14,
-        color: '#1A85FF',
-        marginBottom: 10,
     },
     input: {
         width: '100%',
@@ -302,6 +279,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#1A85FF',
     },
+    disabledItem: {
+        opacity: 0.6,
+    },
     disciplineText: {
         marginRight: 5,
     },
@@ -312,6 +292,9 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 10,
+    },
+    saveButtonDisabled: {
+        backgroundColor: '#8FBFFF',
     },
     saveButtonText: {
         color: '#FFF',

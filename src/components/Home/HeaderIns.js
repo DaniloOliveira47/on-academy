@@ -136,7 +136,7 @@ export default function HeaderIns() {
           </TouchableOpacity>
 
           <View style={styles.menuItem}>
-            <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+            <TouchableOpacity onPress={() => navigation.navigate('PerfilInstitution')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
                 <View style={{ flexDirection: 'row', gap: 20 }}>
                   <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
