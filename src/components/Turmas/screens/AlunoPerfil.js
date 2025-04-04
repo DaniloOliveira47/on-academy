@@ -51,11 +51,11 @@ export default function AlunoPerfil({ route }) {
     useEffect(() => {
         const fetchAluno = async () => {
             try {
-                const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+                const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
                 setAluno(response.data);
             } catch (error) {
                 setError('Erro ao carregar os dados do aluno. Tente novamente mais tarde.');
-                console.error('Erro ao buscar dados do aluno:', error);
+                
             } finally {
                 setLoading(false);
             }
@@ -72,7 +72,7 @@ export default function AlunoPerfil({ route }) {
 
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
+            const response = await axios.get(`http://192.168.15.120:3000/api/student/feedback/${alunoId}`);
             setFeedbacks(response.data);
 
             const professoresUnicos = [];
@@ -88,7 +88,7 @@ export default function AlunoPerfil({ route }) {
             setProfessores(professoresUnicos);
             atualizarDadosGrafico(response.data);
         } catch (error) {
-            console.error('Erro ao carregar os feedbacks:', error);
+            
         }
     };
 
@@ -185,14 +185,14 @@ export default function AlunoPerfil({ route }) {
                 conteudo: conteudoFeedback,
             };
 
-            await axios.post('http://10.0.2.2:3000/api/feedbackForm', feedbackData);
+            await axios.post('http://192.168.15.120:3000/api/feedbackForm', feedbackData);
             Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
 
             fetchFeedbacks();
             setRatings(Array(5).fill(0));
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
-            console.error('Erro ao enviar feedback:', error);
+            
         }
     };
 
@@ -210,12 +210,12 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
             };
 
-            await axios.post('http://10.0.2.2:3000/api/teacher/student', feedbackData);
+            await axios.post('http://192.168.15.120:3000/api/teacher/student', feedbackData);
             Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
             setConteudoFeedback('');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
-            console.error('Erro ao enviar feedback escrito:', error);
+     
         }
     };
 
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     barraAzul: {
-        width: 382,
+        width: '100%',
         height: 60,
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,

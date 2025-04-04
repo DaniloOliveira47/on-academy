@@ -13,7 +13,7 @@ export default function HomeDocente() {
     const [scrollY] = useState(new Animated.Value(0));
     const [turmas, setTurmas] = useState([]);
     const [conteudoAviso, setConteudoAviso] = useState('');
-    const [avisos, setAvisos] = useState([]); // Estado para os avisos
+    const [avisos, setAvisos] = useState([]);
     const [turmaSelecionada, setTurmaSelecionada] = useState(null);
 
     const handleSelecionarTurma = (id) => {
@@ -21,10 +21,25 @@ export default function HomeDocente() {
         console.log('Turma selecionada:', id);
     };
 
-
     const gerarCorAleatoria = () => {
         let cor = '#0077FF';
         return cor;
+    };
+
+    // Função para carregar as mensagens (avisos)
+    const fetchMessages = async () => {
+        try {
+            const { data } = await axios.get('http://192.168.15.120:3000/api/reminder');
+
+            // Ordenar por data mais recente primeiro
+            data.sort((a, b) =>
+                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+            );
+
+            setAvisos(data);
+        } catch (error) {
+          
+        }
     };
 
     useEffect(() => {
@@ -32,43 +47,28 @@ export default function HomeDocente() {
             try {
                 const professorId = await AsyncStorage.getItem('@user_id');
                 if (!professorId) {
-                    console.error('ID do professor não encontrado no Async Storage');
+                    
                     setTurmas([]);
                     return;
                 }
 
-                const response = await axios.get(`http://10.0.2.2:3000/api/teacher/classes/${professorId}`);
+                const response = await axios.get(`http://192.168.15.120:3000/api/teacher/classes/${professorId}`);
                 console.log('Resposta da API:', response.data);
 
                 if (response.data && Array.isArray(response.data.classes)) {
                     setTurmas(response.data.classes);
                 } else {
-                    console.error('Resposta da API não contém um array de classes:', response.data);
+                    
                     setTurmas([]);
                 }
             } catch (error) {
-                console.error('Erro ao buscar turmas:', error);
+              
                 setTurmas([]);
             }
         };
 
-
-        const fetchMessages = async () => {
-            try {
-                const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
-
-                data.sort((a, b) =>
-                    new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
-                );
-
-                setAvisos(data);
-            } catch (error) {
-                console.error('Erro ao carregar avisos:', error);
-            }
-        };
-
         fetchTurmas();
-        fetchMessages();
+        fetchMessages(); // Carrega os avisos inicialmente
     }, []);
 
     const enviarAviso = async () => {
@@ -80,7 +80,7 @@ export default function HomeDocente() {
 
             const instituicaoId = await AsyncStorage.getItem('@user_id');
             if (!instituicaoId) {
-                console.error('ID da instituição não encontrado no Async Storage');
+                
                 return;
             }
 
@@ -95,17 +95,19 @@ export default function HomeDocente() {
                 classSt: { id: turmaSelecionada },
             };
 
-            const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
+            const response = await axios.post('http://192.168.15.120:3000/api/reminder', avisoData);
             console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
 
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
+
+            // Recarrega os avisos após o envio
+            await fetchMessages();
         } catch (error) {
-            console.error('Erro ao enviar aviso:', error);
+       
             Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
         }
     };
-
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -133,7 +135,7 @@ export default function HomeDocente() {
                     </View>
 
                     {/* Seção de turmas */}
-                    <View style={[styles.contTurmas]}>
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={styles.title}>Turmas</Text>
                         <View style={[styles.customScrollView]}>
                             <ScrollView
@@ -167,16 +169,17 @@ export default function HomeDocente() {
                             style={[
                                 styles.contAviso,
                                 {
-                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                    backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
                                     height: 200,
-                                    textAlignVertical: 'top', // Alinha o texto no topo
+                                    textAlignVertical: 'top',
+                                    color: isDarkMode ? '#fff' : '#000'
                                 },
                             ]}
                             placeholder="Digite o aviso..."
                             placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                             multiline
-                            value={conteudoAviso} // Valor do estado
-                            onChangeText={setConteudoAviso} // Atualiza o estado conforme o usuário digita
+                            value={conteudoAviso}
+                            onChangeText={setConteudoAviso}
                         />
                         <View style={{ alignItems: 'center' }}>
                             <TouchableOpacity style={styles.enviarButton} onPress={enviarAviso}>
@@ -198,10 +201,10 @@ export default function HomeDocente() {
                                     <Avisos
                                         key={aviso.id}
                                         abreviacao={aviso.initials}
-                                        nome={aviso.criadoPorNome}
+                                        nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')} // Mostra apenas os dois primeiros nomes
                                         horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         texto={aviso.conteudo}
-                                        aleatorio={gerarCorAleatoria()} // Passa a cor aleatória
+                                        aleatorio={gerarCorAleatoria()}
                                     />
                                 ))
                             ) : (

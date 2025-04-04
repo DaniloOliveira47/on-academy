@@ -47,7 +47,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 activeOpacity={1}
             >
                 <Image
-                    style={{ width: 350, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+                    style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>
@@ -60,13 +60,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     </TouchableOpacity>
                     
                     {/* Static profile image instead of image picker */}
-                    <View style={styles.profileImageContainer}>
-                        <Image 
-                            source={require('../../assets/image/Perfill.png')} 
-                            style={styles.profileImage}
-                        />
-                    </View>
-
+                   
                     <TextInput
                         style={styles.input}
                         placeholder="Nome Completo"

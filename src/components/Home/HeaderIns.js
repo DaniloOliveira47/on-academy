@@ -31,7 +31,7 @@ export default function HeaderIns() {
     const fetchData = async () => {
       try {
         // Busca os eventos
-        const eventsResponse = await axios.get('http://10.0.2.2:3000/api/event');
+        const eventsResponse = await axios.get('http://192.168.15.120:3000/api/event');
         const events = eventsResponse.data;
 
         // Gerar cores aleatórias para cada evento
@@ -45,7 +45,7 @@ export default function HeaderIns() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/institution`);
+        const alunoResponse = await axios.get(`http://192.168.15.120:3000/api/institution`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
 
@@ -139,9 +139,9 @@ export default function HeaderIns() {
             <TouchableOpacity onPress={() => navigation.navigate('PerfilInstitution')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
                 <View style={{ flexDirection: 'row', gap: 20 }}>
-                  <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
+                  <Image style={styles.imgPerfil} source={require('../../assets/image/ins.png')} />
                   <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                    {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
+                  Instituição
                   </Text>
                 </View>
                 <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />

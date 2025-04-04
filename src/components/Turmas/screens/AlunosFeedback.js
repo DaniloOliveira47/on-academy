@@ -32,7 +32,7 @@ export default function AlunosFeedback({ route }) {
         const fetchData = async () => {
             try {
                 // Buscar dados da turma
-                const turmaResponse = await axios.get(`http://10.0.2.2:3000/api/class/students/${turmaId}`);
+                const turmaResponse = await axios.get(`http://192.168.15.120:3000/api/class/students/${turmaId}`);
                 setTurma(turmaResponse.data);
                 
                 // Buscar médias dos feedbacks
@@ -47,7 +47,7 @@ export default function AlunosFeedback({ route }) {
                 setUserToken(token);
             } catch (error) {
                 setError('Erro ao buscar dados. Tente novamente mais tarde.');
-                console.error('Erro ao buscar dados:', error);
+          
             } finally {
                 setLoading(false);
             }
@@ -122,7 +122,7 @@ export default function AlunosFeedback({ route }) {
 
     const fetchMediasFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/feedback/${turmaId}`);
+            const response = await axios.get(`http://192.168.15.120:3000/api/class/feedback/${turmaId}`);
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
             
             setDadosGrafico([
@@ -134,7 +134,7 @@ export default function AlunosFeedback({ route }) {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-            console.error('Erro ao carregar as médias dos feedbacks:', error);
+           
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
         }
@@ -153,7 +153,7 @@ export default function AlunosFeedback({ route }) {
         };
 
         try {
-            const response = await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData, {
+            const response = await axios.post('http://192.168.15.120:3000/api/feedbackTeacher', feedbackData, {
                 headers: {
                     Authorization: `Bearer ${userToken}`
                 }
@@ -165,7 +165,7 @@ export default function AlunosFeedback({ route }) {
                 await fetchMediasFeedbacks();
             }
         } catch (error) {
-            console.error('Erro ao adicionar feedback:', error);
+         
             alert('Erro ao enviar feedback. Tente novamente mais tarde.');
         }
     };

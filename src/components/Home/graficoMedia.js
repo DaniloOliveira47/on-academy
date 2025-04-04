@@ -23,7 +23,7 @@ export default function GraficoMedia({ isDarkMode }) {
         }
 
         // Faz a requisição à API para buscar as notas do aluno
-        const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
         console.log('Resposta da API:', response.data);
 
         // Verifica se a resposta contém as notas do aluno
@@ -32,10 +32,10 @@ export default function GraficoMedia({ isDarkMode }) {
           calcularMedia(response.data.notas); // Calcula a média geral
           extrairMaterias(response.data.notas); // Extrai as matérias disponíveis
         } else {
-          console.error('Resposta da API não contém um array de notas:', response.data);
+         
         }
       } catch (error) {
-        console.error('Erro ao buscar notas:', error);
+    
       }
     };
 
@@ -144,7 +144,7 @@ export default function GraficoMedia({ isDarkMode }) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 360,
+    width: 340,
     padding: 10,
     borderRadius: 12,
     alignItems: 'center',

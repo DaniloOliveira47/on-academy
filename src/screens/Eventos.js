@@ -19,7 +19,7 @@ export default function Eventos() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch('http://10.0.2.2:3000/api/event');
+                const response = await fetch('http://192.168.15.120:3000/api/event');
                 const data = await response.json();
                 setEvents(data);
 
@@ -30,7 +30,7 @@ export default function Eventos() {
                 });
                 setEventColors(colors);
             } catch (error) {
-                console.error('Erro ao buscar eventos:', error);
+               
             }
         };
 
@@ -102,7 +102,7 @@ export default function Eventos() {
                                     titulo={event.tituloEvento}
                                     subData={formatDate(eventDateTime)}
                                     periodo={formatTime(eventDateTime)}
-                                    color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                                    color={'#0077FF'} // Usa a cor do evento ou uma cor padrão
                                 />
                             );
                         })}

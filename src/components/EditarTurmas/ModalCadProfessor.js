@@ -33,14 +33,14 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         try {
             setLoadingDisciplines(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.get('http://10.0.2.2:3000/api/discipline', {
+            const response = await axios.get('http://192.168.15.120:3000/api/discipline', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             setDisciplines(response.data);
         } catch (error) {
-            console.error('Erro ao buscar disciplinas:', error);
+            
             Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
         } finally {
             setLoadingDisciplines(false);
@@ -92,7 +92,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                 activeOpacity={1}
             >
                 <Image
-                    style={{ width: 350, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+                    style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
                 <View style={styles.modalContent}>

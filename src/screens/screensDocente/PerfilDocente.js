@@ -16,7 +16,7 @@ export default function PerfilDocente() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://10.0.2.2:3000/api/teacher/${userId}`);
+          const response = await fetch(`http://192.168.15.120:3000/api/teacher/${userId}`);
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);
@@ -24,7 +24,7 @@ export default function PerfilDocente() {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do aluno:', error);
+       
       }
     };
 
@@ -41,7 +41,7 @@ export default function PerfilDocente() {
       <HeaderSimples titulo="PERFIL" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, Prof.{dadosAluno ? dadosAluno.nomeDocente : 'Carregando...'}</Text>
+          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo, Prof.{dadosAluno ? dadosAluno.nomeDocente : 'Carregando...'}</Text>
         </View>
         <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
         <View style={[styles.form, {
@@ -80,7 +80,7 @@ export default function PerfilDocente() {
 
 const styles = StyleSheet.create({
   tela: {
-    padding: 25,
+    padding: 20,
     width: '100%',
     height: '100%',
   },
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   barraAzul: {
-    width: 363,
+    width: 347,
     height: 60,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,

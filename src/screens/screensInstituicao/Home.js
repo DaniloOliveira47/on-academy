@@ -22,41 +22,40 @@ export default function HomeInstituicao() {
         console.log('Turma selecionada:', id);
     };
 
-
     const gerarCorAleatoria = () => {
         let cor = '#0077FF';
         return cor;
     };
 
+    const fetchMessages = async () => {
+        try {
+            const { data } = await axios.get('http://192.168.15.120:3000/api/reminder');
+
+            data.sort((a, b) =>
+                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+            );
+
+            setAvisos(data);
+        } catch (error) {
+            
+        }
+    };
+
     useEffect(() => {
         const fetchTurmas = async () => {
             try {
-                const response = await axios.get('http://10.0.2.2:3000/api/class');
+                const response = await axios.get('http://192.168.15.120:3000/api/class');
                 console.log('Resposta da API:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
                     setTurmas(response.data);
                 } else {
-                    console.error('Resposta da API não contém um array de classes:', response.data);
+                  
                     setTurmas([]);
                 }
             } catch (error) {
-                console.error('Erro ao buscar turmas:', error);
+              
                 setTurmas([]);
-            }
-        };
-
-        const fetchMessages = async () => {
-            try {
-                const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
-
-                data.sort((a, b) =>
-                    new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
-                );
-
-                setAvisos(data);
-            } catch (error) {
-                console.error('Erro ao carregar avisos:', error);
             }
         };
 
@@ -73,7 +72,7 @@ export default function HomeInstituicao() {
 
             const instituicaoId = await AsyncStorage.getItem('@user_id');
             if (!instituicaoId) {
-                console.error('ID da instituição não encontrado no Async Storage');
+               
                 return;
             }
 
@@ -84,17 +83,19 @@ export default function HomeInstituicao() {
 
             const avisoData = {
                 conteudo: conteudoAviso,
-                createdBy: { id: parseInt(instituicaoId) },
+                createdByInstitution: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
 
-            const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
-            console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
+            await axios.post('http://192.168.15.120:3000/api/reminder', avisoData);
+
+            // Recarrega os avisos após o envio
+            await fetchMessages();
 
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
         } catch (error) {
-            console.error('Erro ao enviar aviso:', error);
+          
             Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
         }
     };
@@ -125,7 +126,7 @@ export default function HomeInstituicao() {
                     </View>
 
                     {/* Seção de turmas com ScrollView personalizado */}
-                    <View style={[styles.contTurmas]}>
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
                         <Text style={styles.title}>Turmas</Text>
                         <View style={[styles.customScrollView]}>
                             <ScrollView
@@ -152,7 +153,6 @@ export default function HomeInstituicao() {
                         </View>
                     </View>
 
-
                     {/* Seção de avisos */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
@@ -160,9 +160,10 @@ export default function HomeInstituicao() {
                             style={[
                                 styles.contAviso,
                                 {
-                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                    backgroundColor: isDarkMode ? '#121212' : '#F0F7FF',
                                     height: 200,
                                     textAlignVertical: 'top',
+                                    color: isDarkMode ? '#fff' : '#000'
                                 },
                             ]}
                             placeholder="Digite o aviso..."
@@ -189,27 +190,37 @@ export default function HomeInstituicao() {
                             backgroundColor: isDarkMode ? '#1A1A1A' : '#E6F2FF',
                             maxHeight: 300,
                         }]}>
-                            <ScrollView
-                                style={styles.customScrollContent}
-                                showsVerticalScrollIndicator={false}
-                            >
+                            
                                 {avisos.length > 0 ? (
-                                    avisos.map((aviso) => (
-                                        <Avisos
-                                            key={aviso.id}
-                                            abreviacao={aviso.initials}
-                                            nome={aviso.criadoPorNome}
-                                            horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                            texto={aviso.conteudo}
-                                            aleatorio={gerarCorAleatoria()}
-                                        />
-                                    ))
+                                    avisos.map((aviso) => {
+                                        // Extrai os dois primeiros nomes do criador do aviso
+                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                            'Instituição';
+
+                                        return (
+                                            <Avisos
+                                                key={aviso.id}
+                                                abreviacao={aviso.initials}
+                                                nome={doisPrimeirosNomes} // Passa apenas os dois primeiros nomes
+                                                horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                                texto={aviso.conteudo}
+                                                aleatorio={gerarCorAleatoria()}
+                                            />
+                                        );
+                                    })
                                 ) : (
                                     <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
                                         Nenhum aviso disponível.
                                     </Text>
                                 )}
-                            </ScrollView>
+                          
                         </View>
                     </View>
                 </View>
@@ -297,14 +308,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 17
     },
-    // Novos estilos para o ScrollView personalizado
     customScrollView: {
         maxHeight: 200,
         borderRadius: 15,
-
-
         marginTop: 10,
-    
     },
     customScrollContent: {
         paddingRight: 10,

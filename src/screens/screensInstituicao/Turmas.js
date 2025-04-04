@@ -43,20 +43,30 @@ export default function Turmas() {
     // Número de cards por página
     const CARDS_POR_PAGINA = 3;
 
+    // Estilo para os pickers
+    const pickerStyle = {
+        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+        color: isDarkMode ? 'white' : 'black',
+        borderRadius: 12,
+        marginBottom: 15,
+        borderWidth: 1,
+        borderColor: isDarkMode ? '#555' : '#D1D1D1',
+    };
+
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/class');
+            const response = await axios.get('http://192.168.15.120:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
                 setTurmasFiltradas(response.data);
             } else {
-                console.error('Resposta da API não contém um array de turmas:', response.data);
+                
                 setTurmas([]);
                 setTurmasFiltradas([]);
             }
         } catch (error) {
-            console.error('Erro ao buscar turmas:', error);
+         
             setTurmas([]);
             setTurmasFiltradas([]);
         }
@@ -64,19 +74,19 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
+            const response = await axios.get('http://192.168.15.120:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
-            console.error('Erro ao buscar professores:', error);
+          
         }
     };
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/discipline');
+            const response = await axios.get('http://192.168.15.120:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
-            console.error('Erro ao buscar disciplinas:', error);
+           
         }
     };
 
@@ -121,7 +131,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.post('http://10.0.2.2:3000/api/class', turmaData, {
+            await axios.post('http://192.168.15.120:3000/api/class', turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -131,7 +141,7 @@ export default function Turmas() {
             limparCampos();
             fetchTurmas();
         } catch (error) {
-            console.error('Erro ao criar turma:', error);
+        
             Alert.alert('Erro', 'Erro ao criar turma. Tente novamente.');
         }
     };
@@ -157,7 +167,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.put(`http://10.0.2.2:3000/api/class/${turmaEditando.id}`, turmaData, {
+            await axios.put(`http://192.168.2.11:3000/api/class/${turmaEditando.id}`, turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -262,7 +272,7 @@ export default function Turmas() {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 650, padding: 20 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 550, padding: 20 }}>
                         <TouchableOpacity
                             style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}>
@@ -308,7 +318,8 @@ export default function Turmas() {
                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
                             <Picker
                                 selectedValue={novoAno}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                style={pickerStyle}
+                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoAno(itemValue)}>
                                 <Picker.Item label="2024" value="2024" />
                                 <Picker.Item label="2025" value="2025" />
@@ -318,7 +329,8 @@ export default function Turmas() {
                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
                             <Picker
                                 selectedValue={novoPeriodo}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                style={pickerStyle}
+                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
                                 <Picker.Item label="Manhã" value="Manhã" />
                                 <Picker.Item label="Tarde" value="Tarde" />
@@ -413,7 +425,8 @@ export default function Turmas() {
                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
                             <Picker
                                 selectedValue={novoAno}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                style={pickerStyle}
+                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoAno(itemValue)}>
                                 <Picker.Item label="2024" value="2024" />
                                 <Picker.Item label="2025" value="2025" />
@@ -423,7 +436,8 @@ export default function Turmas() {
                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
                             <Picker
                                 selectedValue={novoPeriodo}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                style={pickerStyle}
+                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
                                 <Picker.Item label="Manhã" value="Manhã" />
                                 <Picker.Item label="Tarde" value="Tarde" />
@@ -539,6 +553,7 @@ const styles = StyleSheet.create({
     cards: {
         width: '100%',
         padding: 5
+
     },
     botaoCriar: {
         backgroundColor: '#1A85FF',
@@ -557,7 +572,7 @@ const styles = StyleSheet.create({
         padding: 20
     },
     modalContent: {
-        width: '90%',
+        width: '100%', // Aumentado de 90% para 95%
         maxHeight: '85%',
         borderRadius: 15,
         padding: 25,

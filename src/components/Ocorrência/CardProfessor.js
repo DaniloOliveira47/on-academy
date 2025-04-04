@@ -11,7 +11,7 @@ export default function CardProfessor({ nome, id, onPress, selecionado, onVerPer
             <View style={styles.imageContainer}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
-            <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000' }}>
+            <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
                 {nome}
             </Text>
             <TouchableOpacity

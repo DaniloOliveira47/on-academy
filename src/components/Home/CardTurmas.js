@@ -6,11 +6,11 @@ export default function CardTurmas({ titulo, subTitulo, onPress, isSelected }) {
   const { isDarkMode } = useTheme();
 
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.card, isSelected && styles.selectedCard]}>
-      <Text style={[styles.titulo, { color: isSelected ? '#FFF' : '#000' }]}>
+    <TouchableOpacity onPress={onPress} style={[styles.card, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }, isSelected && styles.selectedCard]}>
+      <Text style={[styles.titulo, { color: isSelected ? '#FFF' : isDarkMode ? '#fff' : '#000' }]}>
         {titulo}
       </Text>
-      <Text style={[styles.subTitulo, { color: isSelected ? '#FFF' : '#8A8A8A' }]}>
+      <Text style={[styles.subTitulo, { color: isSelected ? '#FFF' : isDarkMode ? '#fff' : '#000' }]}>
         {subTitulo}
       </Text>
     </TouchableOpacity>

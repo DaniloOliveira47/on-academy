@@ -43,7 +43,7 @@ export default function EventosInstitution() {
   // Função para buscar eventos
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://10.0.2.2:3000/api/event');
+      const response = await fetch('http://192.168.15.120:3000/api/event');
       const data = await response.json();
       setEvents(data);
 
@@ -53,7 +53,7 @@ export default function EventosInstitution() {
       });
       setEventColors(colors);
     } catch (error) {
-      console.error('Erro ao buscar eventos:', error);
+  
     }
   };
 
@@ -122,7 +122,7 @@ export default function EventosInstitution() {
       };
 
       // Faz a requisição POST
-      const response = await fetch('http://10.0.2.2:3000/api/event', {
+      const response = await fetch('http://192.168.15.120:3000/api/event', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export default function EventosInstitution() {
         Alert.alert('Erro', errorData.message || 'Erro ao adicionar evento.');
       }
     } catch (error) {
-      console.error('Erro ao adicionar evento:', error);
+      
       Alert.alert('Erro', 'Ocorreu um erro ao adicionar o evento.');
     }
   };

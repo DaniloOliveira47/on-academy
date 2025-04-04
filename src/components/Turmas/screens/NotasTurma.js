@@ -28,7 +28,7 @@ export default function NotasTurma() {
     useEffect(() => {
         const fetchAlunos = async () => {
             try {
-                const response = await axios.get(`http://10.0.2.2:3000/api/class/students/${turmaId}`);
+                const response = await axios.get(`http://192.168.2.11:3000/api/class/students/${turmaId}`);
 
                 setTurmaInfo({
                     nomeTurma: response.data.nomeTurma,
@@ -48,7 +48,7 @@ export default function NotasTurma() {
                 setAlunos(alunosComNotas);
             } catch (error) {
                 setError('Erro ao buscar alunos. Tente novamente mais tarde.');
-                console.error('Erro ao buscar alunos:', error);
+               
             } finally {
                 setLoading(false);
             }
@@ -57,19 +57,19 @@ export default function NotasTurma() {
         const fetchDisciplinas = async () => {
             try {
                 if (turmaInfo.nomeTurma) {
-                    const response = await axios.get('http://10.0.2.2:3000/api/class/discipline');
+                    const response = await axios.get('http://192.168.2.11:3000/api/class/discipline');
                     const turma = response.data.find((turma) => turma.nomeTurma === turmaInfo.nomeTurma);
                     if (turma && Array.isArray(turma.disciplinas)) {
                         setDisciplinas(turma.disciplinas);
                         setDisciplinaSelecionada(turma.disciplinas[0]?.id);
                     } else {
                         setError('Disciplinas não encontradas para a turma.');
-                        console.error('Disciplinas não encontradas:', turma);
+                       
                     }
                 }
             } catch (error) {
                 setError('Erro ao buscar disciplinas. Tente novamente mais tarde.');
-                console.error('Erro ao buscar disciplinas:', error);
+               
             }
         };
 
@@ -89,10 +89,10 @@ export default function NotasTurma() {
 
     const buscarNotasAluno = async (alunoId) => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+            const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
             setNotasAluno(response.data.notas);
         } catch (error) {
-            console.error('Erro ao buscar notas do aluno:', error);
+           
         }
     };
 
@@ -112,7 +112,7 @@ export default function NotasTurma() {
             };
 
             // Envia a nota para o backend
-            await axios.post('http://10.0.2.2:3000/api/note', novaNota);
+            await axios.post('http://192.168.15.120:3000/api/note', novaNota);
 
             // Atualiza o estado local com a nova nota
             setNotasAluno(prevNotas => [...prevNotas, novaNota]);
@@ -125,7 +125,7 @@ export default function NotasTurma() {
 
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível adicionar a nota. Tente novamente.');
-            console.error('Erro ao adicionar nota:', error);
+            
         }
     };
 

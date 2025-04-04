@@ -20,7 +20,8 @@ export default function Alunos() {
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const navigation = useNavigation();
-    
+    const [nomeTurma, setNomeTurma] = useState('');
+
     // Estados para o gráfico de feedback
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
@@ -39,7 +40,7 @@ export default function Alunos() {
                 return;
             }
 
-            const url = `http://10.0.2.2:3000/api/class/students/${turmaId}`;
+            const url = `http://192.168.15.120:3000/api/class/students/${turmaId}`;
             console.log("URL da requisição:", url);
 
             const response = await axios.get(url, {
@@ -49,6 +50,9 @@ export default function Alunos() {
             });
 
             console.log('Resposta da API:', response.data);
+
+            // Armazena o nome da turma no estado
+            setNomeTurma(response.data.nomeTurma || 'Nome não encontrado');
 
             const alunosComMedias = response.data.students.map((aluno) => {
                 if (aluno.notas && aluno.notas.length > 0) {
@@ -62,7 +66,7 @@ export default function Alunos() {
             setAlunos(alunosComMedias);
             setError(null);
         } catch (error) {
-            console.error('Erro ao buscar alunos:', error.response ? error.response.data : error.message);
+            
             setError('Erro ao buscar alunos. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
@@ -73,14 +77,14 @@ export default function Alunos() {
     const fetchMediasFeedbacks = async () => {
         try {
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/feedback/${turmaId}`, {
+            const response = await axios.get(`http://192.168.15.120:3000/api/class/feedback/${turmaId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            
+
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
-            
+
             setDadosGrafico([
                 mediaResposta1,
                 mediaResposta2,
@@ -90,7 +94,7 @@ export default function Alunos() {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-            console.error('Erro ao carregar as médias dos feedbacks:', error);
+          
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
         }
@@ -112,7 +116,7 @@ export default function Alunos() {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:3000/api/student', alunoData, {
+            const response = await axios.post('http://192.168.15.120:3000/api/student', alunoData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -124,7 +128,7 @@ export default function Alunos() {
                 setModalCriarVisible(false); // Fecha o modal
             }
         } catch (error) {
-            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message);
+           
             Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.');
         } finally {
             setIsCreating(false);
@@ -156,8 +160,8 @@ export default function Alunos() {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
                 <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>{error}</Text>
-                <TouchableOpacity 
-                    style={styles.retryButton} 
+                <TouchableOpacity
+                    style={styles.retryButton}
                     onPress={() => {
                         fetchAlunos();
                         fetchMediasFeedbacks();
@@ -174,13 +178,18 @@ export default function Alunos() {
             <HeaderSimples />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}></Text>
-                    <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº0231000</Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
+                        {nomeTurma}
+                    </Text>
+                    <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>
+                        Nº0231000
+                    </Text>
                 </View>
+
 
                 <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                     {/* Gráfico de Feedback da Turma */}
-                    
+
 
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
@@ -223,8 +232,8 @@ export default function Alunos() {
                     </ScrollView>
 
                     <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
-                        <TouchableOpacity 
-                            style={styles.botaoCriar} 
+                        <TouchableOpacity
+                            style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}
                             disabled={isCreating}
                         >
@@ -235,14 +244,14 @@ export default function Alunos() {
                             )}
                         </TouchableOpacity>
                         <View style={styles.graficoContainer}>
-                        <GraficoFeedbackTurma
-                            dadosGrafico={dadosGrafico}
-                            totalFeedbacks={totalFeedbacks}
-                        />
-                    </View>
-                        <CadastroAlunoModal 
-                            visible={modalCriarVisible} 
-                            onClose={() => setModalCriarVisible(false)} 
+                            <GraficoFeedbackTurma
+                                dadosGrafico={dadosGrafico}
+                                totalFeedbacks={totalFeedbacks}
+                            />
+                        </View>
+                        <CadastroAlunoModal
+                            visible={modalCriarVisible}
+                            onClose={() => setModalCriarVisible(false)}
                             turmaId={turmaId}
                             isCreating={isCreating}
                             onCreate={handleCreateAluno}

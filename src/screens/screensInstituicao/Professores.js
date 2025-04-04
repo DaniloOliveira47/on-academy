@@ -29,12 +29,12 @@ export default function ProfessoresFeedback() {
     const fetchProfessores = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
+            const response = await axios.get('http://192.168.15.120:3000/api/teacher');
             const professoresOrdenados = response.data.sort((a, b) => b.id - a.id);
             setProfessores(professoresOrdenados);
             setProfessoresFiltrados(professoresOrdenados);
         } catch (error) {
-            console.error('Erro ao buscar professores:', error);
+            
             Alert.alert('Erro', 'Não foi possível carregar os professores');
         } finally {
             setLoading(false);
@@ -79,7 +79,7 @@ export default function ProfessoresFeedback() {
         try {
             setIsCreating(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.post('http://10.0.2.2:3000/api/teacher', dadosProfessor, {
+            const response = await axios.post('http://192.168.15.120:3000/api/teacher', dadosProfessor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -103,7 +103,7 @@ export default function ProfessoresFeedback() {
                 }]);
             }
         } catch (error) {
-            console.error('Erro ao criar professor:', error);
+           
             Alert.alert('Erro', 'Não foi possível criar o professor');
             fetchProfessores();
         } finally {
@@ -222,7 +222,7 @@ export default function ProfessoresFeedback() {
     return (
         <View style={styles.mainContainer}>
             <HeaderSimples />
-            <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+            <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
                 <View style={styles.linha}>
                     <Text style={[styles.titulo, { color: isDarkMode ? 'white' : 'black' }]}>Professores</Text>
                 </View>
@@ -343,7 +343,8 @@ const styles = StyleSheet.create({
     },
     contentWrapper: {
         flex: 1,
-        marginBottom: 70, // Espaço para o footer
+        marginBottom: 70,
+         // Espaço para o footer
     },
     scrollContent: {
         paddingBottom: 20,

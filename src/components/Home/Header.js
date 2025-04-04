@@ -31,7 +31,7 @@ export default function Header() {
     const fetchData = async () => {
       try {
         // Busca os eventos
-        const eventsResponse = await axios.get('http://10.0.2.2:3000/api/event');
+        const eventsResponse = await axios.get('http://192.168.15.120:3000/api/event');
         const events = eventsResponse.data;
 
         // Gerar cores aleatórias para cada evento
@@ -45,10 +45,10 @@ export default function Header() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
-        
+
       }
     };
 
@@ -135,7 +135,11 @@ export default function Header() {
           <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
             <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
               <View style={{ flexDirection: 'row', gap: 20 }}>
-                <Image style={styles.imgPerfil} source={require('../../assets/image/perfil4x4.png')} />
+                <Image
+                  style={styles.imgPerfil}
+                  source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                />
+
                 <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
                   {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
                 </Text>
@@ -146,7 +150,7 @@ export default function Header() {
         </View>
 
         <View style={[styles.menuItem, { height: 'auto' }]}>
-        <CustomCalendar events={events} />
+          <CustomCalendar events={events} />
         </View>
 
         <View style={styles.menuItem}>

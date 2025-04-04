@@ -105,7 +105,7 @@ export default function PerfilAluno() {
     const fetchAluno = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`, {
+            const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -154,14 +154,14 @@ export default function PerfilAluno() {
     const fetchFeedbacks = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/feedbackteacher/student/${alunoId}`, {
+            const response = await axios.get(`http://192.168.15.120:3000/api/feedbackteacher/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             setFeedbacks(response.data || []);
         } catch (error) {
-            console.error('Erro ao buscar feedbacks:', error);
+           
             setFeedbacks([]);
         }
     };
@@ -258,7 +258,7 @@ export default function PerfilAluno() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://10.0.2.2:3000/api/student/upload-image/${alunoId}`,
+                `http://192.168.15.120:3000/api/student/upload-image/${alunoId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -312,7 +312,7 @@ export default function PerfilAluno() {
             };
 
             const response = await axios.put(
-                `http://10.0.2.2:3000/api/student/${alunoId}`,
+                `http://192.168.15.120:3000/api/student/${alunoId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -342,7 +342,7 @@ export default function PerfilAluno() {
             setLoading(true);
             const token = await getAuthToken();
             
-            const response = await axios.delete(`http://10.0.2.2:3000/api/student/${alunoId}`, {
+            const response = await axios.delete(`http://192.168.15.120:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -372,7 +372,7 @@ export default function PerfilAluno() {
 
         return (
             <>
-                <View style={[styles.feedbackOuterContainer, { backgroundColor: perfilBackgroundColor }]}>
+                <View style={[styles.feedbackOuterContainer, { backgroundColor: formBackgroundColor }]}>
                     <Text style={[styles.sectionTitle, { color: textColor }]}>
                         Feedbacks Enviados ({feedbacks.length})
                     </Text>
@@ -411,6 +411,7 @@ export default function PerfilAluno() {
                             </Text>
                         </View>
                     )}
+                    
                 </View>
 
                 <Modal visible={feedbackModalVisible} transparent animationType="fade">
@@ -521,7 +522,7 @@ export default function PerfilAluno() {
                             <Image
                                 source={perfil.foto && !imageError ?
                                     { uri: perfil.foto } :
-                                    require('../../../assets/image/Perfill.png')}
+                                    require('../../../assets/image/add.png')}
                                 style={styles.profileImage}
                                 onError={() => setImageError(true)}
                             />
@@ -563,64 +564,71 @@ export default function PerfilAluno() {
                         fixedWidth={width * 0.8}
                     />
 
-                    <View style={styles.inlineFieldsContainer}>
-                        <View style={[styles.inline, { width: width * 0.45 }]}>
-                            <Text style={[styles.label, { color: textColor }]}>Telefone</Text>
-                            {isEditing ? (
-                                <TextInput
-                                    style={[styles.inputContainer, { color: textColor }]}
-                                    value={perfilEdit.telefone}
-                                    onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
-                                    placeholder="Digite o telefone"
-                                    placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
-                                    keyboardType="phone-pad"
-                                />
-                            ) : (
-                                <View style={styles.inputContainer}>
-                                    <Text style={[styles.colorInput, { color: textColor }]}>
-                                        {perfil.telefone || 'Não informado'}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                        <View style={[styles.inline, { width: width * 0.45 }]}>
-                            <Text style={[styles.label, { color: textColor }]}>Data de Nascimento</Text>
-                            {isEditing ? (
-                                <>
-                                    <TouchableOpacity
-                                        style={[styles.inputContainer, { justifyContent: 'center' }]}
-                                        onPress={showDatepicker}
-                                    >
-                                        <Text style={[styles.colorInput, { color: textColor }]}>
-                                            {perfilEdit.nascimento || "Selecione a data"}
-                                        </Text>
-                                        <Icon name="calendar" size={16} color={isDarkMode ? '#AAA' : '#666'} style={styles.calendarIcon} />
-                                    </TouchableOpacity>
-                                    {showDatePicker && (
-                                        <DateTimePicker
-                                            value={selectedDate}
-                                            mode="date"
-                                            display="default"
-                                            onChange={handleDateChange}
-                                            maximumDate={new Date()}
-                                        />
-                                    )}
-                                </>
-                            ) : (
-                                <View style={[styles.inputContainer, { justifyContent: 'center' }]}>
-                                    <Text style={[styles.colorInput, { color: textColor }]}>
-                                        {perfil.nascimento || 'Não informada'}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
+<View style={styles.inlineFieldsContainer}>
+    {/* Telefone */}
+    <View style={[styles.inline, { width: width * 0.45 }]}>
+        <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
+        {isEditing ? (
+            <TextInput
+                style={[
+                    styles.inputContainer,
+                    { color: isDarkMode ? '#FFF' : '#000', backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }
+                ]}
+                value={perfilEdit.telefone}
+                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
+                placeholder="Digite o telefone"
+                placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                keyboardType="phone-pad"
+            />
+        ) : (
+            <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+                <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                    {perfil.telefone || 'Não informado'}
+                </Text>
+            </View>
+        )}
+    </View>
+
+    {/* Data de Nascimento */}
+    <View style={[styles.inline, { width: width * 0.45 }]}>
+        <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Data de Nascimento</Text>
+        {isEditing ? (
+            <>
+                <TouchableOpacity
+                    style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}
+                    onPress={showDatepicker}
+                >
+                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                        {perfilEdit.nascimento || "Selecione a data"}
+                    </Text>
+                    <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
+                </TouchableOpacity>
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={selectedDate}
+                        mode="date"
+                        display="default"
+                        onChange={handleDateChange}
+                        maximumDate={new Date()}
+                    />
+                )}
+            </>
+        ) : (
+            <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
+                <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                    {perfil.nascimento || 'Não informada'}
+                </Text>
+            </View>
+        )}
+    </View>
+</View>
+
 
                     <View style={styles.sectionContainer}>
                         <Text style={[styles.sectionTitle, { color: textColor }]}>Turma</Text>
                         {perfil.turma ? (
                             <View style={styles.itemsContainer}>
-                                <View style={[styles.itemPill, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                                <View style={[styles.itemPill, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
                                     <Text style={[styles.itemText, { color: textColor }]}>{perfil.turma.nomeTurma}</Text>
                                 </View>
                             </View>
@@ -887,6 +895,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        marginBottom: 40
     },
     feedbackContainer: {
         borderWidth: 1,

@@ -31,7 +31,7 @@ export default function Turmas() {
                     return;
                 }
 
-                const response = await axios.get('http://10.0.2.2:3000/api/class');
+                const response = await axios.get('http://192.168.15.120:3000/api/class');
                 const turmasDoProfessor = response.data.filter(turma =>
                     turma.teachers.some(teacher => teacher.id === parseInt(professorId))
                 );
@@ -44,7 +44,7 @@ export default function Turmas() {
                 }
             } catch (error) {
                 setError('Erro ao buscar turmas. Tente novamente mais tarde.');
-                console.error('Erro ao buscar turmas:', error);
+               
             } finally {
                 setLoading(false);
             }

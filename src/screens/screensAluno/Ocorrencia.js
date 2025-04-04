@@ -24,12 +24,12 @@ export default function Ocorrencia() {
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
-        axios.get('http://10.0.2.2:3000/api/teacher')
+        axios.get('http://192.168.15.120:3000/api/teacher')
             .then(response => {
                 setProfessores(response.data);
             })
             .catch(error => {
-                console.error('Erro ao buscar professores:', error);
+            
             });
     }, []);
 
@@ -40,7 +40,7 @@ export default function Ocorrencia() {
                 const id = await AsyncStorage.getItem('@user_id');
                 setUserId(id);
             } catch (error) {
-                console.error('Erro ao buscar userId:', error);
+               
             }
         };
 
@@ -50,12 +50,12 @@ export default function Ocorrencia() {
     // Busca os feedbacks do estudante
     useEffect(() => {
         if (userId) {
-            axios.get(`http://10.0.2.2:3000/api/student/feedback/${userId}`)
+            axios.get(`http://192.168.15.120:3000/api/student/feedback/${userId}`)
                 .then(response => {
                     setFeedbacks(response.data);
                 })
                 .catch(error => {
-                    console.error('Erro ao buscar feedbacks:', error);
+                   
                 });
         }
     }, [userId]);
@@ -114,7 +114,7 @@ export default function Ocorrencia() {
                 recipientTeacher: { id: professorSelecionado.id }
             };
 
-            const response = await axios.post('http://10.0.2.2:3000/api/feedbackStudent', feedback);
+            const response = await axios.post('http://192.168.15.120:3000/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
@@ -124,7 +124,7 @@ export default function Ocorrencia() {
                 Alert.alert('Erro', 'Não foi possível enviar o feedback.');
             }
         } catch (error) {
-            console.error('Erro ao enviar feedback:', error);
+          
             Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
         }
     };

@@ -11,7 +11,7 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
     <View style={[styles.card, { backgroundColor: containerColor }]}>
       {/* Círculo com a data */}
       <View style={{
-        backgroundColor: color, // Usa a cor passada como prop
+        backgroundColor: '#0077FF', // Usa a cor passada como prop
         padding: 10,
         alignItems: 'center',
         width: 45,
@@ -53,6 +53,6 @@ const styles = StyleSheet.create({
   subTitulo: {
     color: '#8A8A8A',
     fontWeight: 'bold',
-    fontSize: 11,
+    fontSize: 9,
   },
 });

@@ -31,33 +31,9 @@ const GraficoFeedbackTurma = ({
     return (
         <View style={[styles.grafico, { backgroundColor: formBackgroundColor }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, width: '100%' }}>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: perfilBackgroundColor,
-                    padding: 8,
-                    borderRadius: 10
-                }}>
-                    
-                </View>
+                
 
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: perfilBackgroundColor,
-                    borderRadius: 10,
-                    padding: 8
-                }}>
-                   
-                    {professorSelecionado && (
-                        <TouchableOpacity
-                            style={{ marginLeft: 10 }}
-                            onPress={onLimparFiltroProfessor}
-                        >
-                            <Icon name="times" size={20} color="red" />
-                        </TouchableOpacity>
-                    )}
-                </View>
+             
             </View>
 
             {semFeedbacks ? (

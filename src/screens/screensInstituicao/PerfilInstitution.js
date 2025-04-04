@@ -16,7 +16,7 @@ export default function PerfilInstitution() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://10.0.2.2:3000/api/institution`);
+          const response = await fetch(`http://192.168.15.120:3000/api/institution`);
           const data = await response.json();
           console.log('Dados da instituição:', data);
           setDadosInstituicao(data);
@@ -24,7 +24,7 @@ export default function PerfilInstitution() {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-        console.error('Erro ao buscar dados da instituição:', error);
+     
       }
     };
 

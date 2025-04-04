@@ -119,7 +119,7 @@ export default function PerfilProfessor() {
     const fetchProfessor = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://10.0.2.2:3000/api/teacher/${professorId}`, {
+            const response = await axios.get(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -171,12 +171,12 @@ export default function PerfilProfessor() {
         try {
             const token = await getAuthToken();
 
-            const turmasResponse = await axios.get('http://10.0.2.2:3000/api/class', {
+            const turmasResponse = await axios.get('http://192.168.2.11:3000/api/class', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllTurmas(turmasResponse.data || []);
 
-            const disciplinasResponse = await axios.get('http://10.0.2.2:3000/api/discipline', {
+            const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/discipline', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllDisciplinas(disciplinasResponse.data || []);
@@ -278,7 +278,7 @@ export default function PerfilProfessor() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://10.0.2.2:3000/api/teacher/upload-image/${professorId}`,
+                `http://192.168.2.11:3000/api/teacher/upload-image/${professorId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -327,7 +327,7 @@ export default function PerfilProfessor() {
             };
 
             const response = await axios.put(
-                `http://10.0.2.2:3000/api/teacher/${professorId}`,
+                `http://192.168.2.11:3000/api/teacher/${professorId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -356,20 +356,20 @@ export default function PerfilProfessor() {
         try {
             setLoading(true);
             const token = await getAuthToken();
-            
-            const response = await axios.delete(`http://10.0.2.2:3000/api/teacher/${professorId}`, {
+
+            const response = await axios.delete(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 200) {
                 Alert.alert('Sucesso', 'Professor excluído com sucesso!');
             }
         } catch (error) {
             Alert.alert(
-                'Erro', 
+                'Erro',
                 error.response?.data?.message || 'Não foi possível excluir o professor'
             );
         } finally {
@@ -408,7 +408,7 @@ export default function PerfilProfessor() {
                             {
                                 backgroundColor: selectedTurmas.includes(turma.id)
                                     ? barraAzulColor
-                                    : isDarkMode ? '#333' : '#E1F0FF'
+                                    : isDarkMode ? '#141414' : '#F0F7FF'
                             }
                         ]}>
                             <Text style={[
@@ -447,7 +447,7 @@ export default function PerfilProfessor() {
                             {
                                 backgroundColor: selectedDisciplinas.includes(disciplina.id)
                                     ? barraAzulColor
-                                    : isDarkMode ? '#333' : '#E1F0FF'
+                                    : isDarkMode ? '#141414' : '#F0F7FF'
                             }
                         ]}>
                             <Text style={[
@@ -470,19 +470,19 @@ export default function PerfilProfessor() {
     const FeedbackSection = ({ feedbacks }) => {
         const [modalVisible, setModalVisible] = useState(false);
         const [selectedFeedback, setSelectedFeedback] = useState(null);
-    
+
         const openFeedbackModal = (item) => {
             setSelectedFeedback(item);
             setModalVisible(true);
         };
-    
+
         return (
             <>
-                <View style={[styles.feedbackOuterContainer, { backgroundColor: perfilBackgroundColor }]}>
+                <View style={[styles.feedbackOuterContainer, { backgroundColor: formBackgroundColor }]}>
                     <Text style={[styles.sectionTitle, { color: textColor }]}>
                         Feedbacks Recebidos ({feedbacks.length})
                     </Text>
-    
+
                     {feedbacks.length > 0 ? (
                         <View style={styles.feedbackContainer}>
                             <View style={[styles.feedbackHeader, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
@@ -493,24 +493,24 @@ export default function PerfilProfessor() {
                                     <Text style={[styles.feedbackHeaderText, { color: textColor }]}>Feedback</Text>
                                 </View>
                             </View>
-    
+
                             <ScrollView style={styles.feedbackBody}>
                                 {feedbacks.map((item, index) => (
-                                    <FeedbackItem 
-                                        key={index} 
-                                        item={item} 
-                                        onPress={openFeedbackModal} 
+                                    <FeedbackItem
+                                        key={index}
+                                        item={item}
+                                        onPress={openFeedbackModal}
                                         textColor={textColor}
                                     />
                                 ))}
                             </ScrollView>
                         </View>
                     ) : (
-                        <View style={styles.noFeedbackContainer}>
-                            <MaterialIcons 
-                                name="feedback" 
-                                size={40} 
-                                color={isDarkMode ? '#666' : '#999'} 
+                        <View style={[styles.noFeedbackContainer,]}>
+                            <MaterialIcons
+                                name="feedback"
+                                size={40}
+                                color={isDarkMode ? '#666' : '#999'}
                             />
                             <Text style={[styles.noFeedbackText, { color: isDarkMode ? '#AAA' : '#888' }]}>
                                 Nenhum feedback recebido ainda
@@ -518,7 +518,7 @@ export default function PerfilProfessor() {
                         </View>
                     )}
                 </View>
-    
+
                 <Modal visible={modalVisible} transparent animationType="fade">
                     <View style={styles.modalBackdrop}>
                         <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
@@ -528,8 +528,8 @@ export default function PerfilProfessor() {
                             <Text style={[styles.feedbackModalText, { color: textColor }]}>
                                 {selectedFeedback?.conteudo}
                             </Text>
-                            <TouchableOpacity 
-                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]} 
+                            <TouchableOpacity
+                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]}
                                 onPress={() => setModalVisible(false)}
                             >
                                 <Text style={styles.buttonText}>Fechar</Text>
@@ -550,8 +550,8 @@ export default function PerfilProfessor() {
                     </Text>
                 </View>
 
-                <TouchableOpacity 
-                    style={styles.feedbackCellIcon} 
+                <TouchableOpacity
+                    style={styles.feedbackCellIcon}
                     onPress={() => onPress(item)}
                 >
                     <MaterialIcons name="feedback" size={24} color={barraAzulColor} />
@@ -616,7 +616,7 @@ export default function PerfilProfessor() {
                             <Image
                                 source={perfil.foto && !imageError ?
                                     { uri: perfil.foto } :
-                                    require('../../../assets/image/Perfill.png')}
+                                    require('../../../assets/image/add.png')}
                                 style={styles.profileImage}
                                 onError={() => setImageError(true)}
                             />
@@ -659,36 +659,42 @@ export default function PerfilProfessor() {
                     />
 
                     <View style={styles.inlineFieldsContainer}>
+                        {/* Telefone */}
                         <View style={[styles.inline, { width: width * 0.45 }]}>
-                            <Text style={[styles.label, { color: textColor }]}>Telefone</Text>
+                            <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
                             {isEditing ? (
                                 <TextInput
-                                    style={[styles.inputContainer, { color: textColor }]}
+                                    style={[
+                                        styles.inputContainer,
+                                        { color: isDarkMode ? '#FFF' : '#000', backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }
+                                    ]}
                                     value={perfilEdit.telefone}
                                     onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
                                     placeholder="Digite o telefone"
                                     placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                 />
                             ) : (
-                                <View style={styles.inputContainer}>
-                                    <Text style={[styles.colorInput, { color: textColor }]}>
+                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                         {perfil.telefone || 'Não informado'}
                                     </Text>
                                 </View>
                             )}
                         </View>
+
+                        {/* Data de Nascimento */}
                         <View style={[styles.inline, { width: width * 0.45 }]}>
-                            <Text style={[styles.label, { color: textColor }]}>Data de Nascimento</Text>
+                            <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Data de Nascimento</Text>
                             {isEditing ? (
                                 <>
                                     <TouchableOpacity
-                                        style={[styles.inputContainer, { justifyContent: 'center' }]}
+                                        style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}
                                         onPress={showDatepicker}
                                     >
-                                        <Text style={[styles.colorInput, { color: textColor }]}>
+                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                             {perfilEdit.nascimento || "Selecione a data"}
                                         </Text>
-                                        <Icon name="calendar" size={16} color={isDarkMode ? '#AAA' : '#666'} style={styles.calendarIcon} />
+                                        <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
                                     </TouchableOpacity>
                                     {showDatePicker && (
                                         <DateTimePicker
@@ -701,14 +707,15 @@ export default function PerfilProfessor() {
                                     )}
                                 </>
                             ) : (
-                                <View style={[styles.inputContainer, { justifyContent: 'center' }]}>
-                                    <Text style={[styles.colorInput, { color: textColor }]}>
+                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                         {perfil.nascimento}
                                     </Text>
                                 </View>
                             )}
                         </View>
                     </View>
+
 
                     {isEditing ? (
                         <>
@@ -722,7 +729,7 @@ export default function PerfilProfessor() {
                                 {perfil.disciplinas.length > 0 ? (
                                     <View style={styles.itemsContainer}>
                                         {perfil.disciplinas.map((disciplina, index) => (
-                                            <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                                            <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
                                                 <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
                                             </View>
                                         ))}
@@ -737,7 +744,7 @@ export default function PerfilProfessor() {
                                 {perfil.turmas.length > 0 ? (
                                     <View style={styles.itemsContainer}>
                                         {perfil.turmas.map((turma, index) => (
-                                            <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                                            <View key={index} style={[styles.itemPill, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
                                                 <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
                                             </View>
                                         ))}
@@ -1054,7 +1061,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#EEE',
         alignItems: 'center',
-        marginRight: 65, 
+        marginRight: 65,
         gap: 60
     },
     feedbackCell: {

@@ -1,16 +1,16 @@
 import React from 'react';
 import { Text, TouchableOpacity, View, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import { useTheme } from '../../path/ThemeContext';
 export default function CardProfessorIns({ nome, id }) { // Recebe o nome e o id como props
     const navigation = useNavigation();
-
+  const { isDarkMode } = useTheme();
     return (
-        <View style={styles.container}>
-            <View style={styles.imageContainer}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+            <View style={[styles.imageContainer, {borderColor: isDarkMode ? '#141414' : '#F0F7FF'  }]}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
-            <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000' }}>
+            <Text style={{ marginTop: 50, fontWeight: 'bold', color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>
                 {nome} {/* Exibe o nome do professor */}
             </Text>
             <TouchableOpacity
