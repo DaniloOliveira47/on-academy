@@ -35,7 +35,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
 
             await onCreate(alunoData);
         } catch (error) {
-            console.error('Erro ao cadastrar aluno:', error.response ? error.response.data : error.message);
+           
             Alert.alert('Erro', 'Erro ao cadastrar aluno. Tente novamente.');
         }
     };
