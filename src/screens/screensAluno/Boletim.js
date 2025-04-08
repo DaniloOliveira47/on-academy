@@ -27,12 +27,12 @@ export default function Boletim() {
         const fetchData = async () => {
             try {
                 // Busca as disciplinas
-                const disciplinasResponse = await axios.get('http://192.168.15.120:3000/api/discipline');
+                const disciplinasResponse = await axios.get('http://10.0.2.2:3000/api/discipline');
                 setDisciplinas(disciplinasResponse.data);
 
                 // Busca os dados do aluno e suas notas
                 const alunoId = await AsyncStorage.getItem('@user_id'); // Substitua pelo ID do aluno logado
-                const alunoResponse = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
+                const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
                 setAluno(alunoResponse.data);
                 setNotas(alunoResponse.data.notas);
             } catch (error) {
@@ -63,7 +63,7 @@ export default function Boletim() {
     // Função para baixar e visualizar o boletim
     const downloadAndViewBoletim = async () => {
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const url = `http://192.168.15.120:3000/api/boletim/${alunoId}`; // URL do boletim com o ID do aluno
+        const url = `http://10.0.2.2:3000/api/boletim/${alunoId}`; // URL do boletim com o ID do aluno
         const fileName = 'boletim.pdf'; // Nome do arquivo
         const fileUri = `${FileSystem.documentDirectory}${fileName}`; // Caminho onde o arquivo será salvo
 

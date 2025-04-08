@@ -24,7 +24,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAvisos = async () => {
       try {
-        const response = await axios.get('http://192.168.15.120:3000/api/reminder');
+        const response = await axios.get('http://10.0.2.2:3000/api/reminder');
         // Ordena avisos por ID decrescente (mais recentes primeiro)
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
@@ -41,7 +41,7 @@ export default function Home() {
           return;
         }
 
-        const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
+        const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
         setAluno(response.data);
       } catch (error) {
       

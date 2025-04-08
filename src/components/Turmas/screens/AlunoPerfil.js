@@ -51,7 +51,7 @@ export default function AlunoPerfil({ route }) {
     useEffect(() => {
         const fetchAluno = async () => {
             try {
-                const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`);
+                const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
                 setAluno(response.data);
             } catch (error) {
                 setError('Erro ao carregar os dados do aluno. Tente novamente mais tarde.');
@@ -72,7 +72,7 @@ export default function AlunoPerfil({ route }) {
 
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://192.168.15.120:3000/api/student/feedback/${alunoId}`);
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/feedback/${alunoId}`);
             setFeedbacks(response.data);
 
             const professoresUnicos = [];
@@ -185,7 +185,7 @@ export default function AlunoPerfil({ route }) {
                 conteudo: conteudoFeedback,
             };
 
-            await axios.post('http://192.168.15.120:3000/api/feedbackForm', feedbackData);
+            await axios.post('http://10.0.2.2:3000/api/feedbackForm', feedbackData);
             Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
 
             fetchFeedbacks();
@@ -210,7 +210,7 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
             };
 
-            await axios.post('http://192.168.15.120:3000/api/teacher/student', feedbackData);
+            await axios.post('http://10.0.2.2:3000/api/teacher/student', feedbackData);
             Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
             setConteudoFeedback('');
         } catch (error) {

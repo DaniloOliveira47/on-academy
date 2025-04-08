@@ -105,7 +105,7 @@ export default function PerfilAluno() {
     const fetchAluno = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://192.168.15.120:3000/api/student/${alunoId}`, {
+            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -154,7 +154,7 @@ export default function PerfilAluno() {
     const fetchFeedbacks = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://192.168.15.120:3000/api/feedbackteacher/student/${alunoId}`, {
+            const response = await axios.get(`http://10.0.2.2:3000/api/feedbackteacher/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -258,7 +258,7 @@ export default function PerfilAluno() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://192.168.15.120:3000/api/student/upload-image/${alunoId}`,
+                `http://10.0.2.2:3000/api/student/upload-image/${alunoId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -312,7 +312,7 @@ export default function PerfilAluno() {
             };
 
             const response = await axios.put(
-                `http://192.168.15.120:3000/api/student/${alunoId}`,
+                `http://10.0.2.2:3000/api/student/${alunoId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -342,7 +342,7 @@ export default function PerfilAluno() {
             setLoading(true);
             const token = await getAuthToken();
             
-            const response = await axios.delete(`http://192.168.15.120:3000/api/student/${alunoId}`, {
+            const response = await axios.delete(`http://10.0.2.2:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

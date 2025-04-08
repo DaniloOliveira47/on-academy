@@ -53,10 +53,15 @@ export default function Turmas() {
         borderColor: isDarkMode ? '#555' : '#D1D1D1',
     };
 
+    const handleTurmaExcluida = (turmaId) => {
+        setTurmas(turmas.filter(turma => turma.id !== turmaId));
+        setTurmasFiltradas(turmasFiltradas.filter(turma => turma.id !== turmaId));
+    };
+
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
-            const response = await axios.get('http://192.168.15.120:3000/api/class');
+            const response = await axios.get('http://10.0.2.2:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
                 setTurmasFiltradas(response.data);
@@ -74,7 +79,7 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://192.168.15.120:3000/api/teacher');
+            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
           
@@ -83,7 +88,7 @@ export default function Turmas() {
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://192.168.15.120:3000/api/discipline');
+            const response = await axios.get('http://10.0.2.2:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
            
@@ -131,7 +136,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.post('http://192.168.15.120:3000/api/class', turmaData, {
+            await axios.post('http://10.0.2.2:3000/api/class', turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -167,7 +172,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.put(`http://192.168.2.11:3000/api/class/${turmaEditando.id}`, turmaData, {
+            await axios.put(`http://10.0.2.2:3000/api/class/${turmaEditando.id}`, turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -263,6 +268,7 @@ export default function Turmas() {
                                     turmaId={turma.id}
                                     navegacao="Alunos"
                                     onEditPress={() => abrirModalEditar(turma)}
+                                    onDelete={handleTurmaExcluida}
                                 />
                             ))
                         ) : (
@@ -272,7 +278,7 @@ export default function Turmas() {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 550, padding: 20 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 580, padding: 20 }}>
                         <TouchableOpacity
                             style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}>

@@ -33,7 +33,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         try {
             setLoadingDisciplines(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.get('http://192.168.15.120:3000/api/discipline', {
+            const response = await axios.get('http://10.0.2.2:3000/api/discipline', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

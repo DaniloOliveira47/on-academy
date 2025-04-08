@@ -60,16 +60,16 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         onPress: async () => {
                             setIsLoading(true);
                             try {
-                                await axios.delete(`http://192.168.15.120:3000/api/class/${turmaId}`, {
+                                await axios.delete(`http://10.0.2.2:3000/api/class/${turmaId}`, {
                                     headers: {
                                         Authorization: `Bearer ${token}`
                                     }
                                 });
-
+                    
                                 Alert.alert('Sucesso', 'Turma excluída com sucesso!');
-                                onDelete(turmaId);
+                                onDelete(turmaId); // Chame a função onDelete passada como prop
                             } catch (error) {
-                                
+                                console.error('Erro ao deletar turma:', error);
                                 Alert.alert('Erro', 'Erro ao deletar turma. Tente novamente.');
                             } finally {
                                 setIsLoading(false);
@@ -111,7 +111,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 disciplineId: selectedDisciplinas
             };
 
-            await axios.put(`http://192.168.15.120:3000/api/class/${turmaId}`, dadosAtualizados, {
+            await axios.put(`http://10.0.2.2:3000/api/class/${turmaId}`, dadosAtualizados, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -145,7 +145,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://192.168.15.120:3000/api/teacher');
+            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             
@@ -154,7 +154,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://192.168.15.120:3000/api/discipline');
+            const response = await axios.get('http://10.0.2.2:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
            
