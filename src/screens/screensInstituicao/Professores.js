@@ -124,6 +124,7 @@ export default function ProfessoresFeedback() {
                         <CardProfessorIns
                             key={index}
                             nome={"Prof - " + professor.nomeDocente}
+                            imageUrl={professor.imageUrl}
                             id={professor.id}
                             onPress={() => selecionarProfessor(professor)}
                             selecionado={professorSelecionado?.id === professor.id}
@@ -221,11 +222,11 @@ export default function ProfessoresFeedback() {
 
     return (
         <View style={styles.mainContainer}>
-            <HeaderSimples />
+            <HeaderSimples
+            titulo= "PROFESSORES"
+            />
             <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-                <View style={styles.linha}>
-                    <Text style={[styles.titulo, { color: isDarkMode ? 'white' : 'black' }]}>Professores</Text>
-                </View>
+            
                 
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                     {/* Barra de busca */}
@@ -353,6 +354,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         marginTop: 20,
+        paddingTop: 20
     },
     emptyCard: {
         width: '45%',

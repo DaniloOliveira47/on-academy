@@ -175,7 +175,9 @@ export default function Alunos() {
 
     return (
         <ScrollView style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderSimples />
+            <HeaderSimples 
+            titulo="ALUNOS"
+            />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
