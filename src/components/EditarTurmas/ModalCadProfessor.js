@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CadastroProfessorModal({ visible, onClose, onCreate, isCreating }) {
@@ -15,19 +13,30 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     const [disciplines, setDisciplines] = useState([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState([]);
     const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
 
     useEffect(() => {
         if (visible) {
             fetchDisciplines();
-            // Limpa os campos quando o modal é aberto
-            setNomeDocente('');
-            setEmailDocente('');
-            setTelefoneDocente('');
-            setDataNascimento('');
-            setSelectedBirthDate(new Date());
-            setSelectedDisciplines([]);
+            resetForm();
         }
     }, [visible]);
+
+    useEffect(() => {
+        validateForm();
+    }, [nomeDocente, emailDocente, telefoneDocente, dataNascimento, selectedDisciplines, touched]);
+
+    const resetForm = () => {
+        setNomeDocente('');
+        setEmailDocente('');
+        setTelefoneDocente('');
+        setDataNascimento('');
+        setSelectedBirthDate(new Date());
+        setSelectedDisciplines([]);
+        setErrors({});
+        setTouched({});
+    };
 
     const fetchDisciplines = async () => {
         try {
@@ -40,11 +49,57 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             });
             setDisciplines(response.data);
         } catch (error) {
-            
             Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
         } finally {
             setLoadingDisciplines(false);
         }
+    };
+
+    const validateForm = () => {
+        const validationErrors = {};
+        
+        if (touched.nomeDocente && !nomeDocente.trim()) {
+            validationErrors.nomeDocente = 'Nome é obrigatório';
+        } else if (nomeDocente.length > 0 && nomeDocente.length < 3) {
+            validationErrors.nomeDocente = 'Nome muito curto';
+        }
+        
+        if (touched.emailDocente && !emailDocente) {
+            validationErrors.emailDocente = 'Email é obrigatório';
+        } else if (touched.emailDocente && !/\S+@\S+\.\S+/.test(emailDocente)) {
+            validationErrors.emailDocente = 'Email inválido';
+        }
+        
+        if (touched.telefoneDocente && !telefoneDocente) {
+            validationErrors.telefoneDocente = 'Telefone é obrigatório';
+        } else if (telefoneDocente && !/^[0-9]{10,11}$/.test(telefoneDocente.replace(/\D/g, ''))) {
+            validationErrors.telefoneDocente = 'Telefone inválido (10 ou 11 dígitos)';
+        }
+        
+        if (touched.dataNascimento && !dataNascimento) {
+            validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
+        } else if (dataNascimento) {
+            const birthDate = new Date(selectedBirthDate);
+            const today = new Date();
+            const minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - 100);
+            
+            if (birthDate > today) {
+                validationErrors.dataNascimento = 'Data não pode ser no futuro';
+            } else if (birthDate < minDate) {
+                validationErrors.dataNascimento = 'Data inválida (muito antiga)';
+            }
+        }
+        
+        if (touched.selectedDisciplines && selectedDisciplines.length === 0) {
+            validationErrors.selectedDisciplines = 'Selecione pelo menos uma disciplina';
+        }
+        
+        setErrors(validationErrors);
+    };
+
+    const handleBlur = (field) => {
+        setTouched({ ...touched, [field]: true });
     };
 
     const handleBirthDateChange = (event, date) => {
@@ -52,43 +107,103 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         if (date) {
             setSelectedBirthDate(date);
             setDataNascimento(date.toLocaleDateString('pt-BR'));
+            setTouched({ ...touched, dataNascimento: true });
         }
+    };
+
+    const formatPhone = (input) => {
+        const numbers = input.replace(/\D/g, '');
+        let formatted = '';
+        
+        if (numbers.length > 0) {
+            formatted = `(${numbers.substring(0, 2)}`;
+        }
+        if (numbers.length > 2) {
+            formatted += `) ${numbers.substring(2, 7)}`;
+        }
+        if (numbers.length > 7) {
+            formatted += `-${numbers.substring(7, 11)}`;
+        }
+        
+        return formatted;
+    };
+
+    const handlePhoneChange = (text) => {
+        const formatted = formatPhone(text);
+        setTelefoneDocente(formatted);
+        setTouched({ ...touched, telefoneDocente: true });
     };
 
     const toggleDiscipline = (disciplineId) => {
         if (isCreating) return;
+        
         setSelectedDisciplines(prev => {
-            if (prev.includes(disciplineId)) {
-                return prev.filter(id => id !== disciplineId);
-            } else {
-                return [...prev, disciplineId];
-            }
+            const newSelection = prev.includes(disciplineId) 
+                ? prev.filter(id => id !== disciplineId)
+                : [...prev, disciplineId];
+            
+            setTouched({ ...touched, selectedDisciplines: true });
+            return newSelection;
         });
     };
 
+    const isFormValid = () => {
+        return nomeDocente && 
+               emailDocente && 
+               telefoneDocente && 
+               dataNascimento && 
+               selectedDisciplines.length > 0 && 
+               Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async () => {
-        if (selectedDisciplines.length === 0) {
-            Alert.alert('Atenção', 'Selecione pelo menos uma disciplina');
+        // Marca todos os campos como tocados para mostrar todos os erros
+        setTouched({
+            nomeDocente: true,
+            emailDocente: true,
+            telefoneDocente: true,
+            dataNascimento: true,
+            selectedDisciplines: true
+        });
+
+        if (!isFormValid()) {
+            Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente');
             return;
         }
 
-        const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
-        const professorData = {
-            nomeDocente,
-            dataNascimentoDocente: dataFormatada,
-            emailDocente,
-            telefoneDocente,
-            disciplineId: selectedDisciplines,
-        };
+        try {
+            const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
+            const phoneDigits = telefoneDocente.replace(/\D/g, '');
 
-        await onCreate(professorData);
+            const professorData = {
+                nomeDocente: nomeDocente.trim(),
+                dataNascimentoDocente: dataFormatada,
+                emailDocente: emailDocente.trim().toLowerCase(),
+                telefoneDocente: phoneDigits,
+                disciplineId: selectedDisciplines,
+            };
+
+            await onCreate(professorData);
+            resetForm();
+        } catch (error) {
+            let errorMessage = 'Erro ao cadastrar professor. Tente novamente mais tarde.';
+            
+            if (error.response) {
+                if (error.response.status === 400) {
+                    errorMessage = 'Dados inválidos. Verifique as informações.';
+                } else if (error.response.status === 409) {
+                    errorMessage = 'Email já cadastrado para outro professor.';
+                }
+            }
+            
+            Alert.alert('Erro', errorMessage);
+        }
     };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <TouchableOpacity 
                 style={styles.modalContainer} 
-                
                 activeOpacity={1}
             >
                 <Image
@@ -104,91 +219,114 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
                     </TouchableOpacity>
 
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nome Completo"
-                        placeholderTextColor="#AAA"
-                        value={nomeDocente}
-                        onChangeText={setNomeDocente}
-                        editable={!isCreating}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email"
-                        placeholderTextColor="#AAA"
-                        keyboardType="email-address"
-                        value={emailDocente}
-                        onChangeText={setEmailDocente}
-                        editable={!isCreating}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Telefone"
-                        placeholderTextColor="#AAA"
-                        keyboardType="phone-pad"
-                        value={telefoneDocente}
-                        onChangeText={setTelefoneDocente}
-                        editable={!isCreating}
-                    />
-
-                    <Text style={styles.label}>Data de Nascimento</Text>
-                    <View style={styles.dateContainer}>
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
                         <TextInput
-                            style={[styles.input, styles.dateInput]}
-                            placeholder="Selecione a data de nascimento"
-                            placeholderTextColor="#666"
-                            value={dataNascimento}
-                            editable={false}
+                            style={[styles.input, errors.nomeDocente && styles.inputError]}
+                            placeholder="Nome Completo"
+                            placeholderTextColor="#AAA"
+                            value={nomeDocente}
+                            onChangeText={setNomeDocente}
+                            onBlur={() => handleBlur('nomeDocente')}
+                            editable={!isCreating}
                         />
-                        <TouchableOpacity
-                            style={styles.dateIconButton}
-                            onPress={() => !isCreating && setShowBirthDatePicker(true)}
-                            disabled={isCreating}
-                        >
-                            <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
-                        </TouchableOpacity>
-                    </View>
-                    {showBirthDatePicker && (
-                        <DateTimePicker
-                            value={selectedBirthDate}
-                            mode="date"
-                            display="default"
-                            onChange={handleBirthDateChange}
+                        {errors.nomeDocente && <Text style={styles.errorText}>{errors.nomeDocente}</Text>}
+                        
+                        <TextInput
+                            style={[styles.input, errors.emailDocente && styles.inputError]}
+                            placeholder="Email"
+                            placeholderTextColor="#AAA"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={emailDocente}
+                            onChangeText={setEmailDocente}
+                            onBlur={() => handleBlur('emailDocente')}
+                            editable={!isCreating}
                         />
-                    )}
+                        {errors.emailDocente && <Text style={styles.errorText}>{errors.emailDocente}</Text>}
+                        
+                        <TextInput
+                            style={[styles.input, errors.telefoneDocente && styles.inputError]}
+                            placeholder="Telefone (XX) XXXXX-XXXX"
+                            placeholderTextColor="#AAA"
+                            keyboardType="phone-pad"
+                            value={telefoneDocente}
+                            onChangeText={handlePhoneChange}
+                            onBlur={() => handleBlur('telefoneDocente')}
+                            editable={!isCreating}
+                            maxLength={15}
+                        />
+                        {errors.telefoneDocente && <Text style={styles.errorText}>{errors.telefoneDocente}</Text>}
 
-                    <Text style={styles.label}>Disciplinas</Text>
-                    {loadingDisciplines ? (
-                        <ActivityIndicator size="small" color="#1A85FF" />
-                    ) : (
-                        <ScrollView style={styles.disciplinesContainer} contentContainerStyle={styles.disciplinesContent}>
-                            {disciplines.map(discipline => (
-                                <TouchableOpacity
-                                    key={discipline.id}
-                                    style={[
-                                        styles.disciplineItem,
-                                        selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
-                                        isCreating && styles.disabledItem
-                                    ]}
-                                    onPress={() => toggleDiscipline(discipline.id)}
-                                    disabled={isCreating}
-                                >
-                                    <Text style={styles.disciplineText}>{discipline.nomeDisciplina}</Text>
-                                    {selectedDisciplines.includes(discipline.id) && (
-                                        <Icon name="check" size={18} color="#1A85FF" />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    )}
+                        <Text style={styles.label}>Data de Nascimento</Text>
+                        <View style={styles.dateContainer}>
+                            <TextInput
+                                style={[
+                                    styles.input, 
+                                    styles.dateInput,
+                                    errors.dataNascimento && styles.inputError
+                                ]}
+                                placeholder="Selecione a data de nascimento"
+                                placeholderTextColor="#666"
+                                value={dataNascimento}
+                                editable={false}
+                                onFocus={() => !isCreating && setShowBirthDatePicker(true)}
+                            />
+                            <TouchableOpacity
+                                style={styles.dateIconButton}
+                                onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                                disabled={isCreating}
+                            >
+                                <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
+                            </TouchableOpacity>
+                        </View>
+                        {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
+                        {showBirthDatePicker && (
+                            <DateTimePicker
+                                value={selectedBirthDate}
+                                mode="date"
+                                display="default"
+                                onChange={handleBirthDateChange}
+                                maximumDate={new Date()}
+                                minimumDate={new Date(1900, 0, 1)}
+                            />
+                        )}
+
+                        <Text style={styles.label}>Disciplinas</Text>
+                        {errors.selectedDisciplines && (
+                            <Text style={styles.errorText}>{errors.selectedDisciplines}</Text>
+                        )}
+                        {loadingDisciplines ? (
+                            <ActivityIndicator size="small" color="#1A85FF" />
+                        ) : (
+                            <View style={styles.disciplinesContainer}>
+                                {disciplines.map(discipline => (
+                                    <TouchableOpacity
+                                        key={discipline.id}
+                                        style={[
+                                            styles.disciplineItem,
+                                            selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
+                                            isCreating && styles.disabledItem
+                                        ]}
+                                        onPress={() => toggleDiscipline(discipline.id)}
+                                        disabled={isCreating}
+                                    >
+                                        <Text style={styles.disciplineText}>{discipline.nomeDisciplina}</Text>
+                                        {selectedDisciplines.includes(discipline.id) && (
+                                            <Icon name="check" size={18} color="#1A85FF" />
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </ScrollView>
 
                     <TouchableOpacity 
                         style={[
                             styles.saveButton,
-                            isCreating && styles.saveButtonDisabled
+                            (!isFormValid() || isCreating) && styles.saveButtonDisabled
                         ]} 
                         onPress={handleSubmit}
-                        disabled={isCreating}
+                        disabled={!isFormValid() || isCreating}
                     >
                         {isCreating ? (
                             <ActivityIndicator size="small" color="#FFF" />
@@ -218,6 +356,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         maxHeight: '80%',
     },
+    scrollContent: {
+        width: '100%',
+    },
     closeButton: {
         position: 'absolute',
         top: -5,
@@ -231,6 +372,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#F0F7FF',
         borderRadius: 8,
         paddingHorizontal: 10,
+        marginBottom: 5,
+    },
+    inputError: {
+        borderColor: '#FF3B30',
+        borderWidth: 1,
+    },
+    errorText: {
+        alignSelf: 'flex-start',
+        color: '#FF3B30',
+        fontSize: 12,
         marginBottom: 10,
     },
     label: {
@@ -244,7 +395,7 @@ const styles = StyleSheet.create({
     dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 5,
         width: '100%',
     },
     dateInput: {
@@ -256,13 +407,9 @@ const styles = StyleSheet.create({
     },
     disciplinesContainer: {
         width: '100%',
-        maxHeight: 150,
-        marginBottom: 15,
-    },
-    disciplinesContent: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'flex-start',
+        marginBottom: 15,
     },
     disciplineItem: {
         flexDirection: 'row',

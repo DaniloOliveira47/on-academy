@@ -33,7 +33,7 @@ import React, { useState } from 'react';
  
    const handleLogin = async () => {
      if (!matricula || !password) {
-       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+       Alert.alert('Por favor, preencha todos os campos.');
        return;
      }
  
@@ -83,12 +83,12 @@ import React, { useState } from 'react';
      } catch (error) {
        if (error.response) {
          if (error.response.status === 401) {
-           Alert.alert('Erro', 'Credenciais inválidas. Verifique sua matrícula e senha.');
+           Alert.alert('Matrícula ou senha inválida, verifique os campos');
          } else {
-           Alert.alert('Erro', 'Erro ao realizar o login. Tente novamente mais tarde.');
+           Alert.alert('Falha no login, tente novamente mais tarde');
          }
        } else {
-         Alert.alert('Erro', 'Erro de conexão. Verifique sua internet.');
+         Alert.alert('Erro de conexão. Verifique sua internet.');
        }
  
      }

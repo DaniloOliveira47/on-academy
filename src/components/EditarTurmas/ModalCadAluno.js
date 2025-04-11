@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreating, onCreate }) {
@@ -12,32 +10,146 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const [dataNascimento, setDataNascimento] = useState('');
     const [selectedBirthDate, setSelectedBirthDate] = useState(new Date());
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+
+    // Validação em tempo real
+    useEffect(() => {
+        const validationErrors = {};
+        
+        if (touched.nomeAluno && !nomeAluno.trim()) {
+            validationErrors.nomeAluno = 'Nome é obrigatório';
+        } else if (nomeAluno.length > 0 && nomeAluno.length < 3) {
+            validationErrors.nomeAluno = 'Nome muito curto';
+        }
+        
+        if (touched.emailAluno && !emailAluno) {
+            validationErrors.emailAluno = 'Email é obrigatório';
+        } else if (touched.emailAluno && !/\S+@\S+\.\S+/.test(emailAluno)) {
+            validationErrors.emailAluno = 'Email inválido';
+        }
+        
+        if (touched.telefoneAluno && !telefoneAluno) {
+            validationErrors.telefoneAluno = 'Telefone é obrigatório';
+        } else if (telefoneAluno && !/^[0-9]{10,11}$/.test(telefoneAluno.replace(/\D/g, ''))) {
+            validationErrors.telefoneAluno = 'Telefone inválido (10 ou 11 dígitos)';
+        }
+        
+        if (touched.dataNascimento && !dataNascimento) {
+            validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
+        } else if (dataNascimento) {
+            const birthDate = new Date(selectedBirthDate);
+            const today = new Date();
+            const minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - 100);
+            
+            if (birthDate > today) {
+                validationErrors.dataNascimento = 'Data não pode ser no futuro';
+            } else if (birthDate < minDate) {
+                validationErrors.dataNascimento = 'Data inválida (muito antiga)';
+            }
+        }
+        
+        setErrors(validationErrors);
+    }, [nomeAluno, emailAluno, telefoneAluno, dataNascimento, touched]);
+
+    const handleBlur = (field) => {
+        setTouched({ ...touched, [field]: true });
+    };
 
     const handleBirthDateChange = (event, date) => {
         setShowBirthDatePicker(false);
         if (date) {
             setSelectedBirthDate(date);
             setDataNascimento(date.toLocaleDateString('pt-BR'));
+            setTouched({ ...touched, dataNascimento: true });
         }
     };
 
+    // Formatação automática do telefone
+    const formatPhone = (input) => {
+        const numbers = input.replace(/\D/g, '');
+        let formatted = '';
+        
+        if (numbers.length > 0) {
+            formatted = `(${numbers.substring(0, 2)}`;
+        }
+        if (numbers.length > 2) {
+            formatted += `) ${numbers.substring(2, 7)}`;
+        }
+        if (numbers.length > 7) {
+            formatted += `-${numbers.substring(7, 11)}`;
+        }
+        
+        return formatted;
+    };
+
+    const handlePhoneChange = (text) => {
+        const formatted = formatPhone(text);
+        setTelefoneAluno(formatted);
+    };
+
     const handleCadastrar = async () => {
+        // Marca todos os campos como tocados para mostrar todos os erros
+        setTouched({
+            nomeAluno: true,
+            emailAluno: true,
+            telefoneAluno: true,
+            dataNascimento: true
+        });
+
+        // Verifica se há erros
+        if (Object.keys(errors).length > 0 || 
+            !nomeAluno || 
+            !emailAluno || 
+            !telefoneAluno || 
+            !dataNascimento) {
+            Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente');
+            return;
+        }
+
         try {
             const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
+            const phoneDigits = telefoneAluno.replace(/\D/g, '');
 
             const alunoData = {
-                nomeAluno,
+                nomeAluno: nomeAluno.trim(),
                 dataNascimentoAluno: dataFormatada,
-                emailAluno,
-                telefoneAluno,
+                emailAluno: emailAluno.trim().toLowerCase(),
+                telefoneAluno: phoneDigits,
                 turmaId,
             };
 
             await onCreate(alunoData);
+            
+            // Limpa o formulário após cadastro bem-sucedido
+            setNomeAluno('');
+            setEmailAluno('');
+            setTelefoneAluno('');
+            setDataNascimento('');
+            setSelectedBirthDate(new Date());
+            setTouched({});
         } catch (error) {
-           
-            Alert.alert('Erro', 'Erro ao cadastrar aluno. Tente novamente.');
+            let errorMessage = 'Erro ao cadastrar aluno. Tente novamente mais tarde.';
+            
+            if (error.response) {
+                if (error.response.status === 400) {
+                    errorMessage = 'Dados inválidos. Verifique as informações.';
+                } else if (error.response.status === 409) {
+                    errorMessage = 'Email já cadastrado para outro aluno.';
+                }
+            }
+            
+            Alert.alert('Erro', errorMessage);
         }
+    };
+
+    const isFormValid = () => {
+        return nomeAluno && 
+               emailAluno && 
+               telefoneAluno && 
+               dataNascimento && 
+               Object.keys(errors).length === 0;
     };
 
     return (
@@ -59,43 +171,56 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
                     </TouchableOpacity>
                     
-                    {/* Static profile image instead of image picker */}
-                   
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors.nomeAluno && styles.inputError]}
                         placeholder="Nome Completo"
                         placeholderTextColor="#AAA"
                         value={nomeAluno}
                         onChangeText={setNomeAluno}
+                        onBlur={() => handleBlur('nomeAluno')}
                         editable={!isCreating}
                     />
+                    {errors.nomeAluno && <Text style={styles.errorText}>{errors.nomeAluno}</Text>}
+                    
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors.emailAluno && styles.inputError]}
                         placeholder="Email"
                         placeholderTextColor="#AAA"
                         keyboardType="email-address"
+                        autoCapitalize="none"
                         value={emailAluno}
                         onChangeText={setEmailAluno}
+                        onBlur={() => handleBlur('emailAluno')}
                         editable={!isCreating}
                     />
+                    {errors.emailAluno && <Text style={styles.errorText}>{errors.emailAluno}</Text>}
+                    
                     <TextInput
-                        style={styles.input}
-                        placeholder="Telefone"
+                        style={[styles.input, errors.telefoneAluno && styles.inputError]}
+                        placeholder="Telefone (XX) XXXXX-XXXX"
                         placeholderTextColor="#AAA"
                         keyboardType="phone-pad"
                         value={telefoneAluno}
-                        onChangeText={setTelefoneAluno}
+                        onChangeText={handlePhoneChange}
+                        onBlur={() => handleBlur('telefoneAluno')}
                         editable={!isCreating}
+                        maxLength={15}
                     />
+                    {errors.telefoneAluno && <Text style={styles.errorText}>{errors.telefoneAluno}</Text>}
 
                     <Text style={styles.label}>Data de Nascimento</Text>
                     <View style={styles.dateContainer}>
                         <TextInput
-                            style={[styles.input, styles.dateInput]}
+                            style={[
+                                styles.input, 
+                                styles.dateInput,
+                                errors.dataNascimento && styles.inputError
+                            ]}
                             placeholder="Selecione a data de nascimento"
                             placeholderTextColor="#666"
                             value={dataNascimento}
                             editable={false}
+                            onFocus={() => !isCreating && setShowBirthDatePicker(true)}
                         />
                         <TouchableOpacity
                             style={styles.dateIconButton}
@@ -105,22 +230,25 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                             <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
                         </TouchableOpacity>
                     </View>
+                    {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
                     {showBirthDatePicker && (
                         <DateTimePicker
                             value={selectedBirthDate}
                             mode="date"
                             display="default"
                             onChange={handleBirthDateChange}
+                            maximumDate={new Date()}
+                            minimumDate={new Date(1900, 0, 1)}
                         />
                     )}
 
                     <TouchableOpacity 
                         style={[
                             styles.saveButton,
-                            isCreating && styles.saveButtonDisabled
+                            (!isFormValid() || isCreating) && styles.saveButtonDisabled
                         ]} 
                         onPress={handleCadastrar}
-                        disabled={isCreating}
+                        disabled={!isFormValid() || isCreating}
                     >
                         {isCreating ? (
                             <ActivityIndicator size="small" color="#FFF" />
@@ -156,26 +284,22 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         zIndex: 10,
     },
-    profileImageContainer: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#F0F7FF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 15,
-        overflow: 'hidden',
-    },
-    profileImage: {
-        width: '100%',
-        height: '100%',
-    },
     input: {
         width: '100%',
         height: 45,
         backgroundColor: '#F0F7FF',
         borderRadius: 8,
         paddingHorizontal: 10,
+        marginBottom: 5,
+    },
+    inputError: {
+        borderColor: '#FF3B30',
+        borderWidth: 1,
+    },
+    errorText: {
+        alignSelf: 'flex-start',
+        color: '#FF3B30',
+        fontSize: 12,
         marginBottom: 10,
     },
     label: {
@@ -189,7 +313,7 @@ const styles = StyleSheet.create({
     dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 5,
         width: '100%',
     },
     dateInput: {

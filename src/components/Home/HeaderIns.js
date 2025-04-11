@@ -136,7 +136,7 @@ export default function HeaderIns() {
           </TouchableOpacity>
 
           <View style={styles.menuItem}>
-            <TouchableOpacity onPress={() => navigation.navigate('PerfilInstitution')}>
+           
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
                 <View style={{ flexDirection: 'row', gap: 20 }}>
                   <Image style={styles.imgPerfil} source={require('../../assets/image/ins.png')} />
@@ -146,10 +146,10 @@ export default function HeaderIns() {
                 </View>
                 <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
               </View>
-            </TouchableOpacity>
+
           </View>
 
-          <View style={[styles.menuItem, { height: 'auto' }]}>
+          <View style={[styles.menuItem, { height: 'auto', borderRadius: 20 }]}>
             <CustomCalendar events={events} />
           </View>
 
