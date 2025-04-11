@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { 
+  StyleSheet, 
+  TextInput, 
+  View, 
+  ActivityIndicator, 
+  TouchableOpacity, 
+  Text, 
+  ScrollView, 
+  Alert,
+  Image,
+  Modal
+} from 'react-native';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import Icon from 'react-native-vector-icons/Feather';
 import CardAlunos from '../CardAlunos';
@@ -8,7 +19,6 @@ import { useTheme } from '../../../path/ThemeContext';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import GraficoFeedback from '../../Gerais/GraficoFeedback';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
 
 export default function AlunosFeedback({ route }) {
@@ -22,11 +32,12 @@ export default function AlunosFeedback({ route }) {
     const [userToken, setUserToken] = useState(null);
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const navigation = useNavigation();
 
-    // Constantes para paginação
-    const ALUNOS_POR_PAGINA = 10;
     const { turmaId } = route.params;
+    const ALUNOS_POR_PAGINA = 10;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -47,7 +58,6 @@ export default function AlunosFeedback({ route }) {
                 setUserToken(token);
             } catch (error) {
                 setError('Erro ao buscar dados. Tente novamente mais tarde.');
-          
             } finally {
                 setLoading(false);
             }
@@ -55,6 +65,25 @@ export default function AlunosFeedback({ route }) {
 
         fetchData();
     }, [turmaId]);
+
+    const fetchMediasFeedbacks = async () => {
+        try {
+            const response = await axios.get(`http://10.0.2.2:3000/api/class/feedback/${turmaId}`);
+            const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
+            
+            setDadosGrafico([
+                mediaResposta1 || 0,
+                mediaResposta2 || 0,
+                mediaResposta3 || 0,
+                mediaResposta4 || 0,
+                mediaResposta5 || 0
+            ]);
+            setTotalFeedbacks(totalFeedbacks || 0);
+        } catch (error) {
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            setTotalFeedbacks(0);
+        }
+    };
 
     // Função para obter alunos da página atual
     const getAlunosPaginaAtual = () => {
@@ -80,27 +109,22 @@ export default function AlunosFeedback({ route }) {
         const botoes = [];
         const maxBotoes = 3; // Número máximo de botões de página a mostrar
         
-        // Se tiver poucas páginas, mostra todas
         if (totalPaginas <= maxBotoes) {
             for (let i = 1; i <= totalPaginas; i++) {
                 botoes.push(i);
             }
         } else {
-            // Lógica para mostrar botões com ellipsis
             if (paginaSelecionada <= 2) {
-                // Mostrar as primeiras páginas
                 for (let i = 1; i <= maxBotoes; i++) {
                     botoes.push(i);
                 }
                 botoes.push('>');
             } else if (paginaSelecionada >= totalPaginas - 1) {
-                // Mostrar as últimas páginas
                 botoes.push('<');
                 for (let i = totalPaginas - 2; i <= totalPaginas; i++) {
                     botoes.push(i);
                 }
             } else {
-                // Mostrar página atual no meio
                 botoes.push('<');
                 botoes.push(paginaSelecionada);
                 botoes.push('>');
@@ -120,23 +144,14 @@ export default function AlunosFeedback({ route }) {
         }
     };
 
-    const fetchMediasFeedbacks = async () => {
-        try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/feedback/${turmaId}`);
-            const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
-            
-            setDadosGrafico([
-                mediaResposta1,
-                mediaResposta2,
-                mediaResposta3,
-                mediaResposta4,
-                mediaResposta5
-            ]);
-            setTotalFeedbacks(totalFeedbacks);
-        } catch (error) {
-           
-            setDadosGrafico([0, 0, 0, 0, 0]);
-            setTotalFeedbacks(0);
+    // Função para lidar com o clique em uma barra do gráfico
+    const handleBarraClick = (categoria, valor) => {
+        if (valor > 0) {
+            setBarraSelecionada({
+                label: categoria,
+                value: valor
+            });
+            setModalBarraVisible(true);
         }
     };
 
@@ -145,27 +160,28 @@ export default function AlunosFeedback({ route }) {
             alert('Por favor, insira um feedback.');
             return;
         }
-
+    
         const feedbackData = {
             conteudo: feedbackConteudo,
-            createdBy: { id: professorId },
-            classSt: { id: turmaId }
+            createdBy: professorId,  // Apenas o ID como string
+            classSt: turmaId        // Apenas o ID como string
         };
-
+    
         try {
-            const response = await axios.post('http://10.0.2.2:3000/api/feedbackTeacher', feedbackData, {
+            const response = await axios.post('http://10.0.2.2:3000/api/teacher/student', feedbackData, {
                 headers: {
-                    Authorization: `Bearer ${userToken}`
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
                 }
             });
-
+    
             if (response.status >= 200 && response.status < 300) {
                 alert('Feedback adicionado com sucesso!');
                 setFeedbackConteudo('');
-                await fetchMediasFeedbacks();
+                await fetchMediasFeedbacks(); // Atualiza os dados do gráfico se necessário
             }
         } catch (error) {
-         
+            console.error('Erro ao enviar feedback:', error);
             alert('Erro ao enviar feedback. Tente novamente mais tarde.');
         }
     };
@@ -198,7 +214,7 @@ export default function AlunosFeedback({ route }) {
     const botoesPagina = getBotoesPagina();
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <ScrollView>
                 <HeaderSimples />
                 <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', paddingBottom: 40 }]}>
@@ -212,7 +228,7 @@ export default function AlunosFeedback({ route }) {
                     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: isDarkMode ? '#FFF' : '#000' }]}
                                 placeholder="Digite o nome ou número da matrícula"
                                 placeholderTextColor="#756262"
                             />
@@ -254,10 +270,25 @@ export default function AlunosFeedback({ route }) {
                         </View>
                         
                         <View style={styles.graficoContainer}>
-                            <GraficoFeedbackTurma
-                                dadosGrafico={dadosGrafico}
-                                totalFeedbacks={totalFeedbacks}
-                            />
+                            {totalFeedbacks === 0 ? (
+                                <View style={styles.semFeedbacksContainer}>
+                                    <Image
+                                        source={require('../../../assets/image/sem-feedback.png')}
+                                        style={styles.semFeedbacksImagem}
+                                    />
+                                    <Text style={[styles.semFeedbacksTitulo, { color: isDarkMode ? 'white' : 'black' }]}>
+                                        Nenhum feedback encontrado
+                                    </Text>
+                                    <Text style={[styles.semFeedbacksTexto, { color: isDarkMode ? 'white' : 'black' }]}>
+                                        Nenhum professor enviou feedbacks para esta turma ainda
+                                    </Text>
+                                </View>
+                            ) : (
+                                <GraficoFeedbackTurma
+                                    dadosGrafico={dadosGrafico}
+                                    onBarraClick={handleBarraClick}
+                                />
+                            )}
                         </View>
                         
                         <View style={styles.feedbackSection}>
@@ -274,13 +305,35 @@ export default function AlunosFeedback({ route }) {
                                     multiline
                                 />
                             </View>
-                            <TouchableOpacity onPress={handleAdicionarFeedback} style={styles.feedbackButton}>
+                            <TouchableOpacity 
+                                onPress={handleAdicionarFeedback} 
+                                style={[styles.feedbackButton, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}
+                            >
                                 <Text style={styles.feedbackButtonText}>Enviar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Modal para exibir detalhes da barra do gráfico */}
+            <Modal visible={modalBarraVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
+                        <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
+                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                            {barraSelecionada.value.toFixed(1)}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                            onPress={() => setModalBarraVisible(false)}
+                        >
+                            <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -308,13 +361,11 @@ const styles = StyleSheet.create({
         height: 400
     },
     container: {
-        backgroundColor: 'white',
         width: '100%',
         padding: 10,
         borderRadius: 16
     },
     tela: {
-        backgroundColor: '#F0F7FF',
         width: '100%',
         height: '100%',
         padding: 10
@@ -338,7 +389,6 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         width: '100%',
         paddingHorizontal: 15,
-        backgroundColor: '#FFF',
         marginBottom: 10,
         marginTop: 10
     },
@@ -348,7 +398,6 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
         paddingVertical: 10,
     },
     selecao: {
@@ -377,7 +426,6 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
     },
     feedbackButton: {
-        backgroundColor: '#1A85FF',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 10,
@@ -386,5 +434,71 @@ const styles = StyleSheet.create({
     feedbackButtonText: {
         color: '#FFF',
         fontWeight: 'bold',
-    }
+    },
+    semFeedbacksContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+    },
+    semFeedbacksImagem: {
+        width: 150,
+        height: 150,
+        marginBottom: 20,
+        opacity: 0.7
+    },
+    semFeedbacksTitulo: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    semFeedbacksTexto: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20, 
+    },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        backgroundColor: '#1E6BE6',
+        borderRadius: 12,
+        width: '80%',
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
+        alignItems: 'center'
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalItem: {
+        padding: 15,
+        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    modalText: {
+        fontSize: 16,
+        textAlign: 'center'
+    },
+    cancelButton: {
+        paddingVertical: 12,
+        borderRadius: 8,
+        width: '45%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontWeight: 'bold',
+    },
 });

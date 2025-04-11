@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import { useTheme } from '../../../path/ThemeContext';
@@ -21,7 +21,8 @@ export default function Alunos() {
     const [isCreating, setIsCreating] = useState(false);
     const navigation = useNavigation();
     const [nomeTurma, setNomeTurma] = useState('');
-
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
+   const [modalBarraVisible, setModalBarraVisible] = useState(false);
     // Estados para o gráfico de feedback
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
@@ -66,10 +67,19 @@ export default function Alunos() {
             setAlunos(alunosComMedias);
             setError(null);
         } catch (error) {
-            
+
             setError('Erro ao buscar alunos. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
+        }
+    };
+    const handleBarraClick = (categoria, valor) => {
+        if (valor > 0) {
+            setBarraSelecionada({
+                label: categoria,
+                value: valor
+            });
+            setModalBarraVisible(true);
         }
     };
 
@@ -94,7 +104,7 @@ export default function Alunos() {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-          
+
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
         }
@@ -128,7 +138,7 @@ export default function Alunos() {
                 setModalCriarVisible(false); // Fecha o modal
             }
         } catch (error) {
-           
+
             Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.');
         } finally {
             setIsCreating(false);
@@ -175,8 +185,8 @@ export default function Alunos() {
 
     return (
         <ScrollView style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderSimples 
-            titulo="ALUNOS"
+            <HeaderSimples
+                titulo="ALUNOS"
             />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
@@ -249,6 +259,8 @@ export default function Alunos() {
                             <GraficoFeedbackTurma
                                 dadosGrafico={dadosGrafico}
                                 totalFeedbacks={totalFeedbacks}
+
+                                onBarraClick={handleBarraClick}
                             />
                         </View>
                         <CadastroAlunoModal
@@ -261,6 +273,23 @@ export default function Alunos() {
                     </View>
                 </View>
             </View>
+             <Modal visible={modalBarraVisible} transparent animationType="slide">
+                            <View style={styles.modalBackdrop}>
+                                <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
+                                    <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
+                                    <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                                        {barraSelecionada.value.toFixed(1)}
+                                    </Text>
+            
+                                    <TouchableOpacity
+                                        style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                                        onPress={() => setModalBarraVisible(false)}
+                                    >
+                                        <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Modal>
         </ScrollView>
     );
 }
@@ -368,6 +397,49 @@ const styles = StyleSheet.create({
     },
     notasText: {
         color: '#1A85FF',
+        fontWeight: 'bold',
+    },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        backgroundColor: '#1E6BE6',
+        borderRadius: 12,
+        width: '80%',
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
+        alignItems: 'center'
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalItem: {
+        padding: 15,
+        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    modalText: {
+        fontSize: 16,
+        textAlign: 'center'
+    },
+    cancelButton: {
+        paddingVertical: 12,
+        borderRadius: 8,
+        width: '45%',
+        alignItems: 'center',
+    },
+    buttonText: {
         fontWeight: 'bold',
     },
 });
