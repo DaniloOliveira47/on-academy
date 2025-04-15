@@ -29,7 +29,7 @@ export default function HomeInstituicao() {
 
     const fetchMessages = async () => {
         try {
-            const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
+            const { data } = await axios.get('http://10.92.198.51:3000/api/reminder');
 
             data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
@@ -44,7 +44,7 @@ export default function HomeInstituicao() {
     useEffect(() => {
         const fetchTurmas = async () => {
             try {
-                const response = await axios.get('http://10.0.2.2:3000/api/class');
+                const response = await axios.get('http://10.92.198.51:3000/api/class');
                 console.log('Resposta da API:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
@@ -87,7 +87,7 @@ export default function HomeInstituicao() {
                 classSt: { id: turmaSelecionada },
             };
 
-            await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
+            await axios.post('http://10.92.198.51:3000/api/reminder', avisoData);
 
             // Recarrega os avisos após o envio
             await fetchMessages();

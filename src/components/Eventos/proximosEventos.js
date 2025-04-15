@@ -25,7 +25,7 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
 
       {/* Detalhes do evento */}
       <View>
-        <View style={{width: 260}}>
+        <View style={{paddingRight: 50}}>
         <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
           {titulo}
         </Text>

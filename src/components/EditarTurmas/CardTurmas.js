@@ -15,7 +15,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     const [modalNovaDisciplinaVisible, setModalNovaDisciplinaVisible] = useState(false);
     const [novaDisciplina, setNovaDisciplina] = useState('');
     const [editTurma, setEditTurma] = useState('');
-    const [editAnoLetivo, setEditAnoLetivo] = useState('2025-01-01');
+    const [editAnoLetivo, setEditAnoLetivo] = useState('2025');
     const [editPeriodo, setEditPeriodo] = useState('');
     const [editCapacidade, setEditCapacidade] = useState('35');
     const [editSala, setEditSala] = useState('01');
@@ -47,8 +47,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             }
 
             setIsLoading(true);
-            
-            const response = await axios.post('http://10.0.2.2:3000/api/discipline', {
+
+            const response = await axios.post('http://10.92.198.51:3000/api/discipline', {
                 nomeDisciplina: novaDisciplina
             }, {
                 headers: {
@@ -58,10 +58,10 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
             // Atualiza a lista de disciplinas
             await fetchDisciplinas();
-            
+
             // Seleciona automaticamente a nova disciplina
             setSelectedDisciplinas(prev => [...prev, response.data.id]);
-            
+
             Alert.alert('Sucesso', 'Disciplina registrada com sucesso!');
             setModalNovaDisciplinaVisible(false);
             setNovaDisciplina('');
@@ -77,26 +77,26 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     const abrirModalEdicao = async () => {
         setModalVisible(true);
         setIsFetchingDetails(true);
-        
+
         try {
             // Busca os detalhes completos da turma
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/teacher/disciplinas/${turmaId}`);
+            const response = await axios.get(`http://10.92.198.51:3000/api/class/teacher/disciplinas/${turmaId}`);
             const turmaDetalhada = response.data;
-            
+
             // Atualiza os estados com os dados da turma
             setEditTurma(turmaDetalhada.nomeTurma || '');
-            setEditAnoLetivo(turmaDetalhada.anoLetivoTurma || '2025-01-01');
+            setEditAnoLetivo(turmaDetalhada.anoLetivoTurma || '2025');
             setEditPeriodo(turmaDetalhada.periodoTurma || periodo || 'Manhã');
             setEditCapacidade(turmaDetalhada.capacidadeMaximaTurma?.toString() || '35');
             setEditSala(turmaDetalhada.salaTurma?.toString() || '01');
-            
+
             // Atualiza professores e disciplinas selecionados
             const professoresIds = turmaDetalhada.teachers.map(prof => prof.id);
             setSelectedProfessores(professoresIds);
-            
+
             const disciplinasIds = turmaDetalhada.disciplines.map(disc => disc.id);
             setSelectedDisciplinas(disciplinasIds);
-            
+
         } catch (error) {
             console.error('Erro ao buscar detalhes da turma:', error);
             Alert.alert('Erro', 'Não foi possível carregar os detalhes da turma');
@@ -129,12 +129,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         onPress: async () => {
                             setIsLoading(true);
                             try {
-                                await axios.delete(`http://10.0.2.2:3000/api/class/${turmaId}`, {
+                                await axios.delete(`http://10.92.198.51:3000/api/class/${turmaId}`, {
                                     headers: {
                                         Authorization: `Bearer ${token}`
                                     }
                                 });
-                    
+
                                 Alert.alert('Sucesso', 'Turma excluída com sucesso!');
                                 onDelete(turmaId); // Chame a função onDelete passada como prop
                             } catch (error) {
@@ -179,7 +179,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 disciplineId: selectedDisciplinas
             };
 
-            await axios.put(`http://10.0.2.2:3000/api/class/${turmaId}`, dadosAtualizados, {
+            await axios.put(`http://10.92.198.51:3000/api/class/${turmaId}`, dadosAtualizados, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -214,7 +214,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
+            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
@@ -223,7 +223,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/discipline');
+            const response = await axios.get('http://10.92.198.51:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);
@@ -248,8 +248,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             </Text>
 
             <View style={styles.botoesContainer}>
-                <TouchableOpacity 
-                    onPress={handleNavigate} 
+                <TouchableOpacity
+                    onPress={handleNavigate}
                     style={styles.botao}
                     disabled={isLoading}
                 >
@@ -257,15 +257,15 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         {isLoading ? 'Carregando...' : 'Visualizar Turma'}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={abrirModalEdicao} 
+                <TouchableOpacity
+                    onPress={abrirModalEdicao}
                     style={styles.iconeBotao}
                     disabled={isLoading}
                 >
                     <Icon name="edit" size={20} color={isLoading ? 'gray' : (isDarkMode ? 'white' : 'black')} />
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={deletarTurma} 
+                <TouchableOpacity
+                    onPress={deletarTurma}
                     style={styles.iconeBotao}
                     disabled={isLoading}
                 >
@@ -296,9 +296,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
                                 <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
                                 <Picker
-                                    selectedValue={editAnoLetivo.split('-')[0]}
+                                    selectedValue={editAnoLetivo}
                                     style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                    onValueChange={(itemValue) => setEditAnoLetivo(`${itemValue}-01-01`)}>
+                                    onValueChange={(itemValue) => setEditAnoLetivo(itemValue)}>
                                     <Picker.Item label="2024" value="2024" />
                                     <Picker.Item label="2025" value="2025" />
                                     <Picker.Item label="2026" value="2026" />
@@ -309,9 +309,10 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                     selectedValue={editPeriodo}
                                     style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
                                     onValueChange={(itemValue) => setEditPeriodo(itemValue)}>
-                                    <Picker.Item label="Manhã" value="Manhã" />
-                                    <Picker.Item label="Tarde" value="Tarde" />
-                                    <Picker.Item label="Noite" value="Noite" />
+                                    <Picker.Item label="Vespertino" value="Vesprtino" />
+                                    <Picker.Item label="Matutino" value="Matutino" />
+                                    <Picker.Item label="Noturno" value="Noturno" />
+                                    <Picker.Item label="Integral" value="Integral" />
                                 </Picker>
 
                                 <View style={styles.rowLabels}>
@@ -357,7 +358,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                     <View style={styles.checkboxColumn}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
-                                            <TouchableOpacity 
+                                            <TouchableOpacity
                                                 onPress={() => setModalNovaDisciplinaVisible(true)}
                                                 style={styles.botaoNovaDisciplina}
                                             >
@@ -381,15 +382,15 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         )}
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoCancelar]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoCancelar]}
                                 onPress={() => setModalVisible(false)}
                                 disabled={isLoading || isFetchingDetails}
                             >
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoSalvar, (isLoading || isFetchingDetails) && { opacity: 0.6 }]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoSalvar, (isLoading || isFetchingDetails) && { opacity: 0.6 }]}
                                 onPress={salvarEdicao}
                                 disabled={isLoading || isFetchingDetails}
                             >
@@ -418,8 +419,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         />
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoCancelar]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoCancelar]}
                                 onPress={() => {
                                     setModalNovaDisciplinaVisible(false);
                                     setNovaDisciplina('');
@@ -427,8 +428,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                             >
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoSalvar]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoSalvar]}
                                 onPress={registrarNovaDisciplina}
                                 disabled={isLoading}
                             >

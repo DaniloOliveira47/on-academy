@@ -63,7 +63,7 @@ export default function Turmas() {
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/class');
+            const response = await axios.get('http://10.92.198.51:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
                 setTurmasFiltradas(response.data);
@@ -79,7 +79,7 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/teacher');
+            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
@@ -88,7 +88,7 @@ export default function Turmas() {
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://10.0.2.2:3000/api/discipline');
+            const response = await axios.get('http://10.92.198.51:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);
@@ -105,24 +105,24 @@ export default function Turmas() {
     // Função para abrir o modal de edição com dados detalhados
     const abrirModalEditar = async (turma) => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/class/teacher/disciplinas/${turma.id}`);
+            const response = await axios.get(`http://10.92.198.51:3000/api/class/teacher/disciplinas/${turma.id}`);
             const turmaDetalhada = response.data;
-            
+
             setTurmaEditando(turmaDetalhada);
             setNovaTurma(turmaDetalhada.nomeTurma);
             setNovoAno(new Date(turmaDetalhada.anoLetivoTurma).getFullYear().toString());
             setNovoPeriodo(turmaDetalhada.periodoTurma);
             setNovaCapacidade(turmaDetalhada.capacidadeMaximaTurma.toString());
             setNovaSala(turmaDetalhada.salaTurma.toString());
-            
+
             // Set selected professors
             const professoresIds = turmaDetalhada.teachers.map(prof => prof.id);
             setSelectedProfessores(professoresIds);
-            
+
             // Set selected disciplines
             const disciplinasIds = turmaDetalhada.disciplines.map(disc => disc.id);
             setSelectedDisciplinas(disciplinasIds);
-            
+
             setModalEditarVisible(true);
         } catch (error) {
             console.error('Erro ao buscar detalhes da turma:', error);
@@ -139,7 +139,7 @@ export default function Turmas() {
                 return;
             }
 
-            const anoLetivoTurma = `${novoAno}-01-01T00:00:00.000Z`;
+            const anoLetivoTurma = novoAno;
 
             const turmaData = {
                 nomeTurma: novaTurma,
@@ -151,7 +151,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.post('http://10.0.2.2:3000/api/class', turmaData, {
+            await axios.post('http://10.92.198.51:3000/api/class', turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -186,7 +186,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.put(`http://10.0.2.2:3000/api/class/${turmaEditando.id}`, turmaData, {
+            await axios.put(`http://10.92.198.51:3000/api/class/${turmaEditando.id}`, turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -216,7 +216,7 @@ export default function Turmas() {
             }
 
             const response = await axios.post(
-                'http://10.0.2.2:3000/api/discipline',
+                'http://10.92.198.51:3000/api/discipline',
                 { nomeDisciplina: novaDisciplina },
                 {
                     headers: {
@@ -326,7 +326,7 @@ export default function Turmas() {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 550, padding: 20 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 570, padding: 20 }}>
                         <TouchableOpacity
                             style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}>
@@ -386,9 +386,10 @@ export default function Turmas() {
                                 style={pickerStyle}
                                 dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
-                                <Picker.Item label="Manhã" value="Manhã" />
-                                <Picker.Item label="Tarde" value="Tarde" />
-                                <Picker.Item label="Noite" value="Noite" />
+                                <Picker.Item label="Vespertino" value="Vesprtino" />
+                                <Picker.Item label="Matutino" value="Matutino" />
+                                <Picker.Item label="Noturno" value="Noturno" />
+                                <Picker.Item label="Integral" value="Integral" />
                             </Picker>
 
                             <View style={styles.rowLabels}>
@@ -430,7 +431,15 @@ export default function Turmas() {
                                 </View>
 
                                 <View style={styles.checkboxColumn}>
+                                    <View style={{flexDirection: 'row', alignItems: 'center', marginTop: -11}}>
                                     <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setModalNovaDisciplinaVisible(true)}
+                                        style={styles.botaoNovaDisciplina}
+                                    >
+                                        <Icon name="plus" size={20} color={isDarkMode ? '#1A85FF' : '#007AFF'} />
+                                    </TouchableOpacity>
+                                    </View>
                                     {disciplinas.map((disciplina) => (
                                         <View key={disciplina.id} style={styles.checkboxContainer}>
                                             <Checkbox
@@ -441,12 +450,7 @@ export default function Turmas() {
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
                                         </View>
                                     ))}
-                                    <TouchableOpacity 
-                                        style={[styles.botaoNovaDisciplina, { backgroundColor: isDarkMode ? '#1A85FF' : '#007AFF' }]}
-                                        onPress={() => setModalNovaDisciplinaVisible(true)}
-                                    >
-                                        <Text style={{ color: 'white', textAlign: 'center' }}>Registrar Nova Disciplina</Text>
-                                    </TouchableOpacity>
+                               
                                 </View>
                             </View>
                         </ScrollView>
@@ -499,9 +503,10 @@ export default function Turmas() {
                                 style={pickerStyle}
                                 dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
-                                <Picker.Item label="Manhã" value="Manhã" />
-                                <Picker.Item label="Tarde" value="Tarde" />
-                                <Picker.Item label="Noite" value="Noite" />
+                                <Picker.Item label="Vespertino" value="Vesprtino" />
+                                <Picker.Item label="Matutino" value="Matutino" />
+                                <Picker.Item label="Noturno" value="Noturno" />
+                                <Picker.Item label="Integral" value="Integral" />
                             </Picker>
 
                             <View style={styles.rowLabels}>
@@ -554,7 +559,7 @@ export default function Turmas() {
                                             <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
                                         </View>
                                     ))}
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.botaoNovaDisciplina, { backgroundColor: isDarkMode ? '#1A85FF' : '#007AFF' }]}
                                         onPress={() => setModalNovaDisciplinaVisible(true)}
                                     >
@@ -595,8 +600,8 @@ export default function Turmas() {
                         />
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoCancelar]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoCancelar]}
                                 onPress={() => {
                                     setModalNovaDisciplinaVisible(false);
                                     setNovaDisciplina('');
@@ -604,8 +609,8 @@ export default function Turmas() {
                             >
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoSalvar]} 
+                            <TouchableOpacity
+                                style={[styles.botaoAcao, styles.botaoSalvar]}
                                 onPress={registrarNovaDisciplina}
                             >
                                 <Text style={styles.textoBotao}>Registrar</Text>
