@@ -8,10 +8,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
 
-export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete }) {
+export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete, onEditSuccess }) {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
+    const [modalNovaDisciplinaVisible, setModalNovaDisciplinaVisible] = useState(false);
+    const [novaDisciplina, setNovaDisciplina] = useState('');
     const [editTurma, setEditTurma] = useState('');
     const [editAnoLetivo, setEditAnoLetivo] = useState('2025-01-01');
     const [editPeriodo, setEditPeriodo] = useState('');
@@ -22,19 +24,86 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     const [professores, setProfessores] = useState([]);
     const [disciplinas, setDisciplinas] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
-    // Inicializa os estados com os dados da turma
+    // Busca professores e disciplinas ao carregar o componente
     useEffect(() => {
-        if (turma) {
-            setEditTurma(turma.nomeTurma || '');
-            setEditAnoLetivo(turma.anoLetivoTurma || '2025-01-01');
-            setEditPeriodo(turma.periodoTurma || periodo || 'Manhã');
-            setEditCapacidade(turma.capacidadeMaximaTurma?.toString() || '35');
-            setEditSala(turma.salaTurma?.toString() || '01');
-            setSelectedProfessores(turma.idTeacher || []);
-            setSelectedDisciplinas(turma.disciplineId || []);
+        fetchProfessores();
+        fetchDisciplinas();
+    }, []);
+
+    // Função para registrar nova disciplina
+    const registrarNovaDisciplina = async () => {
+        if (!novaDisciplina.trim()) {
+            Alert.alert('Erro', 'Por favor, insira um nome para a disciplina');
+            return;
         }
-    }, [turma, periodo]);
+
+        try {
+            const token = await AsyncStorage.getItem('@user_token');
+            if (!token) {
+                console.error('Token não encontrado no AsyncStorage');
+                return;
+            }
+
+            setIsLoading(true);
+            
+            const response = await axios.post('http://10.0.2.2:3000/api/discipline', {
+                nomeDisciplina: novaDisciplina
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Atualiza a lista de disciplinas
+            await fetchDisciplinas();
+            
+            // Seleciona automaticamente a nova disciplina
+            setSelectedDisciplinas(prev => [...prev, response.data.id]);
+            
+            Alert.alert('Sucesso', 'Disciplina registrada com sucesso!');
+            setModalNovaDisciplinaVisible(false);
+            setNovaDisciplina('');
+        } catch (error) {
+            console.error('Erro ao registrar disciplina:', error);
+            Alert.alert('Erro', 'Não foi possível registrar a disciplina');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Função para abrir o modal e buscar os detalhes da turma
+    const abrirModalEdicao = async () => {
+        setModalVisible(true);
+        setIsFetchingDetails(true);
+        
+        try {
+            // Busca os detalhes completos da turma
+            const response = await axios.get(`http://10.0.2.2:3000/api/class/teacher/disciplinas/${turmaId}`);
+            const turmaDetalhada = response.data;
+            
+            // Atualiza os estados com os dados da turma
+            setEditTurma(turmaDetalhada.nomeTurma || '');
+            setEditAnoLetivo(turmaDetalhada.anoLetivoTurma || '2025-01-01');
+            setEditPeriodo(turmaDetalhada.periodoTurma || periodo || 'Manhã');
+            setEditCapacidade(turmaDetalhada.capacidadeMaximaTurma?.toString() || '35');
+            setEditSala(turmaDetalhada.salaTurma?.toString() || '01');
+            
+            // Atualiza professores e disciplinas selecionados
+            const professoresIds = turmaDetalhada.teachers.map(prof => prof.id);
+            setSelectedProfessores(professoresIds);
+            
+            const disciplinasIds = turmaDetalhada.disciplines.map(disc => disc.id);
+            setSelectedDisciplinas(disciplinasIds);
+            
+        } catch (error) {
+            console.error('Erro ao buscar detalhes da turma:', error);
+            Alert.alert('Erro', 'Não foi possível carregar os detalhes da turma');
+        } finally {
+            setIsFetchingDetails(false);
+        }
+    };
 
     // Navega para outra tela com os dados da turma
     const handleNavigate = () => {
@@ -79,7 +148,6 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 ]
             );
         } catch (error) {
-         
             Alert.alert('Erro', 'Erro ao deletar turma. Tente novamente.');
         }
     };
@@ -119,8 +187,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
             Alert.alert('Sucesso', 'Turma atualizada com sucesso!');
             setModalVisible(false);
+            if (onEditSuccess) onEditSuccess(); // Notifica o componente pai sobre a edição
         } catch (error) {
-           
+            console.error('Erro ao atualizar turma:', error);
             Alert.alert('Erro', 'Erro ao atualizar turma. Tente novamente.');
         } finally {
             setIsLoading(false);
@@ -148,7 +217,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             const response = await axios.get('http://10.0.2.2:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
-            
+            console.error('Erro ao buscar professores:', error);
         }
     };
 
@@ -157,15 +226,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             const response = await axios.get('http://10.0.2.2:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
-           
+            console.error('Erro ao buscar disciplinas:', error);
         }
     };
-
-    // Busca professores e disciplinas ao carregar o componente
-    useEffect(() => {
-        fetchProfessores();
-        fetchDisciplinas();
-    }, []);
 
     return (
         <View style={[styles.card, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
@@ -195,7 +258,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                    onPress={() => setModalVisible(true)} 
+                    onPress={abrirModalEdicao} 
                     style={styles.iconeBotao}
                     disabled={isLoading}
                 >
@@ -216,108 +279,161 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
                         <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Editar Turma</Text>
 
-                        <ScrollView>
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Turma</Text>
-                            <TextInput
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                value={editTurma}
-                                onChangeText={setEditTurma}
-                                placeholder="Digite o nome da turma"
-                                placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-                            />
-
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
-                            <Picker
-                                selectedValue={editAnoLetivo.split('-')[0]}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                onValueChange={(itemValue) => setEditAnoLetivo(`${itemValue}-01-01`)}>
-                                <Picker.Item label="2024" value="2024" />
-                                <Picker.Item label="2025" value="2025" />
-                                <Picker.Item label="2026" value="2026" />
-                            </Picker>
-
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
-                            <Picker
-                                selectedValue={editPeriodo}
-                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                onValueChange={(itemValue) => setEditPeriodo(itemValue)}>
-                                <Picker.Item label="Manhã" value="Manhã" />
-                                <Picker.Item label="Tarde" value="Tarde" />
-                                <Picker.Item label="Noite" value="Noite" />
-                            </Picker>
-
-                            <View style={styles.rowLabels}>
-                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Capacidade Máxima</Text>
-                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Nº da Sala</Text>
+                        {isFetchingDetails ? (
+                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Carregando detalhes da turma...</Text>
                             </View>
-                            <View style={styles.rowInputs}>
+                        ) : (
+                            <ScrollView>
+                                <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Turma</Text>
                                 <TextInput
-                                    style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                    value={editCapacidade}
-                                    onChangeText={setEditCapacidade}
-                                    keyboardType="numeric"
-                                    placeholder="Ex: 35"
+                                    style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                    value={editTurma}
+                                    onChangeText={setEditTurma}
+                                    placeholder="Digite o nome da turma"
                                     placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                 />
-                                <TextInput
-                                    style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                                    value={editSala}
-                                    onChangeText={setEditSala}
-                                    keyboardType="numeric"
-                                    placeholder="Ex: 101"
-                                    placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-                                />
-                            </View>
 
-                            {/* Checkboxes para selecionar professores e disciplinas */}
-                            <View style={styles.checkboxRow}>
-                                <View style={styles.checkboxColumn}>
-                                    <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione os Professores</Text>
-                                    {professores.map((professor) => (
-                                        <View key={professor.id} style={styles.checkboxContainer}>
-                                            <Checkbox
-                                                status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
-                                                onPress={() => handleProfessorSelect(professor.id)}
-                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
-                                                disabled={isLoading}
-                                            />
-                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
-                                        </View>
-                                    ))}
+                                <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
+                                <Picker
+                                    selectedValue={editAnoLetivo.split('-')[0]}
+                                    style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                    onValueChange={(itemValue) => setEditAnoLetivo(`${itemValue}-01-01`)}>
+                                    <Picker.Item label="2024" value="2024" />
+                                    <Picker.Item label="2025" value="2025" />
+                                    <Picker.Item label="2026" value="2026" />
+                                </Picker>
+
+                                <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
+                                <Picker
+                                    selectedValue={editPeriodo}
+                                    style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                    onValueChange={(itemValue) => setEditPeriodo(itemValue)}>
+                                    <Picker.Item label="Manhã" value="Manhã" />
+                                    <Picker.Item label="Tarde" value="Tarde" />
+                                    <Picker.Item label="Noite" value="Noite" />
+                                </Picker>
+
+                                <View style={styles.rowLabels}>
+                                    <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Capacidade Máxima</Text>
+                                    <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Nº da Sala</Text>
+                                </View>
+                                <View style={styles.rowInputs}>
+                                    <TextInput
+                                        style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                        value={editCapacidade}
+                                        onChangeText={setEditCapacidade}
+                                        keyboardType="numeric"
+                                        placeholder="Ex: 35"
+                                        placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                    />
+                                    <TextInput
+                                        style={[styles.modalInput, styles.smallInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                        value={editSala}
+                                        onChangeText={setEditSala}
+                                        keyboardType="numeric"
+                                        placeholder="Ex: 101"
+                                        placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                    />
                                 </View>
 
-                                <View style={styles.checkboxColumn}>
-                                    <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
-                                    {disciplinas.map((disciplina) => (
-                                        <View key={disciplina.id} style={styles.checkboxContainer}>
-                                            <Checkbox
-                                                status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
-                                                onPress={() => handleDisciplinaSelect(disciplina.id)}
-                                                color={isDarkMode ? '#1A85FF' : '#007AFF'}
-                                                disabled={isLoading}
-                                            />
-                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
+                                {/* Checkboxes para selecionar professores e disciplinas */}
+                                <View style={styles.checkboxRow}>
+                                    <View style={styles.checkboxColumn}>
+                                        <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione os Professores</Text>
+                                        {professores.map((professor) => (
+                                            <View key={professor.id} style={styles.checkboxContainer}>
+                                                <Checkbox
+                                                    status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
+                                                    onPress={() => handleProfessorSelect(professor.id)}
+                                                    color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                                    disabled={isLoading}
+                                                />
+                                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={styles.checkboxColumn}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
+                                            <TouchableOpacity 
+                                                onPress={() => setModalNovaDisciplinaVisible(true)}
+                                                style={styles.botaoNovaDisciplina}
+                                            >
+                                                <Icon name="plus" size={20} color={isDarkMode ? '#1A85FF' : '#007AFF'} />
+                                            </TouchableOpacity>
                                         </View>
-                                    ))}
+                                        {disciplinas.map((disciplina) => (
+                                            <View key={disciplina.id} style={styles.checkboxContainer}>
+                                                <Checkbox
+                                                    status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
+                                                    onPress={() => handleDisciplinaSelect(disciplina.id)}
+                                                    color={isDarkMode ? '#1A85FF' : '#007AFF'}
+                                                    disabled={isLoading}
+                                                />
+                                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
                                 </View>
-                            </View>
-                        </ScrollView>
+                            </ScrollView>
+                        )}
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity 
                                 style={[styles.botaoAcao, styles.botaoCancelar]} 
                                 onPress={() => setModalVisible(false)}
-                                disabled={isLoading}
+                                disabled={isLoading || isFetchingDetails}
                             >
                                 <Text style={styles.textoBotao}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
-                                style={[styles.botaoAcao, styles.botaoSalvar, isLoading && { opacity: 0.6 }]} 
+                                style={[styles.botaoAcao, styles.botaoSalvar, (isLoading || isFetchingDetails) && { opacity: 0.6 }]} 
                                 onPress={salvarEdicao}
-                                disabled={isLoading}
+                                disabled={isLoading || isFetchingDetails}
                             >
                                 <Text style={styles.textoBotao}>
                                     {isLoading ? 'Salvando...' : 'Salvar'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Modal para criar nova disciplina */}
+            <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Registrar Nova Disciplina</Text>
+
+                        <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Disciplina</Text>
+                        <TextInput
+                            style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                            value={novaDisciplina}
+                            onChangeText={setNovaDisciplina}
+                            placeholder="Digite o nome da disciplina"
+                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity 
+                                style={[styles.botaoAcao, styles.botaoCancelar]} 
+                                onPress={() => {
+                                    setModalNovaDisciplinaVisible(false);
+                                    setNovaDisciplina('');
+                                }}
+                            >
+                                <Text style={styles.textoBotao}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.botaoAcao, styles.botaoSalvar]} 
+                                onPress={registrarNovaDisciplina}
+                                disabled={isLoading}
+                            >
+                                <Text style={styles.textoBotao}>
+                                    {isLoading ? 'Registrando...' : 'Registrar'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -445,5 +561,9 @@ const styles = StyleSheet.create({
     },
     botaoCancelar: {
         backgroundColor: '#FF453A',
+    },
+    botaoNovaDisciplina: {
+        padding: 5,
+        borderRadius: 20,
     },
 });

@@ -48,6 +48,52 @@ const formatarData = (dataString) => {
     }
 };
 
+// Funções de validação
+const validarDataNascimento = (date) => {
+    const hoje = new Date();
+    const idade = hoje.getFullYear() - date.getFullYear();
+    const mes = hoje.getMonth() - date.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoje.getDate() < date.getDate())) {
+        return idade - 1;
+    }
+    return idade;
+};
+
+const validarTelefone = (telefone) => {
+    // Aceita (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
+    const regex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$/;
+    return regex.test(telefone);
+};
+
+const formatarTelefone = (input) => {
+    // Remove tudo que não é dígito
+    const numeros = input.replace(/\D/g, '');
+    
+    // Limita a 11 caracteres (DD + 9 dígitos)
+    const limite = numeros.substring(0, 11);
+    
+    // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
+    if (limite.length > 10) {
+        return limite.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (limite.length > 6) {
+        return limite.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    if (limite.length > 2) {
+        return limite.replace(/(\d{2})(\d{0,4})/, '($1) $2');
+    }
+    if (limite.length > 0) {
+        return `(${limite}`;
+    }
+    return '';
+};
+
+const validarEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+};
+
 export default function PerfilProfessor() {
     const route = useRoute();
     const { professorId } = route.params;
@@ -78,6 +124,12 @@ export default function PerfilProfessor() {
     const [selectedFeedback, setSelectedFeedback] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [validationErrors, setValidationErrors] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        nascimento: ''
+    });
 
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
@@ -189,14 +241,74 @@ export default function PerfilProfessor() {
     const handleDateChange = (event, date) => {
         setShowDatePicker(false);
         if (date) {
+            const idade = validarDataNascimento(date);
+            if (idade < 18 || idade > 90) {
+                setValidationErrors(prev => ({
+                    ...prev,
+                    nascimento: 'O professor deve ter entre 18 e 90 anos'
+                }));
+                return;
+            }
+            
             setSelectedDate(date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
             setPerfilEdit({ ...perfilEdit, nascimento: formattedDate });
+            setValidationErrors(prev => ({
+                ...prev,
+                nascimento: ''
+            }));
         }
     };
 
     const showDatepicker = () => {
         setShowDatePicker(true);
+    };
+
+    const handleNomeChange = (text) => {
+        if (text.length > 100) {
+            setValidationErrors(prev => ({
+                ...prev,
+                nome: 'O nome deve ter no máximo 100 caracteres'
+            }));
+            return;
+        }
+        setPerfilEdit({ ...perfilEdit, nome: text });
+        setValidationErrors(prev => ({
+            ...prev,
+            nome: ''
+        }));
+    };
+
+    const handleEmailChange = (text) => {
+        setPerfilEdit({ ...perfilEdit, email: text });
+        if (!validarEmail(text)) {
+            setValidationErrors(prev => ({
+                ...prev,
+                email: 'Por favor, insira um email válido'
+            }));
+        } else {
+            setValidationErrors(prev => ({
+                ...prev,
+                email: ''
+            }));
+        }
+    };
+
+    const handleTelefoneChange = (text) => {
+        const formatted = formatarTelefone(text);
+        setPerfilEdit({ ...perfilEdit, telefone: formatted });
+        
+        if (!validarTelefone(formatted) && formatted.length > 0) {
+            setValidationErrors(prev => ({
+                ...prev,
+                telefone: 'Formato inválido. Use (DD) 9XXXX-XXXX'
+            }));
+        } else {
+            setValidationErrors(prev => ({
+                ...prev,
+                telefone: ''
+            }));
+        }
     };
 
     const pickImage = async () => {
@@ -299,19 +411,37 @@ export default function PerfilProfessor() {
 
     const handleEditSave = async () => {
         try {
-            setUpdating(true);
-            const token = await getAuthToken();
+            // Verificar se há erros de validação
+            const hasErrors = Object.values(validationErrors).some(error => error !== '');
+            if (hasErrors) {
+                Alert.alert('Erro', 'Por favor, corrija os campos destacados antes de salvar');
+                return;
+            }
 
+            // Validações adicionais
             if (!perfilEdit.nome || !perfilEdit.email) {
                 Alert.alert('Erro', 'Nome e email são campos obrigatórios');
                 return;
             }
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(perfilEdit.email)) {
+            if (!validarEmail(perfilEdit.email)) {
                 Alert.alert('Erro', 'Por favor, insira um email válido');
                 return;
             }
+
+            if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
+                Alert.alert('Erro', 'Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                return;
+            }
+
+            const idade = validarDataNascimento(selectedDate);
+            if (idade < 18 || idade > 90) {
+                Alert.alert('Erro', 'O professor deve ter entre 18 e 90 anos');
+                return;
+            }
+
+            setUpdating(true);
+            const token = await getAuthToken();
 
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
             const formattedDate = `${ano}-${mes}-${dia}T00:00:00.000Z`;
@@ -385,6 +515,12 @@ export default function PerfilProfessor() {
             setSelectedDisciplinas(perfil.disciplinas.map(d => d.id));
         } else {
             setPerfilEdit(perfil);
+            setValidationErrors({
+                nome: '',
+                email: '',
+                telefone: '',
+                nascimento: ''
+            });
         }
         setIsEditing(!isEditing);
     };
@@ -627,18 +763,25 @@ export default function PerfilProfessor() {
                                     <TextInput
                                         style={[styles.editNome, { color: textColor }]}
                                         value={perfilEdit.nome}
-                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nome: text })}
+                                        onChangeText={handleNomeChange}
                                         placeholder="Nome do professor"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                        maxLength={100}
                                     />
+                                    {validationErrors.nome ? (
+                                        <Text style={styles.errorText}>{validationErrors.nome}</Text>
+                                    ) : null}
                                     <TextInput
                                         style={[styles.editEmail, { color: textColor }]}
                                         value={perfilEdit.email}
-                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, email: text })}
+                                        onChangeText={handleEmailChange}
                                         placeholder="Email do professor"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                         keyboardType="email-address"
                                     />
+                                    {validationErrors.email ? (
+                                        <Text style={styles.errorText}>{validationErrors.email}</Text>
+                                    ) : null}
                                 </>
                             ) : (
                                 <>
@@ -663,16 +806,27 @@ export default function PerfilProfessor() {
                         <View style={[styles.inline, { width: width * 0.45 }]}>
                             <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
                             {isEditing ? (
-                                <TextInput
-                                    style={[
-                                        styles.inputContainer,
-                                        { color: isDarkMode ? '#FFF' : '#000', backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }
-                                    ]}
-                                    value={perfilEdit.telefone}
-                                    onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
-                                    placeholder="Digite o telefone"
-                                    placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
-                                />
+                                <>
+                                    <TextInput
+                                        style={[
+                                            styles.inputContainer,
+                                            { 
+                                                color: isDarkMode ? '#FFF' : '#000', 
+                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                                borderColor: validationErrors.telefone ? 'red' : 'transparent',
+                                                borderWidth: validationErrors.telefone ? 1 : 0
+                                            }
+                                        ]}
+                                        value={perfilEdit.telefone}
+                                        onChangeText={handleTelefoneChange}
+                                        placeholder="(00) 00000-0000"
+                                        placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                        keyboardType="phone-pad"
+                                    />
+                                    {validationErrors.telefone ? (
+                                        <Text style={styles.errorText}>{validationErrors.telefone}</Text>
+                                    ) : null}
+                                </>
                             ) : (
                                 <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                                     <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
@@ -688,7 +842,15 @@ export default function PerfilProfessor() {
                             {isEditing ? (
                                 <>
                                     <TouchableOpacity
-                                        style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}
+                                        style={[
+                                            styles.inputContainer, 
+                                            { 
+                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', 
+                                                justifyContent: 'center',
+                                                borderColor: validationErrors.nascimento ? 'red' : 'transparent',
+                                                borderWidth: validationErrors.nascimento ? 1 : 0
+                                            }
+                                        ]}
                                         onPress={showDatepicker}
                                     >
                                         <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
@@ -696,6 +858,9 @@ export default function PerfilProfessor() {
                                         </Text>
                                         <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
                                     </TouchableOpacity>
+                                    {validationErrors.nascimento ? (
+                                        <Text style={styles.errorText}>{validationErrors.nascimento}</Text>
+                                    ) : null}
                                     {showDatePicker && (
                                         <DateTimePicker
                                             value={selectedDate}
@@ -798,11 +963,7 @@ export default function PerfilProfessor() {
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
                         <Text style={[styles.modalTitle, { color: textColor }]}>Tem certeza que deseja excluir o perfil?</Text>
                         <View style={styles.modalButtonsContainer}>
-                            <TouchableOpacity style={styles.deleteButton}
-                            
-                            
-                            
-                             onPress={handleDelete}>
+                            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                                 <Text style={styles.buttonText}>Excluir</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalDeleteVisible(false)}>
@@ -865,6 +1026,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 5,
     },
     tela: {
         padding: 0,

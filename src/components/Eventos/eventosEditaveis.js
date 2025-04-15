@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 
-export default function ProximosEventos({ data, titulo, subData, periodo, color }) {
+export default function eventosEditaveis({ data, titulo, subData, periodo, color }) {
   const { isDarkMode } = useTheme();
   const containerColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
@@ -15,7 +15,6 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
         padding: 10,
         alignItems: 'center',
         width: 45,
-        height: 45,
         borderRadius: 100,
       }}>
         <Text style={{ fontSize: 18, color: 'white', fontWeight: 'bold' }}>
@@ -25,11 +24,9 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
 
       {/* Detalhes do evento */}
       <View>
-        <View style={{width: 260}}>
         <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
           {titulo}
         </Text>
-        </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Text style={styles.subTitulo}>
             {subData}

@@ -21,9 +21,9 @@ export default function Alunos() {
     const [isCreating, setIsCreating] = useState(false);
     const navigation = useNavigation();
     const [nomeTurma, setNomeTurma] = useState('');
+    const [periodoTurma, setPeriodoTurma] = useState('');
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
-   const [modalBarraVisible, setModalBarraVisible] = useState(false);
-    // Estados para o gráfico de feedback
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
 
@@ -52,13 +52,14 @@ export default function Alunos() {
 
             console.log('Resposta da API:', response.data);
 
-            // Armazena o nome da turma no estado
+            // Armazena o nome e período da turma no estado
             setNomeTurma(response.data.nomeTurma || 'Nome não encontrado');
+            setPeriodoTurma(response.data.periodoTurma || '');
 
             const alunosComMedias = response.data.students.map((aluno) => {
-                if (aluno.notas && aluno.notas.length > 0) {
-                    const totalNotas = aluno.notas.reduce((acc, curr) => acc + curr.valorNota, 0);
-                    const media = totalNotas / aluno.notas.length;
+                if (aluno.nota && aluno.nota.length > 0) {
+                    const totalNotas = aluno.nota.reduce((acc, curr) => acc + curr.valorNota, 0);
+                    const media = (totalNotas / aluno.nota.length); // Multiplica por 10 para obter porcentagem
                     return { ...aluno, mediaNota: media.toFixed(2) };
                 }
                 return { ...aluno, mediaNota: '-' };
@@ -67,12 +68,13 @@ export default function Alunos() {
             setAlunos(alunosComMedias);
             setError(null);
         } catch (error) {
-
+            console.error('Erro ao buscar alunos:', error);
             setError('Erro ao buscar alunos. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
         }
     };
+
     const handleBarraClick = (categoria, valor) => {
         if (valor > 0) {
             setBarraSelecionada({
@@ -83,7 +85,6 @@ export default function Alunos() {
         }
     };
 
-    // Função para buscar as médias dos feedbacks da turma
     const fetchMediasFeedbacks = async () => {
         try {
             const token = await AsyncStorage.getItem('@user_token');
@@ -104,7 +105,7 @@ export default function Alunos() {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-
+            console.error('Erro ao buscar feedbacks:', error);
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
         }
@@ -113,7 +114,7 @@ export default function Alunos() {
     useEffect(() => {
         if (turmaId) {
             fetchAlunos();
-            fetchMediasFeedbacks(); // Carrega os dados do gráfico de feedback
+            fetchMediasFeedbacks();
         }
     }, [turmaId]);
 
@@ -134,11 +135,11 @@ export default function Alunos() {
 
             if (response.status === 201) {
                 Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
-                await fetchAlunos(); // Atualiza a lista de alunos
-                setModalCriarVisible(false); // Fecha o modal
+                await fetchAlunos();
+                setModalCriarVisible(false);
             }
         } catch (error) {
-
+            console.error('Erro ao cadastrar aluno:', error);
             Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.');
         } finally {
             setIsCreating(false);
@@ -191,18 +192,14 @@ export default function Alunos() {
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
-                        {nomeTurma}
+                        {nomeTurma} - {periodoTurma}
                     </Text>
                     <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>
                         Nº0231000
                     </Text>
                 </View>
 
-
                 <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
-                    {/* Gráfico de Feedback da Turma */}
-
-
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
                             style={[styles.input, { color: isDarkMode ? 'white' : 'black' }]}
@@ -259,7 +256,6 @@ export default function Alunos() {
                             <GraficoFeedbackTurma
                                 dadosGrafico={dadosGrafico}
                                 totalFeedbacks={totalFeedbacks}
-
                                 onBarraClick={handleBarraClick}
                             />
                         </View>
@@ -273,23 +269,22 @@ export default function Alunos() {
                     </View>
                 </View>
             </View>
-             <Modal visible={modalBarraVisible} transparent animationType="slide">
-                            <View style={styles.modalBackdrop}>
-                                <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
-                                    <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
-                                    <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
-                                        {barraSelecionada.value.toFixed(1)}
-                                    </Text>
-            
-                                    <TouchableOpacity
-                                        style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
-                                        onPress={() => setModalBarraVisible(false)}
-                                    >
-                                        <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </Modal>
+            <Modal visible={modalBarraVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
+                        <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
+                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                            {barraSelecionada.value.toFixed(1)}
+                        </Text>
+                        <TouchableOpacity
+                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                            onPress={() => setModalBarraVisible(false)}
+                        >
+                            <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }

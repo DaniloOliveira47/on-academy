@@ -17,8 +17,8 @@ import ProximosEventos from '../../components/Eventos/proximosEventos';
 import { useTheme } from '../../path/ThemeContext';
 import { FAB } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { MaterialIcons } from '@expo/vector-icons'; // Importando ícones do Expo
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Para acessar o token
+import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EventosInstitution() {
   const { isDarkMode } = useTheme();
@@ -26,10 +26,11 @@ export default function EventosInstitution() {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [eventColors, setEventColors] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date()); // Estado para a data selecionada
-  const [selectedTime, setSelectedTime] = useState(new Date()); // Estado para a hora selecionada
-  const [showDatePicker, setShowDatePicker] = useState(false); // Controla a exibição do DatePicker
-  const [showTimePicker, setShowTimePicker] = useState(false); // Controla a exibição do TimePicker
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Estados para os campos do evento
   const [tituloEvento, setTituloEvento] = useState('');
@@ -53,7 +54,7 @@ export default function EventosInstitution() {
       });
       setEventColors(colors);
     } catch (error) {
-  
+      console.error('Erro ao buscar eventos:', error);
     }
   };
 
@@ -82,7 +83,6 @@ export default function EventosInstitution() {
       .toUpperCase();
   };
 
-  // Função para lidar com a seleção de data
   const handleDateChange = (event, date) => {
     setShowDatePicker(false);
     if (date) {
@@ -90,7 +90,6 @@ export default function EventosInstitution() {
     }
   };
 
-  // Função para lidar com a seleção de hora
   const handleTimeChange = (event, time) => {
     setShowTimePicker(false);
     if (time) {
@@ -98,21 +97,87 @@ export default function EventosInstitution() {
     }
   };
 
-  // Função para adicionar um evento
+  const resetForm = () => {
+    setTituloEvento('');
+    setLocalEvento('');
+    setDescricaoEvento('');
+    setSelectedDate(new Date());
+    setSelectedTime(new Date());
+    setIsEditMode(false);
+    setSelectedEventId(null);
+  };
+
+  const prepareEditForm = (event) => {
+    setTituloEvento(event.tituloEvento);
+    setLocalEvento(event.localEvento);
+    setDescricaoEvento(event.descricaoEvento);
+    
+    // Formata a data e hora do evento para os estados
+    const [year, month, day] = event.dataEvento.split('-');
+    const [hours, minutes, seconds] = event.horarioEvento.split(':');
+    
+    setSelectedDate(new Date(year, month - 1, day));
+    setSelectedTime(new Date(0, 0, 0, hours, minutes));
+    
+    setIsEditMode(true);
+    setSelectedEventId(event.id);
+    setModalVisible(true);
+  };
+
+  const validateEventDate = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Verifica se a data é anterior à data atual
+    if (date < today) {
+      Alert.alert('Erro', 'Não é possível agendar eventos para datas passadas.');
+      return false;
+    }
+    
+    // Verifica se a data é mais de 2 anos no futuro
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 2);
+    
+    if (date > maxDate) {
+      Alert.alert('Erro', 'Não é possível agendar eventos com mais de 2 anos de antecedência.');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleAddEvent = async () => {
     try {
-      // Recupera o token do AsyncStorage
+      // Validação de campos obrigatórios
+      if (!tituloEvento.trim()) {
+        Alert.alert('Erro', 'Por favor, insira um título para o evento.');
+        return;
+      }
+      
+      if (!localEvento.trim()) {
+        Alert.alert('Erro', 'Por favor, insira um local para o evento.');
+        return;
+      }
+      
+      if (!descricaoEvento.trim()) {
+        Alert.alert('Erro', 'Por favor, insira uma descrição para o evento.');
+        return;
+      }
+
+      // Validação da data do evento
+      if (!validateEventDate(selectedDate)) {
+        return;
+      }
+
       const token = await AsyncStorage.getItem('@user_token');
       if (!token) {
         Alert.alert('Erro', 'Token não encontrado. Faça login novamente.');
         return;
       }
 
-      // Formata a data e hora no formato esperado pela API
       const formattedDate = selectedDate.toISOString().split('T')[0];
       const formattedTime = selectedTime.toTimeString().split(' ')[0];
 
-      // Dados do evento
       const eventData = {
         tituloEvento,
         dataEvento: formattedDate,
@@ -121,9 +186,14 @@ export default function EventosInstitution() {
         descricaoEvento,
       };
 
-      // Faz a requisição POST
-      const response = await fetch('http://10.0.2.2:3000/api/event', {
-        method: 'POST',
+      const url = isEditMode 
+        ? `http://10.0.2.2:3000/api/event/${selectedEventId}`
+        : 'http://10.0.2.2:3000/api/event';
+      
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -132,16 +202,65 @@ export default function EventosInstitution() {
       });
 
       if (response.ok) {
-        Alert.alert('Sucesso', 'Evento adicionado com sucesso!');
-        setModalVisible(false); // Fecha o modal
-        fetchEvents(); // Atualiza a lista de eventos
+        Alert.alert('Sucesso', isEditMode ? 'Evento atualizado com sucesso!' : 'Evento adicionado com sucesso!');
+        setModalVisible(false);
+        resetForm();
+        fetchEvents();
       } else {
         const errorData = await response.json();
-        Alert.alert('Erro', errorData.message || 'Erro ao adicionar evento.');
+        Alert.alert('Erro', errorData.message || 'Erro ao processar o evento.');
       }
     } catch (error) {
+      console.error('Erro:', error);
+      Alert.alert('Erro', 'Ocorreu um erro ao processar o evento.');
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    try {
+      if (!selectedEventId) return;
       
-      Alert.alert('Erro', 'Ocorreu um erro ao adicionar o evento.');
+      const token = await AsyncStorage.getItem('@user_token');
+      if (!token) {
+        Alert.alert('Erro', 'Token não encontrado. Faça login novamente.');
+        return;
+      }
+
+      Alert.alert(
+        'Confirmar',
+        'Tem certeza que deseja excluir este evento?',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Excluir',
+            onPress: async () => {
+              const response = await fetch(`http://10.0.2.2:3000/api/event/${selectedEventId}`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (response.ok) {
+                Alert.alert('Sucesso', 'Evento excluído com sucesso!');
+                resetForm();
+                fetchEvents();
+              } else {
+                const errorData = await response.json();
+                Alert.alert('Erro', errorData.message || 'Erro ao excluir evento.');
+              }
+            },
+            style: 'destructive',
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error('Erro:', error);
+      Alert.alert('Erro', 'Ocorreu um erro ao excluir o evento.');
     }
   };
 
@@ -174,6 +293,23 @@ export default function EventosInstitution() {
               <Text style={{ fontSize: 20, color: textColor }}>
                 {selectedEvent.localEvento}
               </Text>
+              
+              {/* Botões de Editar e Excluir */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: '#0077FF' }]}
+                  onPress={() => prepareEditForm(selectedEvent)}
+                >
+                  <Text style={styles.buttonText}>Editar</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: '#D9534F' }]}
+                  onPress={handleDeleteEvent}
+                >
+                  <Text style={styles.buttonText}>Excluir</Text>
+                </TouchableOpacity>
+              </View>
             </>
           )}
         </View>
@@ -187,14 +323,19 @@ export default function EventosInstitution() {
             {events.map((event, index) => {
               const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
               return (
-                <ProximosEventos
-                  key={index}
-                  data={eventDateTime.getDate()}
-                  titulo={event.tituloEvento}
-                  subData={formatDate(eventDateTime)}
-                  periodo={formatTime(eventDateTime)}
-                  color={eventColors[event.id] || '#0077FF'}
-                />
+                <TouchableOpacity 
+                  key={index} 
+                  onPress={() => handleDayPress(event.id)}
+                  onLongPress={() => prepareEditForm(event)}
+                >
+                  <ProximosEventos
+                    data={eventDateTime.getDate()}
+                    titulo={event.tituloEvento}
+                    subData={formatDate(eventDateTime)}
+                    periodo={formatTime(eventDateTime)}
+                    color={eventColors[event.id] || '#0077FF'}
+                  />
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -206,23 +347,34 @@ export default function EventosInstitution() {
         style={[styles.fab, { marginBottom: 70 }]}
         icon="plus"
         color="white"
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          resetForm();
+          setModalVisible(true);
+        }}
       />
 
-      {/* Modal para Adicionar Evento */}
+      {/* Modal para Adicionar/Editar Evento */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          resetForm();
+        }}
       >
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { backgroundColor: '#FFF' }]}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => {
+              setModalVisible(false);
+              resetForm();
+            }}>
               <Text style={styles.closeButtonText}>✖</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalTitle, { color: '#000' }]}>Adicionar Evento</Text>
+            <Text style={[styles.modalTitle, { color: '#000' }]}>
+              {isEditMode ? 'Editar Evento' : 'Adicionar Evento'}
+            </Text>
 
             <TextInput
               style={styles.input}
@@ -260,6 +412,8 @@ export default function EventosInstitution() {
                 mode="date"
                 display="default"
                 onChange={handleDateChange}
+                minimumDate={new Date()}
+                maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
               />
             )}
 
@@ -294,7 +448,9 @@ export default function EventosInstitution() {
             />
 
             <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
-              <Text style={styles.addButtonText}>Adicionar evento</Text>
+              <Text style={styles.addButtonText}>
+                {isEditMode ? 'Atualizar evento' : 'Adicionar evento'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -326,7 +482,6 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     margin: 16,
-    
     right: 0,
     bottom: 0,
     backgroundColor: '#0077FF',
@@ -409,5 +564,20 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  actionButton: {
+    padding: 10,
+    borderRadius: 5,
+    width: '48%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

@@ -37,14 +37,14 @@ export default function Home() {
       try {
         const alunoId = await AsyncStorage.getItem('@user_id');
         if (!alunoId) {
-         
+
           return;
         }
 
         const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
         setAluno(response.data);
       } catch (error) {
-      
+
       }
     };
 
@@ -138,11 +138,8 @@ export default function Home() {
                   <Avisos
                     key={aviso.id}
                     abreviacao={aviso.initials}
-                    nome={aviso.criadoPorNome?.split(' ').slice(0, 2).join(' ')}
-                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')} // Mostra apenas os dois primeiros nomes
+                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     texto={aviso.conteudo}
                     aleatorio={gerarCorAleatoria()}
                   />

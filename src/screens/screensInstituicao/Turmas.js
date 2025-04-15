@@ -102,17 +102,32 @@ export default function Turmas() {
         fetchDisciplinas();
     }, []);
 
-    // Função para abrir o modal de edição
-    const abrirModalEditar = (turma) => {
-        setTurmaEditando(turma);
-        setNovaTurma(turma.nomeTurma);
-        setNovoAno(new Date(turma.anoLetivoTurma).getFullYear().toString());
-        setNovoPeriodo(turma.periodoTurma);
-        setNovaCapacidade(turma.capacidadeMaximaTurma.toString());
-        setNovaSala(turma.salaTurma.toString());
-        setSelectedProfessores(turma.idTeacher || []);
-        setSelectedDisciplinas(turma.disciplineId || []);
-        setModalEditarVisible(true);
+    // Função para abrir o modal de edição com dados detalhados
+    const abrirModalEditar = async (turma) => {
+        try {
+            const response = await axios.get(`http://10.0.2.2:3000/api/class/teacher/disciplinas/${turma.id}`);
+            const turmaDetalhada = response.data;
+            
+            setTurmaEditando(turmaDetalhada);
+            setNovaTurma(turmaDetalhada.nomeTurma);
+            setNovoAno(new Date(turmaDetalhada.anoLetivoTurma).getFullYear().toString());
+            setNovoPeriodo(turmaDetalhada.periodoTurma);
+            setNovaCapacidade(turmaDetalhada.capacidadeMaximaTurma.toString());
+            setNovaSala(turmaDetalhada.salaTurma.toString());
+            
+            // Set selected professors
+            const professoresIds = turmaDetalhada.teachers.map(prof => prof.id);
+            setSelectedProfessores(professoresIds);
+            
+            // Set selected disciplines
+            const disciplinasIds = turmaDetalhada.disciplines.map(disc => disc.id);
+            setSelectedDisciplinas(disciplinasIds);
+            
+            setModalEditarVisible(true);
+        } catch (error) {
+            console.error('Erro ao buscar detalhes da turma:', error);
+            Alert.alert('Erro', 'Não foi possível carregar os detalhes da turma');
+        }
     };
 
     // Função para criar uma nova turma
