@@ -29,7 +29,7 @@ export default function HomeDocente() {
     // Função para carregar as mensagens (avisos)
     const fetchMessages = async () => {
         try {
-            const { data } = await axios.get('http://10.0.2.2:3000/api/reminder');
+            const { data } = await axios.get('http://192.168.2.11:3000/api/reminder');
 
             // Ordenar por data mais recente primeiro
             data.sort((a, b) =>
@@ -52,7 +52,7 @@ export default function HomeDocente() {
                     return;
                 }
 
-                const response = await axios.get(`http://10.0.2.2:3000/api/teacher/classes/${professorId}`);
+                const response = await axios.get(`http://192.168.2.11:3000/api/teacher/classes/${professorId}`);
                 console.log('Resposta da API:', response.data);
 
                 if (response.data && Array.isArray(response.data.classes)) {
@@ -95,7 +95,7 @@ export default function HomeDocente() {
                 classSt: { id: turmaSelecionada },
             };
 
-            const response = await axios.post('http://10.0.2.2:3000/api/reminder', avisoData);
+            const response = await axios.post('http://192.168.2.11:3000/api/reminder', avisoData);
             console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
 
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');

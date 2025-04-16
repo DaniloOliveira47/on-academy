@@ -63,7 +63,7 @@ export default function Turmas() {
     // Função para buscar turmas, professores e disciplinas
     const fetchTurmas = async () => {
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/class');
+            const response = await axios.get('http://192.168.2.11:3000/api/class');
             if (response.data && Array.isArray(response.data)) {
                 setTurmas(response.data);
                 setTurmasFiltradas(response.data);
@@ -79,7 +79,7 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
+            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
@@ -88,7 +88,7 @@ export default function Turmas() {
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/discipline');
+            const response = await axios.get('http://192.168.2.11:3000/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);
@@ -105,7 +105,7 @@ export default function Turmas() {
     // Função para abrir o modal de edição com dados detalhados
     const abrirModalEditar = async (turma) => {
         try {
-            const response = await axios.get(`http://10.92.198.51:3000/api/class/teacher/disciplinas/${turma.id}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/class/teacher/disciplinas/${turma.id}`);
             const turmaDetalhada = response.data;
 
             setTurmaEditando(turmaDetalhada);
@@ -151,7 +151,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.post('http://10.92.198.51:3000/api/class', turmaData, {
+            await axios.post('http://192.168.2.11:3000/api/class', turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -186,7 +186,7 @@ export default function Turmas() {
                 disciplineId: selectedDisciplinas,
             };
 
-            await axios.put(`http://10.92.198.51:3000/api/class/${turmaEditando.id}`, turmaData, {
+            await axios.put(`http://192.168.2.11:3000/api/class/${turmaEditando.id}`, turmaData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -216,7 +216,7 @@ export default function Turmas() {
             }
 
             const response = await axios.post(
-                'http://10.92.198.51:3000/api/discipline',
+                'http://192.168.2.11:3000/api/discipline',
                 { nomeDisciplina: novaDisciplina },
                 {
                     headers: {

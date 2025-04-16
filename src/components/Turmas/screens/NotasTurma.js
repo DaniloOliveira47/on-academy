@@ -30,7 +30,7 @@ export default function NotasTurma() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const alunosResponse = await axios.get(`http://10.0.2.2:3000/api/class/students/${turmaId}`);
+                const alunosResponse = await axios.get(`http://192.168.2.11:3000/api/class/students/${turmaId}`);
 
                 setTurmaInfo({
                     nomeTurma: alunosResponse.data.nomeTurma,
@@ -48,7 +48,7 @@ export default function NotasTurma() {
 
                 setAlunos(alunosComNotas);
 
-                const disciplinasResponse = await axios.get('http://10.0.2.2:3000/api/class/discipline');
+                const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/class/discipline');
                 const turma = disciplinasResponse.data.find(t => t.nomeTurma === alunosResponse.data.nomeTurma);
 
                 if (turma && Array.isArray(turma.disciplinas)) {
@@ -78,7 +78,7 @@ export default function NotasTurma() {
 
     const buscarNotasAluno = async (alunoId) => {
         try {
-            const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
             setNotasAluno(response.data.notas || []);
         } catch (error) {
             console.error("Erro ao buscar notas:", error);
@@ -104,7 +104,7 @@ export default function NotasTurma() {
                 nomeDisciplina: disciplina?.nomeDisciplina || 'Desconhecida'
             };
 
-            await axios.post('http://10.0.2.2:3000/api/note', novaNota);
+            await axios.post('http://192.168.2.11:3000/api/note', novaNota);
 
             const updatedNotas = [...notasAluno, novaNota];
             setNotasAluno(updatedNotas);
@@ -272,13 +272,11 @@ export default function NotasTurma() {
                                                 disciplinaId={disciplina.id}
                                                 bimestre={bimestreFiltro}
                                                 onNotaUpdated={(novaNota) => {
-                                                    // Atualizar o estado local das notas
                                                     const notasAtualizadas = notasAluno.map(nota =>
                                                         nota.id === notaDisciplina.id ? { ...nota, valorNota: novaNota } : nota
                                                     );
                                                     setNotasAluno(notasAtualizadas);
 
-                                                    // Recalcular média se necessário
                                                     const notasFiltradas = notasAtualizadas.filter(nota =>
                                                         nota.disciplineId === disciplinaSelecionada
                                                     );
@@ -349,20 +347,12 @@ export default function NotasTurma() {
                                     </View>
                                 </>
                             ) : (
-                                <View style={styles.buttonsContainer}>
-                                    <TouchableOpacity
-                                        style={[styles.actionButton, { backgroundColor: '#1A85FF', flex: 1, marginRight: 10 }]}
-                                        onPress={() => setMostrarCamposNota(true)}
-                                    >
-                                        <Text style={styles.actionButtonText}>Adicionar Nota</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.actionButton, { backgroundColor: '#FFA500', flex: 1 }]}
-                                        onPress={() => { }}
-                                    >
-                                        <Text style={styles.actionButtonText}>Editar Notas</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: '#1A85FF' }]}
+                                    onPress={() => setMostrarCamposNota(true)}
+                                >
+                                    <Text style={styles.actionButtonText}>Adicionar Nota</Text>
+                                </TouchableOpacity>
                             )}
                         </ScrollView>
 
@@ -526,11 +516,10 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     actionButton: {
-        flex: 1,
         padding: 12,
         borderRadius: 8,
         alignItems: 'center',
-        marginHorizontal: 5,
+        marginBottom: 10,
     },
     actionButtonText: {
         color: 'white',
@@ -592,10 +581,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 5,
         fontWeight: 'bold',
-    },
-    buttonsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
     },
 });

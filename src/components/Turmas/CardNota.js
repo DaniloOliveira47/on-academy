@@ -15,33 +15,45 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
     const inputBackground = isDarkMode ? '#333' : '#FFF';
 
     const handleEditPress = () => {
+        if (nota === '-') {
+            Alert.alert('Aviso', 'Não é possível editar uma nota que não existe. Adicione uma nota primeiro.');
+            return;
+        }
+        
         setTempNota(nota);
         setEditing(true);
     };
 
     const handleSave = async () => {
+        if (!notaId) {
+            Alert.alert('Erro', 'Não foi possível identificar a nota para edição');
+            return;
+        }
+
         if (tempNota === nota) {
             setEditing(false);
             return;
         }
 
+        const novaNota = parseFloat(tempNota);
+        if (isNaN(novaNota)) {
+            Alert.alert('Erro', 'Por favor, insira um valor numérico válido');
+            return;
+        }
 
         try {
-            // Atualizar no backend
-            await axios.put(`http://10.0.2.2:3000/api/note/${notaId}`, {
-                valorNota: parseFloat(tempNota),
+            await axios.put(`http://192.168.2.11:3000/api/note/${notaId}`, {
+                valorNota: novaNota,
                 studentId: alunoId,
                 disciplineId: disciplinaId,
                 bimestre: bimestre
             });
 
-            // Atualizar no estado local
             setNota(tempNota);
             setEditing(false);
             
-            // Notificar o componente pai sobre a atualização
             if (onNotaUpdated) {
-                onNotaUpdated(parseFloat(tempNota));
+                onNotaUpdated(novaNota);
             }
 
             Alert.alert('Sucesso', 'Nota atualizada com sucesso!');
@@ -83,23 +95,21 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
                     </View>
                 </View>
             ) : (
-                <TouchableOpacity 
-                    style={styles.notaContainer}
-                    onLongPress={handleEditPress}
-                    activeOpacity={0.7}
-                >
+                <View style={styles.notaContainer}>
                     <Text style={{ color: textColor, fontSize: 14, fontWeight: 'bold' }}>
                         {nota}
                     </Text>
                     {nota !== '-' && (
-                        <Icon 
-                            name="edit-2" 
-                            size={14} 
-                            color={textColor} 
-                            style={styles.editIcon}
-                        />
+                        <TouchableOpacity onPress={handleEditPress}>
+                            <Icon 
+                                name="edit-2" 
+                                size={14} 
+                                color={textColor} 
+                                style={styles.editIcon}
+                            />
+                        </TouchableOpacity>
                     )}
-                </TouchableOpacity>
+                </View>
             )}
         </View>
     );

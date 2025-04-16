@@ -29,7 +29,7 @@ export default function HeaderDoc() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const eventsResponse = await axios.get('http://10.0.2.2:3000/api/event');
+        const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
         const events = eventsResponse.data;
 
         const colors = {};
@@ -41,7 +41,7 @@ export default function HeaderDoc() {
         setEventColors(colors);
 
         const alunoId = await AsyncStorage.getItem('@user_id');
-        const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/teacher/${alunoId}`);
+        const alunoResponse = await axios.get(`http://192.168.2.11:3000/api/teacher/${alunoId}`);
         setAluno(alunoResponse.data);
       } catch (error) {
     

@@ -33,7 +33,7 @@ import React, { useState, useEffect } from 'react';
          try {
              setLoadingDisciplines(true);
              const token = await AsyncStorage.getItem('@user_token');
-             const response = await axios.get('http://10.92.198.51:3000/api/discipline', {
+             const response = await axios.get('http://192.168.2.11:3000/api/discipline', {
                  headers: {
                      Authorization: `Bearer ${token}`,
                  },
