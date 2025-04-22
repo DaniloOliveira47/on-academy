@@ -19,7 +19,7 @@ export default function Eventos() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch('http://192.168.2.11:3000/api/event');
+                const response = await fetch('http://10.92.198.51:3000/api/event');
                 const data = await response.json();
                 setEvents(data);
 

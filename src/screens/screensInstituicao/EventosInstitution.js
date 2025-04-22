@@ -51,7 +51,7 @@ export default function EventosInstitution() {
   // Função para buscar eventos
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://192.168.2.11:3000/api/event');
+      const response = await fetch('http://10.92.198.51:3000/api/event');
       const data = await response.json();
       setEvents(data);
 
@@ -223,13 +223,13 @@ export default function EventosInstitution() {
       };
 
       const url = isEditMode 
-        ? `http://192.168.2.11:3000/api/event/${selectedEventId}`
-        : 'http://192.168.2.11:3000/api/event';
+        ? `http://10.92.198.51:3000/api/event/${selectedEventId}`
+        : 'http://10.92.198.51:3000/api/event';
       
       const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
-        method,
+        method, 
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -273,7 +273,7 @@ export default function EventosInstitution() {
           {
             text: 'Excluir',
             onPress: async () => {
-              const response = await fetch(`http://192.168.2.11:3000/api/event/${selectedEventId}`, {
+              const response = await fetch(`http://10.92.198.51:3000/api/event/${selectedEventId}`, {
                 method: 'DELETE',
                 headers: {
                   Authorization: `Bearer ${token}`,

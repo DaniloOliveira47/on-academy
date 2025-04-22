@@ -33,7 +33,7 @@ export default function ProfessoresFeedback() {
     const fetchProfessores = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
+            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
             const professoresOrdenados = response.data.sort((a, b) => b.id - a.id);
             setProfessores(professoresOrdenados);
             setProfessoresFiltrados(professoresOrdenados);
@@ -81,7 +81,7 @@ export default function ProfessoresFeedback() {
         try {
             setIsCreating(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.post('http://192.168.2.11:3000/api/teacher', dadosProfessor, {
+            const response = await axios.post('http://10.92.198.51:3000/api/teacher', dadosProfessor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

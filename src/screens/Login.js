@@ -44,11 +44,11 @@ import React, { useState } from 'react';
  
      let url = '';
      if (matricula.charAt(0).toLowerCase() === 'a') {
-       url = 'http://192.168.2.11:3000/api/student/login';
+       url = 'http://10.92.198.51:3000/api/student/login';
      } else if (matricula.charAt(0).toLowerCase() === 'p') {
-       url = 'http://192.168.2.11:3000/api/teacher/login';
+       url = 'http://10.92.198.51:3000/api/teacher/login';
      } else {
-       url = 'http://192.168.2.11:3000/api/institution/login';
+       url = 'http://10.92.198.51:3000/api/institution/login';
 
      }
  

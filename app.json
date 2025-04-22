@@ -16,11 +16,17 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.danilo_47.nomedoprojeto"
     },
     "web": {},
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "508b3bed-d030-4f53-8ac6-9977190151d5"
+      }
+    }
   }
 }
