@@ -386,7 +386,7 @@ export default function Turmas() {
                                 style={pickerStyle}
                                 dropdownIconColor={isDarkMode ? 'white' : 'black'}
                                 onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
-                                <Picker.Item label="Vespertino" value="Vesprtino" />
+                                <Picker.Item label="Vespertino" value="Vespertino" />
                                 <Picker.Item label="Matutino" value="Matutino" />
                                 <Picker.Item label="Noturno" value="Noturno" />
                                 <Picker.Item label="Integral" value="Integral" />

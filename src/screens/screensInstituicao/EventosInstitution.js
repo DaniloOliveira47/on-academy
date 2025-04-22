@@ -31,6 +31,13 @@ export default function EventosInstitution() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [errors, setErrors] = useState({
+    tituloEvento: '',
+    localEvento: '',
+    descricaoEvento: '',
+    dataEvento: '',
+    horarioEvento: ''
+  });
 
   // Estados para os campos do evento
   const [tituloEvento, setTituloEvento] = useState('');
@@ -87,6 +94,7 @@ export default function EventosInstitution() {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
+      setErrors(prev => ({...prev, dataEvento: ''}));
     }
   };
 
@@ -94,6 +102,7 @@ export default function EventosInstitution() {
     setShowTimePicker(false);
     if (time) {
       setSelectedTime(time);
+      setErrors(prev => ({...prev, horarioEvento: ''}));
     }
   };
 
@@ -105,6 +114,13 @@ export default function EventosInstitution() {
     setSelectedTime(new Date());
     setIsEditMode(false);
     setSelectedEventId(null);
+    setErrors({
+      tituloEvento: '',
+      localEvento: '',
+      descricaoEvento: '',
+      dataEvento: '',
+      horarioEvento: ''
+    });
   };
 
   const prepareEditForm = (event) => {
@@ -130,7 +146,7 @@ export default function EventosInstitution() {
     
     // Verifica se a data é anterior à data atual
     if (date < today) {
-      Alert.alert('Erro', 'Não é possível agendar eventos para datas passadas.');
+      setErrors(prev => ({...prev, dataEvento: 'Não é possível agendar eventos para datas passadas'}));
       return false;
     }
     
@@ -139,35 +155,55 @@ export default function EventosInstitution() {
     maxDate.setFullYear(maxDate.getFullYear() + 2);
     
     if (date > maxDate) {
-      Alert.alert('Erro', 'Não é possível agendar eventos com mais de 2 anos de antecedência.');
+      setErrors(prev => ({...prev, dataEvento: 'Não é possível agendar eventos com mais de 2 anos de antecedência'}));
       return false;
     }
     
     return true;
   };
 
+  const validateFields = () => {
+    let valid = true;
+    const newErrors = {
+      tituloEvento: '',
+      localEvento: '',
+      descricaoEvento: '',
+      dataEvento: '',
+      horarioEvento: ''
+    };
+
+    if (!tituloEvento.trim()) {
+      newErrors.tituloEvento = 'Título é obrigatório';
+      valid = false;
+    } else if (tituloEvento.trim().length < 3) {
+      newErrors.tituloEvento = 'Título deve ter pelo menos 3 caracteres';
+      valid = false;
+    }
+
+    if (!localEvento.trim()) {
+      newErrors.localEvento = 'Local é obrigatório';
+      valid = false;
+    }
+
+    if (!descricaoEvento.trim()) {
+      newErrors.descricaoEvento = 'Descrição é obrigatória';
+      valid = false;
+    }
+
+    if (!selectedDate) {
+      newErrors.dataEvento = 'Data é obrigatória';
+      valid = false;
+    } else if (!validateEventDate(selectedDate)) {
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleAddEvent = async () => {
     try {
-      // Validação de campos obrigatórios
-      if (!tituloEvento.trim()) {
-        Alert.alert('Erro', 'Por favor, insira um título para o evento.');
-        return;
-      }
-      
-      if (!localEvento.trim()) {
-        Alert.alert('Erro', 'Por favor, insira um local para o evento.');
-        return;
-      }
-      
-      if (!descricaoEvento.trim()) {
-        Alert.alert('Erro', 'Por favor, insira uma descrição para o evento.');
-        return;
-      }
-
-      // Validação da data do evento
-      if (!validateEventDate(selectedDate)) {
-        return;
-      }
+      if (!validateFields()) return;
 
       const token = await AsyncStorage.getItem('@user_token');
       if (!token) {
@@ -179,11 +215,11 @@ export default function EventosInstitution() {
       const formattedTime = selectedTime.toTimeString().split(' ')[0];
 
       const eventData = {
-        tituloEvento,
+        tituloEvento: tituloEvento.trim(),
         dataEvento: formattedDate,
         horarioEvento: formattedTime,
-        localEvento,
-        descricaoEvento,
+        localEvento: localEvento.trim(),
+        descricaoEvento: descricaoEvento.trim(),
       };
 
       const url = isEditMode 
@@ -377,26 +413,38 @@ export default function EventosInstitution() {
             </Text>
 
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.tituloEvento && styles.inputError]}
               placeholder="Nome do evento"
               placeholderTextColor="#666"
               value={tituloEvento}
-              onChangeText={setTituloEvento}
+              onChangeText={(text) => {
+                setTituloEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, tituloEvento: ''}));
+                }
+              }}
             />
+            {errors.tituloEvento ? <Text style={styles.errorText}>{errors.tituloEvento}</Text> : null}
 
             <TextInput
-              style={[styles.input, styles.description]}
+              style={[styles.input, styles.description, errors.descricaoEvento && styles.inputError]}
               placeholder="Descrição do evento"
               placeholderTextColor="#666"
               multiline
               value={descricaoEvento}
-              onChangeText={setDescricaoEvento}
+              onChangeText={(text) => {
+                setDescricaoEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, descricaoEvento: ''}));
+                }
+              }}
             />
+            {errors.descricaoEvento ? <Text style={styles.errorText}>{errors.descricaoEvento}</Text> : null}
 
             <Text style={styles.label}>Data do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
-                style={[styles.input, styles.dateInput]}
+                style={[styles.input, styles.dateInput, errors.dataEvento && styles.inputError]}
                 placeholder="Selecione a data"
                 placeholderTextColor="#666"
                 value={selectedDate ? selectedDate.toLocaleDateString('pt-BR') : ''}
@@ -406,6 +454,7 @@ export default function EventosInstitution() {
                 <MaterialIcons name="calendar-today" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
+            {errors.dataEvento ? <Text style={styles.errorText}>{errors.dataEvento}</Text> : null}
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
@@ -420,7 +469,7 @@ export default function EventosInstitution() {
             <Text style={styles.label}>Horário do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
-                style={[styles.input, styles.dateInput]}
+                style={[styles.input, styles.dateInput, errors.horarioEvento && styles.inputError]}
                 placeholder="Selecione o horário"
                 placeholderTextColor="#666"
                 value={selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -430,6 +479,7 @@ export default function EventosInstitution() {
                 <MaterialIcons name="access-time" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
+            {errors.horarioEvento ? <Text style={styles.errorText}>{errors.horarioEvento}</Text> : null}
             {showTimePicker && (
               <DateTimePicker
                 value={selectedTime}
@@ -440,12 +490,18 @@ export default function EventosInstitution() {
             )}
 
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.localEvento && styles.inputError]}
               placeholder="Local"
               placeholderTextColor="#666"
               value={localEvento}
-              onChangeText={setLocalEvento}
+              onChangeText={(text) => {
+                setLocalEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, localEvento: ''}));
+                }
+              }}
             />
+            {errors.localEvento ? <Text style={styles.errorText}>{errors.localEvento}</Text> : null}
 
             <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
               <Text style={styles.addButtonText}>
@@ -510,9 +566,18 @@ const styles = StyleSheet.create({
     borderColor: '#CCC',
     borderRadius: 10,
     padding: 12,
-    marginBottom: 15,
+    marginBottom: 5,
     color: '#000',
     backgroundColor: '#FFF',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
   description: {
     height: 100,
@@ -544,7 +609,7 @@ const styles = StyleSheet.create({
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 5,
   },
   dateInput: {
     flex: 1,

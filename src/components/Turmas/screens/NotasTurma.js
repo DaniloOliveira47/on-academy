@@ -265,31 +265,31 @@ export default function NotasTurma() {
 
                                         return (
                                             <CardNota
-                                                key={`${disciplina.id}-${bimestreFiltro}`}
-                                                nota={notaDisciplina ? notaDisciplina.nota.toString() : '-'}
-                                                notaId={notaDisciplina?.id}
-                                                alunoId={alunoSelecionado?.id}
-                                                disciplinaId={disciplina.id}
-                                                bimestre={bimestreFiltro}
-                                                onNotaUpdated={(novaNota) => {
-                                                    const notasAtualizadas = notasAluno.map(nota =>
-                                                        nota.id === notaDisciplina.id ? { ...nota, valorNota: novaNota } : nota
-                                                    );
-                                                    setNotasAluno(notasAtualizadas);
-
-                                                    const notasFiltradas = notasAtualizadas.filter(nota =>
-                                                        nota.disciplineId === disciplinaSelecionada
-                                                    );
-                                                    const total = notasFiltradas.reduce((sum, nota) => sum + nota.valorNota, 0);
-                                                    const media = (total / notasFiltradas.length).toFixed(2);
-
-                                                    setAlunos(alunos.map(aluno =>
-                                                        aluno.id === alunoSelecionado.id
-                                                            ? { ...aluno, mediaNota: media }
-                                                            : aluno
-                                                    ));
-                                                }}
-                                            />
+                                            key={`${disciplina.id}-${bimestreFiltro}`}
+                                            nota={notaDisciplina ? notaDisciplina.nota.toString() : '-'}
+                                            notaId={notaDisciplina?.idNota}
+                                            alunoId={alunoSelecionado?.id}
+                                            disciplinaId={disciplina.id}
+                                            bimestre={bimestreFiltro}
+                                            onNotaUpdated={(novaNota) => {
+                                                const notasAtualizadas = notasAluno.map(nota =>
+                                                    nota.id === notaDisciplina.id ? { ...nota, nota: novaNota } : nota
+                                                );
+                                                setNotasAluno(notasAtualizadas);
+                                        
+                                                const notasFiltradas = notasAtualizadas.filter(nota =>
+                                                    nota.disciplineId === disciplinaSelecionada
+                                                );
+                                                const total = notasFiltradas.reduce((sum, nota) => sum + nota.nota, 0);
+                                                const media = (total / notasFiltradas.length).toFixed(2);
+                                        
+                                                setAlunos(alunos.map(aluno =>
+                                                    aluno.id === alunoSelecionado.id
+                                                        ? { ...aluno, mediaNota: media }
+                                                        : aluno
+                                                ));
+                                            }}
+                                        />
                                         );
                                     })}
                                 </View>

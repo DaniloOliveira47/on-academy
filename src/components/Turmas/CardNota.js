@@ -25,10 +25,7 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
     };
 
     const handleSave = async () => {
-        if (!notaId) {
-            Alert.alert('Erro', 'Não foi possível identificar a nota para edição');
-            return;
-        }
+      
 
         if (tempNota === nota) {
             setEditing(false);
@@ -42,11 +39,12 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
         }
 
         try {
+            // Atualização para usar o formato esperado pela API
             await axios.put(`http://192.168.2.11:3000/api/note/${notaId}`, {
-                valorNota: novaNota,
-                studentId: alunoId,
+                nota: novaNota,  // Alterado de "valorNota" para "nota"
+                bimestre: bimestre,
                 disciplineId: disciplinaId,
-                bimestre: bimestre
+                studentId: alunoId
             });
 
             setNota(tempNota);

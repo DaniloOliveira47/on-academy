@@ -13,7 +13,7 @@ import {
     Platform,
     Dimensions
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import Campo from '../../Perfil/Campo';
 import HeaderSimples from '../../Gerais/HeaderSimples';
@@ -53,7 +53,7 @@ const validarDataNascimento = (date) => {
     const hoje = new Date();
     const idade = hoje.getFullYear() - date.getFullYear();
     const mes = hoje.getMonth() - date.getMonth();
-    
+
     if (mes < 0 || (mes === 0 && hoje.getDate() < date.getDate())) {
         return idade - 1;
     }
@@ -67,12 +67,19 @@ const validarTelefone = (telefone) => {
 };
 
 const formatarTelefone = (input) => {
+    if (!input) return '';
+
     // Remove tudo que não é dígito
     const numeros = input.replace(/\D/g, '');
-    
+
     // Limita a 11 caracteres (DD + 9 dígitos)
     const limite = numeros.substring(0, 11);
-    
+
+    // Se estiver apagando, retorna o valor atual sem forçar a formatação completa
+    if (limite.length < input.replace(/\D/g, '').length) {
+        return input; // Permite apagar caracteres livremente
+    }
+
     // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
     if (limite.length > 10) {
         return limite.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
@@ -88,6 +95,25 @@ const formatarTelefone = (input) => {
     }
     return '';
 };
+// Função para formatar o telefone para exibição (mesmo quando não está em edição)
+const formatarTelefoneExibicao = (telefone) => {
+    if (!telefone) return 'Não informado';
+
+    // Remove tudo que não é dígito
+    const numeros = telefone.replace(/\D/g, '');
+
+    // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
+    if (numeros.length > 10) {
+        return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (numeros.length > 6) {
+        return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    if (numeros.length > 0) {
+        return `(${numeros.substring(0, 2)}) ${numeros.substring(2)}`;
+    }
+    return 'Não informado';
+};
 
 const validarEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,7 +124,7 @@ export default function PerfilProfessor() {
     const route = useRoute();
     const { professorId } = route.params;
     const { isDarkMode } = useTheme();
-
+    const navigation = useNavigation();
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
@@ -249,7 +275,7 @@ export default function PerfilProfessor() {
                 }));
                 return;
             }
-            
+
             setSelectedDate(date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
             setPerfilEdit({ ...perfilEdit, nascimento: formattedDate });
@@ -297,7 +323,7 @@ export default function PerfilProfessor() {
     const handleTelefoneChange = (text) => {
         const formatted = formatarTelefone(text);
         setPerfilEdit({ ...perfilEdit, telefone: formatted });
-        
+
         if (!validarTelefone(formatted) && formatted.length > 0) {
             setValidationErrors(prev => ({
                 ...prev,
@@ -486,16 +512,21 @@ export default function PerfilProfessor() {
         try {
             setLoading(true);
             const token = await getAuthToken();
-
+    
             const response = await axios.delete(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             if (response.status === 200) {
-                Alert.alert('Sucesso', 'Professor excluído com sucesso!');
+                Alert.alert('Sucesso', 'Professor excluído com sucesso!', [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.goBack() // Volta para a tela anterior após o alerta
+                    }
+                ]);
             }
         } catch (error) {
             Alert.alert(
@@ -544,7 +575,11 @@ export default function PerfilProfessor() {
                             {
                                 backgroundColor: selectedTurmas.includes(turma.id)
                                     ? barraAzulColor
-                                    : isDarkMode ? '#141414' : '#F0F7FF'
+                                    : isDarkMode ? '#141414' : '#F0F7FF',
+                                borderColor: perfil.turmas.some(t => t.id === turma.id)
+                                    ? barraAzulColor
+                                    : 'transparent',
+                                borderWidth: 1
                             }
                         ]}>
                             <Text style={[
@@ -583,7 +618,11 @@ export default function PerfilProfessor() {
                             {
                                 backgroundColor: selectedDisciplinas.includes(disciplina.id)
                                     ? barraAzulColor
-                                    : isDarkMode ? '#141414' : '#F0F7FF'
+                                    : isDarkMode ? '#141414' : '#F0F7FF',
+                                borderColor: perfil.disciplinas.some(d => d.id === disciplina.id)
+                                    ? barraAzulColor
+                                    : 'transparent',
+                                borderWidth: 1
                             }
                         ]}>
                             <Text style={[
@@ -810,14 +849,14 @@ export default function PerfilProfessor() {
                                     <TextInput
                                         style={[
                                             styles.inputContainer,
-                                            { 
-                                                color: isDarkMode ? '#FFF' : '#000', 
+                                            {
+                                                color: isDarkMode ? '#FFF' : '#000',
                                                 backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
                                                 borderColor: validationErrors.telefone ? 'red' : 'transparent',
                                                 borderWidth: validationErrors.telefone ? 1 : 0
                                             }
                                         ]}
-                                        value={perfilEdit.telefone}
+                                        value={formatarTelefone(perfilEdit.telefone)} // Sempre formatado
                                         onChangeText={handleTelefoneChange}
                                         placeholder="(00) 00000-0000"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
@@ -829,8 +868,8 @@ export default function PerfilProfessor() {
                                 </>
                             ) : (
                                 <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
-                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                                        {perfil.telefone || 'Não informado'}
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
+                                        {formatarTelefoneExibicao(perfil.telefone)}
                                     </Text>
                                 </View>
                             )}
@@ -843,17 +882,18 @@ export default function PerfilProfessor() {
                                 <>
                                     <TouchableOpacity
                                         style={[
-                                            styles.inputContainer, 
-                                            { 
-                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', 
+                                            styles.inputContainer,
+                                            {
+                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
                                                 justifyContent: 'center',
                                                 borderColor: validationErrors.nascimento ? 'red' : 'transparent',
-                                                borderWidth: validationErrors.nascimento ? 1 : 0
+                                                borderWidth: validationErrors.nascimento ? 1 : 0,
+                                                
                                             }
                                         ]}
                                         onPress={showDatepicker}
                                     >
-                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000',  fontSize: 15 }]}>
                                             {perfilEdit.nascimento || "Selecione a data"}
                                         </Text>
                                         <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
@@ -873,7 +913,7 @@ export default function PerfilProfessor() {
                                 </>
                             ) : (
                                 <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
-                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000',  fontSize: 15 }]}>
                                         {perfil.nascimento}
                                     </Text>
                                 </View>
@@ -894,7 +934,16 @@ export default function PerfilProfessor() {
                                 {perfil.disciplinas.length > 0 ? (
                                     <View style={styles.itemsContainer}>
                                         {perfil.disciplinas.map((disciplina, index) => (
-                                            <View key={index} style={[styles.itemPill, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
+                                            <View
+                                                key={index}
+                                                style={[
+                                                    styles.itemPill,
+                                                    {
+                                                        backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                                        borderColor: barraAzulColor,
+                                                        borderWidth: 1
+                                                    }
+                                                ]}>
                                                 <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
                                             </View>
                                         ))}
@@ -909,7 +958,16 @@ export default function PerfilProfessor() {
                                 {perfil.turmas.length > 0 ? (
                                     <View style={styles.itemsContainer}>
                                         {perfil.turmas.map((turma, index) => (
-                                            <View key={index} style={[styles.itemPill, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
+                                            <View
+                                                key={index}
+                                                style={[
+                                                    styles.itemPill,
+                                                    {
+                                                        backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                                        borderColor: barraAzulColor,
+                                                        borderWidth: 1
+                                                    }
+                                                ]}>
                                                 <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
                                             </View>
                                         ))}

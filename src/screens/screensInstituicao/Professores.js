@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Text } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native'; // Importe o hook
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import Icon from 'react-native-vector-icons/Feather';
 import CardSelecao from '../../components/Turmas/CardSelecao';
@@ -19,12 +20,15 @@ export default function ProfessoresFeedback() {
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreating, setIsCreating] = useState(false);
-    const professoresPorPagina = 6; // 3 linhas × 2 cards
+    const professoresPorPagina = 6;
     const totalPaginas = Math.ceil(professoresFiltrados.length / professoresPorPagina);
 
-    useEffect(() => {
-        fetchProfessores();
-    }, []);
+    // Atualiza a lista sempre que a tela receber foco
+    useFocusEffect(
+        useCallback(() => {
+            fetchProfessores();
+        }, [])
+    );
 
     const fetchProfessores = async () => {
         try {
@@ -34,13 +38,11 @@ export default function ProfessoresFeedback() {
             setProfessores(professoresOrdenados);
             setProfessoresFiltrados(professoresOrdenados);
         } catch (error) {
-            
             Alert.alert('Erro', 'Não foi possível carregar os professores');
         } finally {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         if (searchTerm === '') {
             setProfessoresFiltrados(professores);
