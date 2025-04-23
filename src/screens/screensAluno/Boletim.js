@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Text, View, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
+import { 
+  Image, 
+  StyleSheet, 
+  Text, 
+  View, 
+  TouchableOpacity, 
+  Modal, 
+  FlatList, 
+  Alert,
+  ActivityIndicator,
+  ScrollView
+} from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CardMateria from '../../components/Boletim/CardMateria';
 import Nota from '../../components/Boletim/Nota';
 import { useTheme } from '../../path/ThemeContext';
 import axios from 'axios';
-import { ScrollView } from 'react-native-gesture-handler';
-import * as FileSystem from 'expo-file-system'; // Para baixar o PDF
-import * as Print from 'expo-print'; // Para visualizar o PDF
+import * as FileSystem from 'expo-file-system';
+import { shareAsync } from 'expo-sharing';
+import { Platform } from 'react-native';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import BarraAzul from '../../components/Boletim/barraAzul';
 
 export default function Boletim() {
     const [modalVisible, setModalVisible] = useState(false);
@@ -16,6 +30,8 @@ export default function Boletim() {
     const [notas, setNotas] = useState([]);
     const [disciplinas, setDisciplinas] = useState([]);
     const [aluno, setAluno] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
 
     const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
     const { isDarkMode } = useTheme();
@@ -26,84 +42,157 @@ export default function Boletim() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Busca as disciplinas
-                const disciplinasResponse = await axios.get('http://10.0.2.2:3000/api/discipline');
-                setDisciplinas(disciplinasResponse.data);
-
-                // Busca os dados do aluno e suas notas
-                const alunoId = await AsyncStorage.getItem('@user_id'); // Substitua pelo ID do aluno logado
-                const alunoResponse = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+                setLoading(true);
+                const alunoId = await AsyncStorage.getItem('@user_id');
+                const alunoResponse = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
+                
                 setAluno(alunoResponse.data);
-                setNotas(alunoResponse.data.notas);
+                
+                const disciplinasDoAluno = alunoResponse.data.turma.disciplinaTurmas.map(d => ({
+                    id: d.id,
+                    nomeDisciplina: d.nomeDisciplina.trim()
+                }));
+                
+                setDisciplinas(disciplinasDoAluno);
+                setNotas(alunoResponse.data.notas || []);
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
+                Alert.alert("Erro", "Não foi possível carregar os dados do boletim");
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchData();
     }, []);
 
-    // Função para combinar disciplinas com notas
     const getNotasPorBimestre = (bimestre) => {
-        const bimestreNumero = parseInt(bimestre[0]); // Extrai o número do bimestre (1, 2, 3, 4)
+        const bimestreNumero = parseInt(bimestre[0]);
         const notasDoBimestre = notas.filter(nota => nota.bimestre === bimestreNumero);
 
-        // Combina as disciplinas com as notas
         return disciplinas.map(disciplina => {
-            const notaDaDisciplina = notasDoBimestre.find(nota => nota.nomeDisciplina === disciplina.nomeDisciplina);
+            const notaDaDisciplina = notasDoBimestre.find(nota => 
+                nota.nomeDisciplina.trim() === disciplina.nomeDisciplina
+            );
             return {
                 disciplina: disciplina.nomeDisciplina,
-                nota: notaDaDisciplina ? notaDaDisciplina.nota : '-', // Se não houver nota, exibe '-'
+                nota: notaDaDisciplina ? notaDaDisciplina.nota : '-',
             };
         });
     };
 
     const notasBimestreSelecionado = getNotasPorBimestre(bimestreSelecionado);
 
-    // Função para baixar e visualizar o boletim
-    const downloadAndViewBoletim = async () => {
-        const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const url = `http://10.0.2.2:3000/api/boletim/${alunoId}`; // URL do boletim com o ID do aluno
-        const fileName = 'boletim.pdf'; // Nome do arquivo
-        const fileUri = `${FileSystem.documentDirectory}${fileName}`; // Caminho onde o arquivo será salvo
-
+    const downloadAndSavePDF = async () => {
         try {
-            console.log('Iniciando download do boletim...');
-            const { uri } = await FileSystem.downloadAsync(url, fileUri);
-
-            console.log('Boletim baixado em:', uri);
-
-            // Verifica se o arquivo foi baixado corretamente
+            setDownloading(true);
+            const alunoId = await AsyncStorage.getItem('@user_id');
+            const url = `http://10.92.198.51:3000/api/boletim/${alunoId}`;
+            const fileName = `boletim_${alunoId}_${new Date().toISOString().slice(0,10)}.pdf`;
+            
+            const downloadUri = FileSystem.cacheDirectory + fileName;
+            const { uri } = await FileSystem.downloadAsync(url, downloadUri);
+            
             const fileInfo = await FileSystem.getInfoAsync(uri);
-            if (fileInfo.exists) {
-                Alert.alert('Sucesso', 'Boletim baixado com sucesso!');
-
-                // Abre o PDF com o expo-print
-                console.log('Abrindo o PDF...');
-                await Print.printAsync({
-                    uri: uri, // URI do arquivo baixado
+            if (!fileInfo.exists || fileInfo.size === 0) {
+                throw new Error('O arquivo PDF está vazio');
+            }
+        
+            if (Platform.OS === 'android') {
+                try {
+                    const { status } = await MediaLibrary.requestPermissionsAsync();
+                    if (status !== 'granted') {
+                        throw new Error('Permissão para acessar arquivos foi negada');
+                    }
+            
+                    const asset = await MediaLibrary.createAssetAsync(uri);
+                    await MediaLibrary.createAlbumAsync('Downloads', asset, false);
+                    
+                    Alert.alert(
+                        'Sucesso', 
+                        'Boletim salvo na pasta Downloads',
+                        [
+                            {
+                                text: 'Abrir',
+                                onPress: () => openPDF(uri)
+                            },
+                            { text: 'OK' }
+                        ]
+                    );
+                    return;
+                } catch (mediaError) {
+                    console.warn('Erro ao salvar com MediaLibrary:', mediaError);
+                }
+            }
+        
+            await shareAsync(uri, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Salvar Boletim',
+                UTI: 'com.adobe.pdf'
+            });
+        
+        } catch (error) {
+            console.error('Erro completo:', error);
+            Alert.alert(
+                'Erro', 
+                error.message || 'Não foi possível salvar o boletim'
+            );
+        } finally {
+            setDownloading(false);
+        }
+    };
+    
+    const openPDF = async (uri) => {
+        try {
+            if (Platform.OS === 'android') {
+                const contentUri = await FileSystem.getContentUriAsync(uri);
+                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                    data: contentUri,
+                    flags: 1,
+                    type: 'application/pdf'
                 });
             } else {
-                Alert.alert('Erro', 'O boletim não foi baixado corretamente.');
+                await shareAsync(uri, {
+                    mimeType: 'application/pdf',
+                    UTI: 'com.adobe.pdf'
+                });
             }
         } catch (error) {
-            console.error('Erro ao baixar ou visualizar o boletim:', error);
-            Alert.alert('Erro', 'Não foi possível baixar ou visualizar o boletim.');
+            Alert.alert('Erro', 'Nenhum aplicativo encontrado para abrir PDF');
         }
     };
 
+    if (loading) {
+        return (
+            <View style={[styles.loadingContainer, { backgroundColor: BackgroundColor }]}>
+                <ActivityIndicator size="large" color="#0077FF" />
+                <Text style={[styles.loadingText, { color: text }]}>Carregando boletim...</Text>
+            </View>
+        );
+    }
+
     return (
         <ScrollView>
+            
             <View>
+                
                 <HeaderSimples titulo="BOLETIM" />
-                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 70 }]}>
+                
+                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 500 }]}>
+                    
                     <View style={{
-                        backgroundColor: container, marginTop: 10, padding: 20, borderRadius: 20, paddingTop: 30, shadowColor: '#000',
+                        backgroundColor: container, 
+                        marginTop: 10, 
+                        padding: 20, 
+                        borderRadius: 20, 
+                        paddingTop: 30, 
+                        shadowColor: '#000',
                         shadowOpacity: 0.1,
                         shadowRadius: 4,
                         elevation: 5,
                     }}>
                         <View style={{ alignItems: 'center' }}>
+                           
                             <View style={styles.botao}>
                                 <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
                                 <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -120,21 +209,17 @@ export default function Boletim() {
                                 </TouchableOpacity>
                             </View>
                         </View>
+                        
                         <View style={styles.boletim}>
                             <View style={styles.titulos}>
                                 <View style={styles.containers}>
-                                    <Text style={styles.contText}>
-                                        Matéria
-                                    </Text>
+                                    <Text style={styles.contText}>Matéria</Text>
                                 </View>
                                 <View style={styles.containers}>
-                                    <Text style={styles.contText}>
-                                        {bimestreSelecionado}
-                                    </Text>
+                                    <Text style={styles.contText}>{bimestreSelecionado}</Text>
                                 </View>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-
                                 <View style={styles.column}>
                                     {notasBimestreSelecionado.map((item, index) => (
                                         <CardMateria key={index} materia={item.disciplina} />
@@ -158,15 +243,26 @@ export default function Boletim() {
                                     borderColor: '#0077FF',
                                     marginLeft: 16,
                                 }}
-                                onPress={downloadAndViewBoletim} // Chama a função de download e visualização
+                                onPress={downloadAndSavePDF}
+                                disabled={downloading}
                             >
-                                <Image source={require('../../assets/image/baixar.png')} />
-                                <Text style={{ fontSize: 18, color: '#000', fontWeight: 'bold' }}>PDF</Text>
+                                {downloading ? (
+                                    <ActivityIndicator size="small" color="#0077FF" />
+                                ) : (
+                                    <>
+                                        <Image source={require('../../assets/image/baixar.png')} />
+                                        <Text style={{ fontSize: 18, color: '#000', fontWeight: 'bold' }}>PDF</Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
 
                         <Modal visible={modalVisible} transparent animationType="fade">
-                            <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                            <TouchableOpacity 
+                                style={styles.modalOverlay} 
+                                onPress={() => setModalVisible(false)}
+                                activeOpacity={1}
+                            >
                                 <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
                                     <FlatList
                                         data={bimestres}
@@ -194,6 +290,15 @@ export default function Boletim() {
 }
 
 const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+    },
     boletim: {
         padding: 6
     },
@@ -227,7 +332,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#0077FF',
-        width: 350,
+        width: '100%',
         padding: 10,
         borderRadius: 13,
         justifyContent: 'space-between',
@@ -239,7 +344,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 20,
         marginRight: 10,
-
     },
     icone: {
         width: 20,

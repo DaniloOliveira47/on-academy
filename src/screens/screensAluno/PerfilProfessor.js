@@ -12,7 +12,7 @@ export default function ProfessorPerfil({ route }) {
 
   useEffect(() => {
 
-    axios.get(`http://10.0.2.2:3000/api/teacher/${id}`)
+    axios.get(`http://10.92.198.51:3000/api/teacher/${id}`)
       .then(response => {
         setDadosProfessor(response.data); 
       })

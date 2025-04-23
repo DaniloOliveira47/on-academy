@@ -69,41 +69,44 @@ export default function HomeInstituicao() {
                 Alert.alert('Aviso', 'Por favor, selecione uma turma.');
                 return;
             }
-
+    
             const instituicaoId = await AsyncStorage.getItem('@user_id');
-            if (!instituicaoId) {
-               
+            const token = await AsyncStorage.getItem('@user_token'); // Adicionado obtenção do token
+            
+            if (!instituicaoId || !token) {
+                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
                 return;
             }
-
+    
             if (!conteudoAviso.trim()) {
                 Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
                 return;
             }
-
+    
             const avisoData = {
                 conteudo: conteudoAviso,
                 createdByInstitution: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
-
-            await axios.post('http://10.92.198.51:3000/api/reminder', { 
+    
+            // Corrigido a chamada axios.post
+            await axios.post('http://10.92.198.51:3000/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                avisoData})
-
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+    
             // Recarrega os avisos após o envio
             await fetchMessages();
-
+    
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
         } catch (error) {
-          
-            Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
+            console.error('Erro ao enviar aviso:', error);
+            Alert.alert('Erro', error.response?.data?.message || 'Erro ao enviar aviso. Tente novamente.');
         }
     };
-
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
             <HeaderIns isDarkMode={isDarkMode} />

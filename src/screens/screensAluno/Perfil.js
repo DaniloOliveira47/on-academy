@@ -16,7 +16,7 @@ export default function Perfil() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://10.0.2.2:3000/api/student/${userId}`);
+          const response = await fetch(`http://10.92.198.51:3000/api/student/${userId}`);
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);
@@ -43,6 +43,9 @@ export default function Perfil() {
         <View style={styles.conText}>
           <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
         </View>
+        <View>
+
+       
         <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
         <View style={[styles.form, {
           backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
@@ -72,6 +75,7 @@ export default function Perfil() {
               </View>
             </>
           )}
+        </View>
         </View>
       </View>
     </View>

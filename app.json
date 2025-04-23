@@ -10,18 +10,75 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
-    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.danilo_47.nomedoprojeto"
+      "package": "com.danilo_47.nomedoprojeto",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.MANAGE_EXTERNAL_STORAGE"
+      ],
+      "versionCode": 1,
+      "intentFilters": [
+        {
+          "action": "android.intent.action.VIEW",
+          "data": [
+            {
+              "scheme": "content",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/pdf",
+              "pathPattern": ".*\\.pdf"
+            }
+          ],
+          "category": [
+            "android.intent.category.DEFAULT",
+            "android.intent.category.BROWSABLE"
+          ]
+        }
+      ]
     },
-    "web": {},
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.danilo_47.nomedoprojeto",
+      "infoPlist": {
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "NSDocumentsFolderUsageDescription": "O app precisa acessar seus documentos para salvar boletins",
+        "NSDownloadsFolderUsageDescription": "O app precisa acessar a pasta de downloads para salvar arquivos"
+      },
+      "usesIcloudStorage": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permitir acesso para salvar boletins",
+          "savePhotosPermission": "Permitir salvar boletins na galeria",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
     ],
     "extra": {
       "eas": {

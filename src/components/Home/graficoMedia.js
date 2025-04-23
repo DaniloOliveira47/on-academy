@@ -23,7 +23,7 @@ export default function GraficoMedia({ isDarkMode }) {
         }
 
         // Faz a requisição à API para buscar as notas do aluno
-        const response = await axios.get(`http://10.0.2.2:3000/api/student/${alunoId}`);
+        const response = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
         console.log('Resposta da API:', response.data);
 
         // Verifica se a resposta contém as notas do aluno

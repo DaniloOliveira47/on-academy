@@ -128,26 +128,46 @@ export default function Turmas() {
     };
 
     const validarCampos = () => {
+        // Objeto que armazena os erros de cada campo
         const novosErros = {
-            nomeTurma: !novaTurma.trim(),
-            capacidade: !novaCapacidade.trim() || isNaN(novaCapacidade) || parseInt(novaCapacidade) <= 0,
-            sala: !novaSala.trim() || isNaN(novaSala) || parseInt(novaSala) <= 0,
-            professores: selectedProfessores.length === 0,
-            disciplinas: selectedDisciplinas.length === 0
+            nomeTurma: !novaTurma.trim(), // Campo obrigatório
+            capacidade: !novaCapacidade.trim() ||
+                isNaN(novaCapacidade) ||
+                parseInt(novaCapacidade) < 20 || // Mínimo de 20 alunos
+                parseInt(novaCapacidade) <= 0, // Valor deve ser positivo
+            sala: !novaSala.trim() ||
+                isNaN(novaSala) ||
+                parseInt(novaSala) <= 0, // Número da sala deve ser válido
+            professores: selectedProfessores.length === 0, // Pelo menos 1 professor
+            disciplinas: selectedDisciplinas.length === 0 // Pelo menos 1 disciplina
         };
 
+        // Atualiza o estado de erros
         setErros(novosErros);
 
+        // Validação específica para capacidade mínima
+        if (novosErros.capacidade && novaCapacidade.trim() && !isNaN(novaCapacidade)) {
+            if (parseInt(novaCapacidade) < 20) {
+                Alert.alert('Atenção', 'A capacidade mínima da turma é 20 alunos.');
+            } else {
+                Alert.alert('Atenção', 'Capacidade inválida. Digite um número válido.');
+            }
+            return false;
+        }
+
+        // Validação para professores
         if (novosErros.professores) {
-            Alert.alert('Atenção', 'Selecione pelo menos um professor');
+            Alert.alert('Atenção', 'Selecione pelo menos um professor.');
             return false;
         }
 
+        // Validação para disciplinas
         if (novosErros.disciplinas) {
-            Alert.alert('Atenção', 'Selecione pelo menos uma disciplina');
+            Alert.alert('Atenção', 'Selecione pelo menos uma disciplina.');
             return false;
         }
 
+        // Retorna true apenas se NENHUM erro for encontrado
         return !Object.values(novosErros).some(erro => erro);
     };
 
@@ -176,7 +196,7 @@ export default function Turmas() {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+
                     }
                 }
             );
@@ -193,48 +213,7 @@ export default function Turmas() {
         }
     };
 
-    const editarTurma = async () => {
-        if (!validarCampos()) return;
 
-        setCarregando(true);
-        try {
-            const token = await AsyncStorage.getItem('@user_token');
-            if (!token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
-                return;
-            }
-
-            const anoLetivoTurma = `${novoAno}-01-01T00:00:00.000Z`;
-
-            await axios.put(
-                `http://10.92.198.51:3000/api/class/${turmaEditando.id}`,
-                {
-                    nomeTurma: novaTurma,
-                    anoLetivoTurma: anoLetivoTurma,
-                    capacidadeMaximaTurma: parseInt(novaCapacidade),
-                    salaTurma: parseInt(novaSala),
-                    periodoTurma: novoPeriodo,
-                    idTeacher: selectedProfessores,
-                    disciplineId: selectedDisciplinas,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                }
-            );
-
-            Alert.alert('Sucesso', 'Turma atualizada com sucesso!');
-            setModalEditarVisible(false);
-            limparCampos();
-            fetchTurmas();
-        } catch (error) {
-            const mensagem = error.response?.data?.message || 'Erro ao editar turma';
-            Alert.alert('Erro', mensagem);
-        } finally {
-            setCarregando(false);
-        }
-    };
 
     const registrarNovaDisciplina = async () => {
         if (!novaDisciplina.trim()) {
@@ -350,7 +329,7 @@ export default function Turmas() {
                         </View>
                     ) : (
                         <View style={styles.cards}>
-                           // No seu componente Turmas, modifique a renderização dos cards:
+
                             {turmasPaginaAtual.length > 0 ? (
                                 turmasPaginaAtual.map((turma) => (
                                     <CardTurmas
@@ -466,7 +445,6 @@ export default function Turmas() {
                                             styles.smallInput,
                                             {
                                                 backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
-                                                color: isDarkMode ? 'white' : 'black',
                                                 borderColor: erros.capacidade ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
                                             }
                                         ]}
@@ -476,10 +454,14 @@ export default function Turmas() {
                                             setErros({ ...erros, capacidade: false });
                                         }}
                                         keyboardType="numeric"
-                                        placeholder="Ex: 35"
+                                        placeholder="Ex: 40"
                                         placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                     />
-                                    {erros.capacidade && <Text style={styles.erroTexto}>Valor inválido</Text>}
+                                    {erros.capacidade && (
+                                        <Text style={styles.erroTexto}>
+                                            {parseInt(novaCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Valor inválido'}
+                                        </Text>
+                                    )}
                                 </View>
                                 <View style={{ width: '48%' }}>
                                     <TextInput
