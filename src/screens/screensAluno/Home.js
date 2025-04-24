@@ -15,17 +15,14 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [avisos, setAvisos] = useState([]);
 
-
   const gerarCorAleatoria = () => {
-    let cor = '#0077FF';
-    return cor;
+    return '#0077FF';
   };
 
   useEffect(() => {
     const fetchAvisos = async () => {
       try {
         const response = await axios.get('http://10.92.198.51:3000/api/reminder');
-        // Ordena avisos por ID decrescente (mais recentes primeiro)
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {
@@ -36,15 +33,12 @@ export default function Home() {
     const fetchAluno = async () => {
       try {
         const alunoId = await AsyncStorage.getItem('@user_id');
-        if (!alunoId) {
-
-          return;
-        }
+        if (!alunoId) return;
 
         const response = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
         setAluno(response.data);
       } catch (error) {
-
+        console.error('Erro ao buscar aluno:', error);
       }
     };
 
@@ -63,6 +57,7 @@ export default function Home() {
     <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
       <ScrollView>
         <Header isDarkMode={isDarkMode} />
+
         <View style={styles.subtela}>
           <View style={[styles.infoContainer, {
             backgroundColor: '#1E6BE6',
@@ -81,21 +76,36 @@ export default function Home() {
             </View>
             <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
           </View>
+
           <GraficoMedia isDarkMode={isDarkMode} />
-        </View>
+          
         <View style={styles.containerNotas}>
           <View style={styles.headerNotas}>
             <Text style={[styles.tituloNotas, { color: isDarkMode ? '#FFF' : '#000' }]}>Notas</Text>
-            <TouchableOpacity style={styles.bimestreButton} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity
+              style={[
+                styles.bimestreButton,
+                { backgroundColor: isDarkMode ? '#1E6BE6' : '#0077FF' }
+              ]}
+              onPress={() => setModalVisible(true)}
+            >
               <Text style={styles.bimestreButtonText}>
-                {bimestreSelecionado ? `${bimestreSelecionado}º Bimestre` : "Selecionar"}
+                {bimestreSelecionado ? `${bimestreSelecionado}º Bimestre` : "Todas"}
               </Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.scrollContainer}>
+
+          <View style={[
+            styles.scrollContainer,
+            {
+              backgroundColor: isDarkMode ? '#1E1E1E' : '#FFF',
+              borderColor: isDarkMode ? '#333' : '#EEE',
+            }
+          ]}>
             <ScrollView
               style={styles.scrollContent}
-              indicatorStyle={isDarkMode ? 'white' : 'default'}
+              contentContainerStyle={styles.scrollContentContainer}
+              indicatorStyle={isDarkMode ? 'white' : 'black'}
               nestedScrollEnabled={true}
             >
               {filtrarNotasPorBimestre().length > 0 ? (
@@ -104,51 +114,67 @@ export default function Home() {
                     key={index}
                     title={nota.nomeDisciplina}
                     subtitle={`Bimestre ${nota.bimestre} - ${nota.status}`}
-                    imageSource={require('../../assets/image/matematica.png')}
                     percentage={nota.nota}
                     isDarkMode={isDarkMode}
                   />
                 ))
               ) : (
-                <Text style={{ textAlign: 'center', color: isDarkMode ? '#FFF' : '#000' }}>
-                  Nenhuma nota encontrada.
-                </Text>
+                <View style={styles.emptyContainer}>
+                  <Text style={{
+                    color: isDarkMode ? '#AAA' : '#888',
+                    fontSize: 16,
+                    textAlign: 'center'
+                  }}>
+                    Nenhuma nota encontrada.
+                  </Text>
+                </View>
               )}
             </ScrollView>
           </View>
+        </View>
+        <View style={{ padding: 15, paddingTop: 0, marginBottom: 40 }}>
 
-          {/* Seção de Avisos - Ordenados por ID decrescente */}
+
           <View style={{
             backgroundColor: isDarkMode ? '#000' : '#FFF',
             width: '100%',
             borderRadius: 20,
-            marginTop: 20
+            marginTop: 20,
+            paddingBottom: 20
+
           }}>
             <Text style={{
               fontSize: 24,
               fontWeight: 'bold',
-              padding: 10,
+              padding: 15,
               color: isDarkMode ? '#FFF' : '#000'
             }}>
               Avisos
             </Text>
-            <View style={{ padding: 10 }}>
+
+            <View style={{ paddingHorizontal: 10 }}>
               {avisos.length > 0 ? (
                 avisos.map((aviso) => (
                   <Avisos
                     key={aviso.id}
                     abreviacao={aviso.initials}
-                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')} // Mostra apenas os dois primeiros nomes
-                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
+                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                     texto={aviso.conteudo}
                     aleatorio={gerarCorAleatoria()}
                   />
-
                 ))
               ) : (
                 <Text style={{
-                  color: isDarkMode ? '#FFF' : '#000',
-                  textAlign: 'center'
+                  color: isDarkMode ? '#AAA' : '#888',
+                  textAlign: 'center',
+                  paddingVertical: 20
                 }}>
                   Nenhum aviso disponível.
                 </Text>
@@ -156,6 +182,8 @@ export default function Home() {
             </View>
           </View>
         </View>
+        </View>
+
       </ScrollView>
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
@@ -169,19 +197,22 @@ export default function Home() {
               Selecione o Bimestre
             </Text>
             <FlatList
-              data={[1, 2, 3, 4]}
+              data={['Todas as Notas', 1, 2, 3, 4]}
               keyExtractor={(item) => item.toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => {
-                  setBimestreSelecionado(item);
-                  setModalVisible(false);
-                }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setBimestreSelecionado(item === 'Todas as Notas' ? null : item);
+                    setModalVisible(false);
+                  }}
+                  style={styles.modalItem}
+                >
                   <Text style={{
                     color: isDarkMode ? '#FFF' : '#000',
-                    padding: 10,
-                    fontSize: 18
+                    padding: 12,
+                    fontSize: 16
                   }}>
-                    {item}º Bimestre
+                    {item === 'Todas as Notas' ? item : `${item}º Bimestre`}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -200,14 +231,16 @@ const styles = StyleSheet.create({
   },
   subtela: {
     paddingTop: 20,
+    padding: 10,
     alignItems: 'center'
   },
   infoContainer: {
     flexDirection: 'row',
-    width: '90%',
+    width: '100%',
     padding: 20,
     borderRadius: 20,
-    height: 143
+    height: 143,
+    marginBottom: 20
   },
   textContainer: {
     width: 200
@@ -217,7 +250,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   subtitulo: {
-    fontSize: 14
+    fontSize: 14,
+    marginTop: 5
   },
   infoImage: {
     position: 'absolute',
@@ -228,37 +262,51 @@ const styles = StyleSheet.create({
     resizeMode: 'contain'
   },
   containerNotas: {
-    padding: 30,
     paddingTop: 10,
-    marginBottom: 30
+    width: '100%',
+    marginBottom: 10
   },
   headerNotas: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15
+    marginBottom: 15,
+    paddingHorizontal: 5,
   },
   tituloNotas: {
-    fontSize: 30,
-    fontWeight: 'bold'
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   bimestreButton: {
-    backgroundColor: '#1E6BE6',
     paddingVertical: 8,
     paddingHorizontal: 15,
-    borderRadius: 5
+    borderRadius: 20,
+    minWidth: 120,
+    alignItems: 'center',
   },
   bimestreButtonText: {
     color: '#FFF',
-    fontSize: 16
+    fontSize: 14,
+    fontWeight: '500',
   },
   scrollContainer: {
     flex: 1,
     maxHeight: 400,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 10
+  },
+  scrollContentContainer: {
+    padding: 10,
+    paddingBottom: 15,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   modalContainer: {
     flex: 1,
@@ -270,11 +318,18 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 20,
     borderRadius: 10,
-    alignItems: 'center'
+    maxHeight: '60%'
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10
+    marginBottom: 15,
+    textAlign: 'center'
   },
+  modalItem: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+    alignItems: 'center'
+  }
 });

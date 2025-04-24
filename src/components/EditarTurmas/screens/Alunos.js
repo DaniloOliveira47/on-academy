@@ -26,6 +26,7 @@ export default function Alunos() {
     const [modalBarraVisible, setModalBarraVisible] = useState(false);
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
+    const [hasFeedbacks, setHasFeedbacks] = useState(false);
 
     const fetchAlunos = async () => {
         try {
@@ -52,14 +53,13 @@ export default function Alunos() {
 
             console.log('Resposta da API:', response.data);
 
-            // Armazena o nome e período da turma no estado
             setNomeTurma(response.data.nomeTurma || 'Nome não encontrado');
             setPeriodoTurma(response.data.periodoTurma || '');
 
             const alunosComMedias = response.data.students.map((aluno) => {
                 if (aluno.nota && aluno.nota.length > 0) {
                     const totalNotas = aluno.nota.reduce((acc, curr) => acc + curr.valorNota, 0);
-                    const media = (totalNotas / aluno.nota.length); // Multiplica por 10 para obter porcentagem
+                    const media = (totalNotas / aluno.nota.length);
                     return { ...aluno, mediaNota: media.toFixed(2) };
                 }
                 return { ...aluno, mediaNota: '-' };
@@ -96,6 +96,9 @@ export default function Alunos() {
 
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
 
+            const hasData = [mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5].some(val => val > 0);
+            setHasFeedbacks(hasData);
+
             setDadosGrafico([
                 mediaResposta1,
                 mediaResposta2,
@@ -105,7 +108,8 @@ export default function Alunos() {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-            console.error('Erro ao buscar feedbacks:', error);
+       
+            setHasFeedbacks(false);
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
         }
@@ -194,9 +198,6 @@ export default function Alunos() {
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
                         {nomeTurma} - {periodoTurma}
                     </Text>
-                    <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>
-                        Nº0231000
-                    </Text>
                 </View>
 
                 <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
@@ -239,6 +240,22 @@ export default function Alunos() {
                             </Text>
                         )}
                     </ScrollView>
+                    <View style={styles.graficoContainer}>
+                            {hasFeedbacks ? (
+                                <GraficoFeedbackTurma
+                                    dadosGrafico={dadosGrafico}
+                                    totalFeedbacks={totalFeedbacks}
+                                    onBarraClick={handleBarraClick}
+                                />
+                            ) : (
+                                <View style={[styles.noFeedbackContainer, { backgroundColor: isDarkMode ? '#2D2D2D' : '#F0F0F0' }]}>
+                                    <Icon name="info" size={24} color={isDarkMode ? '#AAA' : '#666'} />
+                                    <Text style={[styles.noFeedbackText, { color: isDarkMode ? '#AAA' : '#666' }]}>
+                                        Nenhum feedback disponível para esta turma
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
 
                     <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
                         <TouchableOpacity
@@ -252,13 +269,9 @@ export default function Alunos() {
                                 <Icon name="plus" size={24} color="white" />
                             )}
                         </TouchableOpacity>
-                        <View style={styles.graficoContainer}>
-                            <GraficoFeedbackTurma
-                                dadosGrafico={dadosGrafico}
-                                totalFeedbacks={totalFeedbacks}
-                                onBarraClick={handleBarraClick}
-                            />
-                        </View>
+                        
+                 
+                        
                         <CadastroAlunoModal
                             visible={modalCriarVisible}
                             onClose={() => setModalCriarVisible(false)}
@@ -344,6 +357,18 @@ const styles = StyleSheet.create({
     graficoContainer: {
         marginBottom: 20,
         padding: 10,
+        width: '100%',
+    },
+    noFeedbackContainer: {
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+    },
+    noFeedbackText: {
+        marginLeft: 10,
+        fontSize: 16,
     },
     inputContainer: {
         flexDirection: 'row',

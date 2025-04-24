@@ -144,12 +144,12 @@ export default function GraficoMedia({ isDarkMode }) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 340,
+    width: '100%',
     padding: 10,
     borderRadius: 12,
     alignItems: 'center',
     height: 200,
-    marginTop: 30,
+    marginTop: 0,
   },
   header: {
     flexDirection: 'row',

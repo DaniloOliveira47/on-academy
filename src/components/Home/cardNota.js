@@ -2,16 +2,19 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-const CardNota = ({ title, subtitle, imageSource, percentage, isDarkMode }) => {
+const CardNota = ({ title, subtitle, percentage, isDarkMode }) => {
   const radius = 25;
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
   const progress = (percentage / 10) * circumference;
+  
+  // Pegar as duas primeiras letras do título e converter para maiúsculas
+  const initials = title ? title.substring(0, 2).toUpperCase() : '';
 
   return (
     <View style={[styles.card, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
-      <View style={styles.imageBack}>
-        <Image style={styles.image} source={imageSource} />
+      <View style={[styles.initialsContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#0077FF' }]}>
+        <Text style={styles.initialsText}>{initials}</Text>
       </View>
       <View style={styles.info}>
         <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#000' }]}>{title}</Text>
@@ -40,17 +43,17 @@ const CardNota = ({ title, subtitle, imageSource, percentage, isDarkMode }) => {
 };
 
 const styles = StyleSheet.create({
-  imageBack: {
-    backgroundColor: '#0077FF',
+  initialsContainer: {
     width: 57,
     height: 60,
     alignItems: 'center',
-    padding: 7,
+    justifyContent: 'center',
     borderRadius: 10,
   },
-  image: {
-    width: 47,
-    height: 47,
+  initialsText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   card: {
     padding: 10,
@@ -59,6 +62,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 6,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,

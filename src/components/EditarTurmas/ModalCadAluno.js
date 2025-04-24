@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import { useTheme } from '../../path/ThemeContext';
 export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreating, onCreate }) {
     const [nomeAluno, setNomeAluno] = useState('');
     const [emailAluno, setEmailAluno] = useState('');
@@ -12,29 +12,29 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
-
+    const { isDarkMode } = useTheme();
     // Validação em tempo real
     useEffect(() => {
         const validationErrors = {};
-        
+
         if (touched.nomeAluno && !nomeAluno.trim()) {
             validationErrors.nomeAluno = 'Nome é obrigatório';
         } else if (nomeAluno.length > 0 && nomeAluno.length < 3) {
             validationErrors.nomeAluno = 'Nome muito curto';
         }
-        
+
         if (touched.emailAluno && !emailAluno) {
             validationErrors.emailAluno = 'Email é obrigatório';
         } else if (touched.emailAluno && !/\S+@\S+\.\S+/.test(emailAluno)) {
             validationErrors.emailAluno = 'Email inválido';
         }
-        
+
         if (touched.telefoneAluno && !telefoneAluno) {
             validationErrors.telefoneAluno = 'Telefone é obrigatório';
         } else if (telefoneAluno && !/^[0-9]{10,11}$/.test(telefoneAluno.replace(/\D/g, ''))) {
             validationErrors.telefoneAluno = 'Telefone inválido (10 ou 11 dígitos)';
         }
-        
+
         if (touched.dataNascimento && !dataNascimento) {
             validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
         } else if (dataNascimento) {
@@ -42,14 +42,14 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             const today = new Date();
             const minDate = new Date();
             minDate.setFullYear(today.getFullYear() - 100);
-            
+
             if (birthDate > today) {
                 validationErrors.dataNascimento = 'Data não pode ser no futuro';
             } else if (birthDate < minDate) {
                 validationErrors.dataNascimento = 'Data inválida (muito antiga)';
             }
         }
-        
+
         setErrors(validationErrors);
     }, [nomeAluno, emailAluno, telefoneAluno, dataNascimento, touched]);
 
@@ -70,7 +70,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const formatPhone = (input) => {
         const numbers = input.replace(/\D/g, '');
         let formatted = '';
-        
+
         if (numbers.length > 0) {
             formatted = `(${numbers.substring(0, 2)}`;
         }
@@ -80,7 +80,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         if (numbers.length > 7) {
             formatted += `-${numbers.substring(7, 11)}`;
         }
-        
+
         return formatted;
     };
 
@@ -99,10 +99,10 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         });
 
         // Verifica se há erros
-        if (Object.keys(errors).length > 0 || 
-            !nomeAluno || 
-            !emailAluno || 
-            !telefoneAluno || 
+        if (Object.keys(errors).length > 0 ||
+            !nomeAluno ||
+            !emailAluno ||
+            !telefoneAluno ||
             !dataNascimento) {
             Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente');
             return;
@@ -121,7 +121,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             };
 
             await onCreate(alunoData);
-            
+
             // Limpa o formulário após cadastro bem-sucedido
             setNomeAluno('');
             setEmailAluno('');
@@ -131,7 +131,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             setTouched({});
         } catch (error) {
             let errorMessage = 'Erro ao cadastrar aluno. Tente novamente mais tarde.';
-            
+
             if (error.response) {
                 if (error.response.status === 400) {
                     errorMessage = 'Dados inválidos. Verifique as informações.';
@@ -139,53 +139,57 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     errorMessage = 'Email já cadastrado para outro aluno.';
                 }
             }
-            
+
             Alert.alert('Erro', errorMessage);
         }
     };
 
     const isFormValid = () => {
-        return nomeAluno && 
-               emailAluno && 
-               telefoneAluno && 
-               dataNascimento && 
-               Object.keys(errors).length === 0;
+        return nomeAluno &&
+            emailAluno &&
+            telefoneAluno &&
+            dataNascimento &&
+            Object.keys(errors).length === 0;
     };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <TouchableOpacity 
-                style={styles.modalContainer}
+            <TouchableOpacity
+                style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}
                 activeOpacity={1}
             >
                 <Image
                     style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
-                <View style={styles.modalContent}>
-                    <TouchableOpacity 
-                        style={styles.closeButton} 
+                <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+                    <TouchableOpacity
+                        style={styles.closeButton}
                         onPress={onClose}
                         disabled={isCreating}
                     >
-                        <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
+                        <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                     </TouchableOpacity>
-                    
+
                     <TextInput
-                        style={[styles.input, errors.nomeAluno && styles.inputError]}
+                        style={[ styles.input, 
+                            isDarkMode && styles.darkInput,
+                            errors.nomeAluno && styles.inputError]}
                         placeholder="Nome Completo"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         value={nomeAluno}
                         onChangeText={setNomeAluno}
                         onBlur={() => handleBlur('nomeAluno')}
                         editable={!isCreating}
                     />
                     {errors.nomeAluno && <Text style={styles.errorText}>{errors.nomeAluno}</Text>}
-                    
+
                     <TextInput
-                        style={[styles.input, errors.emailAluno && styles.inputError]}
+                        style={[   styles.input, 
+                            isDarkMode && styles.darkInput,
+                            errors.emailAluno && styles.inputError]}
                         placeholder="Email"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         value={emailAluno}
@@ -194,11 +198,13 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         editable={!isCreating}
                     />
                     {errors.emailAluno && <Text style={styles.errorText}>{errors.emailAluno}</Text>}
-                    
+
                     <TextInput
-                        style={[styles.input, errors.telefoneAluno && styles.inputError]}
+                        style={[     styles.input, 
+                            isDarkMode && styles.darkInput,
+                            errors.telefoneAluno && styles.inputError]}
                         placeholder="Telefone (XX) XXXXX-XXXX"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="phone-pad"
                         value={telefoneAluno}
                         onChangeText={handlePhoneChange}
@@ -208,16 +214,17 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     />
                     {errors.telefoneAluno && <Text style={styles.errorText}>{errors.telefoneAluno}</Text>}
 
-                    <Text style={styles.label}>Data de Nascimento</Text>
+                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
                     <View style={styles.dateContainer}>
                         <TextInput
                             style={[
                                 styles.input, 
-                                styles.dateInput,
+                                styles.dateInput, 
+                                isDarkMode && styles.darkInput,
                                 errors.dataNascimento && styles.inputError
                             ]}
                             placeholder="Selecione a data de nascimento"
-                            placeholderTextColor="#666"
+                            placeholderTextColor={isDarkMode ? '#888' : '#666'}
                             value={dataNascimento}
                             editable={false}
                             onFocus={() => !isCreating && setShowBirthDatePicker(true)}
@@ -242,11 +249,11 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         />
                     )}
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[
                             styles.saveButton,
                             (!isFormValid() || isCreating) && styles.saveButtonDisabled
-                        ]} 
+                        ]}
                         onPress={handleCadastrar}
                         disabled={!isFormValid() || isCreating}
                     >
@@ -268,6 +275,19 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    darkModalContainer: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    darkModalContent: {
+        backgroundColor: '#1E1E1E',
+    },
+    darkInput: {
+        backgroundColor: '#2D2D2D',
+        color: '#FFF',
+    },
+    darkLabel: {
+        color: '#FFF',
     },
     modalContent: {
         width: '85%',

@@ -117,7 +117,7 @@ export default function Header() {
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
               <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
-            <Image style={styles.notification} source={require('../../assets/image/Notification3.png')} />
+           
           </View>
         </View>
       </View>

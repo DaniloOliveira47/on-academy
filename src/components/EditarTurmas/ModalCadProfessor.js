@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import { useTheme } from '../../path/ThemeContext';
 export default function CadastroProfessorModal({ visible, onClose, onCreate, isCreating }) {
     const [nomeDocente, setNomeDocente] = useState('');
     const [emailDocente, setEmailDocente] = useState('');
@@ -15,6 +15,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     const [disciplines, setDisciplines] = useState([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState([]);
     const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+    const { isDarkMode } = useTheme();
     const [errors, setErrors] = useState({
         nomeDocente: '',
         emailDocente: '',
@@ -65,7 +66,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         if (date) {
             setSelectedBirthDate(date);
             setDataNascimento(date.toLocaleDateString('pt-BR'));
-            setErrors(prev => ({...prev, dataNascimento: ''}));
+            setErrors(prev => ({ ...prev, dataNascimento: '' }));
         }
     };
 
@@ -75,11 +76,11 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             const newSelection = prev.includes(disciplineId)
                 ? prev.filter(id => id !== disciplineId)
                 : [...prev, disciplineId];
-            
+
             if (newSelection.length > 0) {
-                setErrors(prev => ({...prev, disciplines: ''}));
+                setErrors(prev => ({ ...prev, disciplines: '' }));
             }
-            
+
             return newSelection;
         });
     };
@@ -87,10 +88,10 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     const formatPhoneNumber = (input) => {
         // Remove tudo que não é dígito
         const cleaned = input.replace(/\D/g, '');
-        
+
         // Limita a 11 caracteres (DDD + 9 dígitos)
         const limited = cleaned.slice(0, 11);
-        
+
         // Aplica a formatação
         if (limited.length <= 10) {
             return limited.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
@@ -103,7 +104,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         const formatted = formatPhoneNumber(text);
         setTelefoneDocente(formatted);
         if (formatted.replace(/\D/g, '').length >= 10) {
-            setErrors(prev => ({...prev, telefoneDocente: ''}));
+            setErrors(prev => ({ ...prev, telefoneDocente: '' }));
         }
     };
 
@@ -150,11 +151,11 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             const birthDate = new Date(selectedBirthDate);
             let age = today.getFullYear() - birthDate.getFullYear();
             const monthDiff = today.getMonth() - birthDate.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-            
+
             if (age < 18) {
                 newErrors.dataNascimento = 'O professor deve ter pelo menos 18 anos';
                 valid = false;
@@ -187,32 +188,34 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <TouchableOpacity 
-                style={styles.modalContainer} 
+            <TouchableOpacity
+                style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}
                 activeOpacity={1}
             >
                 <Image
                     style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                     source={require('../../assets/image/barraAzul.png')}
                 />
-                <View style={styles.modalContent}>
-                    <TouchableOpacity 
-                        style={styles.closeButton} 
+                <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+                    <TouchableOpacity
+                        style={styles.closeButton}
                         onPress={onClose}
                         disabled={isCreating}
                     >
-                        <Icon name="x" size={30} color={isCreating ? '#CCC' : '#000'} />
+                        <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                     </TouchableOpacity>
 
                     <TextInput
-                        style={[styles.input, errors.nomeDocente && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.nomeDocente && styles.inputError]}
                         placeholder="Nome Completo"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         value={nomeDocente}
                         onChangeText={(text) => {
                             setNomeDocente(text);
                             if (text.trim()) {
-                                setErrors(prev => ({...prev, nomeDocente: ''}));
+                                setErrors(prev => ({ ...prev, nomeDocente: '' }));
                             }
                         }}
                         editable={!isCreating}
@@ -220,16 +223,18 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                     {errors.nomeDocente ? <Text style={styles.errorText}>{errors.nomeDocente}</Text> : null}
 
                     <TextInput
-                        style={[styles.input, errors.emailDocente && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.emailDocente && styles.inputError]}
                         placeholder="Email"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         value={emailDocente}
                         onChangeText={(text) => {
                             setEmailDocente(text);
                             if (text.trim()) {
-                                setErrors(prev => ({...prev, emailDocente: ''}));
+                                setErrors(prev => ({ ...prev, emailDocente: '' }));
                             }
                         }}
                         editable={!isCreating}
@@ -237,9 +242,11 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                     {errors.emailDocente ? <Text style={styles.errorText}>{errors.emailDocente}</Text> : null}
 
                     <TextInput
-                        style={[styles.input, errors.telefoneDocente && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.telefoneDocente && styles.inputError]}
                         placeholder="Telefone (DDD) + número"
-                        placeholderTextColor="#AAA"
+                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="phone-pad"
                         value={telefoneDocente}
                         onChangeText={handlePhoneChange}
@@ -248,12 +255,15 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                     />
                     {errors.telefoneDocente ? <Text style={styles.errorText}>{errors.telefoneDocente}</Text> : null}
 
-                    <Text style={styles.label}>Data de Nascimento</Text>
+                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
                     <View style={styles.dateContainer}>
                         <TextInput
-                            style={[styles.input, styles.dateInput, errors.dataNascimento && styles.inputError]}
+                            style={[styles.input,
+                            styles.dateInput,
+                            isDarkMode && styles.darkInput,
+                            errors.dataNascimento && styles.inputError]}
                             placeholder="Selecione a data de nascimento"
-                            placeholderTextColor="#666"
+                            placeholderTextColor={isDarkMode ? '#888' : '#666'}
                             value={dataNascimento}
                             editable={false}
                         />
@@ -270,30 +280,34 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         <DateTimePicker
                             value={selectedBirthDate}
                             mode="date"
-                            display="default"
+
                             onChange={handleBirthDateChange}
                             maximumDate={new Date()}
+                            themeVariant={isDarkMode ? 'dark' : 'light'} // Esta é a linha importante para o dark mode
+                            textColor={isDarkMode ? '#FFF' : '#000'} // Cor do texto no Android
                         />
                     )}
 
-                    <Text style={styles.label}>Disciplinas</Text>
-                    {errors.disciplines ? <Text style={styles.errorText}>{errors.disciplines}</Text> : null}
+                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Disciplinas</Text>
+                    {errors.disciplines ? <Text style={[styles.errorText, isDarkMode && styles.darkErrorText]}>{errors.disciplines}</Text> : null}
                     {loadingDisciplines ? (
-                        <ActivityIndicator size="small" color="#1A85FF" />
+                        <ActivityIndicator size="small" color={isDarkMode ? '#1A85FF' : '#1A85FF'} />
                     ) : (
-                        <ScrollView style={styles.disciplinesContainer} contentContainerStyle={styles.disciplinesContent}>
+                        <ScrollView style={[styles.disciplinesContainer, isDarkMode && styles.darkDisciplinesContainer]} contentContainerStyle={styles.disciplinesContent}>
                             {disciplines.map(discipline => (
                                 <TouchableOpacity
                                     key={discipline.id}
                                     style={[
                                         styles.disciplineItem,
+                                        isDarkMode && styles.darkDisciplineItem,
                                         selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
+                                        isDarkMode && selectedDisciplines.includes(discipline.id) && styles.darkDisciplineItemSelected,
                                         isCreating && styles.disabledItem
                                     ]}
                                     onPress={() => toggleDiscipline(discipline.id)}
                                     disabled={isCreating}
                                 >
-                                    <Text style={styles.disciplineText}>{discipline.nomeDisciplina}</Text>
+                                    <Text style={[styles.disciplineText, isDarkMode && styles.darkDisciplineText]}>{discipline.nomeDisciplina}</Text>
                                     {selectedDisciplines.includes(discipline.id) && (
                                         <Icon name="check" size={18} color="#1A85FF" />
                                     )}
@@ -302,11 +316,11 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         </ScrollView>
                     )}
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[
                             styles.saveButton,
                             isCreating && styles.saveButtonDisabled
-                        ]} 
+                        ]}
                         onPress={handleSubmit}
                         disabled={isCreating}
                     >
@@ -345,6 +359,28 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         zIndex: 10,
     },
+    darkErrorText: {
+        color: '#FF7D7D',
+    },
+    darkDisciplinesContainer: {
+        backgroundColor: '#1E1E1E',
+    },
+    darkDisciplineItem: {
+        backgroundColor: '#2D2D2D',
+    },
+    darkDisciplineItemSelected: {
+        backgroundColor: '#333333',
+        borderColor: '#1A85FF',
+    },
+    darkDisciplineText: {
+        color: '#FFF',
+    },
+    darkSaveButton: {
+        backgroundColor: '#1A65C0',
+    },
+    darkLabel: {
+        color: '#FFF',
+    },
     input: {
         width: '100%',
         height: 45,
@@ -352,6 +388,19 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 10,
         marginBottom: 5,
+    },
+    darkModalContainer: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    darkModalContent: {
+        backgroundColor: '#1E1E1E',
+    },
+    darkInput: {
+        backgroundColor: '#2D2D2D',
+        color: '#FFF',
+    },
+    darkLabel: {
+        color: '#FFF',
     },
     inputError: {
         borderWidth: 1,
