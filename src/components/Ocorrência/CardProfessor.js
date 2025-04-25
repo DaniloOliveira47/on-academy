@@ -1,14 +1,16 @@
 import React from 'react';
 import { Text, TouchableOpacity, View, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import { useTheme } from '../../path/ThemeContext';
 export default function CardProfessor({ nome, id, onPress, selecionado, onVerPerfil }) {
+    const navigation = useNavigation();
+    const { isDarkMode } = useTheme();
     return (
         <TouchableOpacity
             onPress={onPress} // Clique em todo o card para selecionar o professor
-            style={[styles.container, selecionado && styles.selecionado]}
+            style={[styles.container, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }, selecionado && styles.selecionado]}
         >
-            <View style={styles.imageContainer}>
+            <View style={[styles.imageContainer,  {borderColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
             <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
@@ -29,7 +31,7 @@ export default function CardProfessor({ nome, id, onPress, selecionado, onVerPer
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#F0F7FF',
-        width: 170,
+        width: 160,
         height: 'auto',
         borderRadius: 16,
         alignItems: 'center',

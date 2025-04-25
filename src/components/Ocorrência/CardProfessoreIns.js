@@ -44,7 +44,7 @@ export default function CardProfessorIns({ nome, id, imageUrl }) { // Adicione i
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#F0F7FF',
-        width: 170,
+        width: 160,
         height: 'auto',
         borderRadius: 16,
         alignItems: 'center',

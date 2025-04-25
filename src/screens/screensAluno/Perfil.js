@@ -24,7 +24,7 @@ export default function Perfil() {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-       
+
       }
     };
 
@@ -45,37 +45,37 @@ export default function Perfil() {
         </View>
         <View>
 
-       
-        <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
-        <View style={[styles.form, {
-          backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }]}>
-          {dadosAluno && (
-            <>
-              <View style={styles.linhaUser}>
-                <Image source={require('../../assets/image/Perfill.png')} />
-                <View style={styles.name}>
-                  <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nome}</Text>
-                  <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailAluno}</Text>
+
+          <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
+          <View style={[styles.form, {
+            backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }]}>
+            {dadosAluno && (
+              <>
+                <View style={styles.linhaUser}>
+                  <Image source={require('../../assets/image/Perfill.png')} />
+                  <View style={styles.name}>
+                    <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nome}</Text>
+                    <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailAluno}</Text>
+                  </View>
                 </View>
-              </View>
-              <Campo label="Nome Completo" text={dadosAluno.nome} textColor={textColor} />
-              <Campo label="Email" text={dadosAluno.emailAluno} textColor={textColor} />
-              <Campo label="Nº Matrícula" text={dadosAluno.matriculaAluno} textColor={textColor} />
-              <View style={styles.doubleCampo}>
-                <View style={styles.metadeCampo}>
-                  <Campo label="Telefone" text={dadosAluno.telefoneAluno} textColor={textColor} />
+                <Campo label="Nome Completo" text={dadosAluno.nome} textColor={textColor} />
+                <Campo label="Email" text={dadosAluno.emailAluno} textColor={textColor} />
+                <Campo label="Nº Matrícula" text={dadosAluno.matriculaAluno} textColor={textColor} />
+                <View style={styles.doubleCampo}>
+                  <View style={styles.metadeCampo}>
+                    <Campo label="Telefone" text={dadosAluno.telefoneAluno} textColor={textColor} />
+                  </View>
+                  <View style={styles.metadeCampo}>
+                    <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoAluno).toLocaleDateString()} textColor={textColor} />
+                  </View>
                 </View>
-                <View style={styles.metadeCampo}>
-                  <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoAluno).toLocaleDateString()} textColor={textColor} />
-                </View>
-              </View>
-            </>
-          )}
-        </View>
+              </>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -84,7 +84,7 @@ export default function Perfil() {
 
 const styles = StyleSheet.create({
   tela: {
-    padding: 25,
+    padding: 15,
     width: '100%',
     height: '100%',
   },

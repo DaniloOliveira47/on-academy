@@ -194,9 +194,9 @@ export default function HomeInstituicao() {
                             Avisos
                         </Text>
                         <View style={[styles.customScrollView, {
-                            backgroundColor: isDarkMode ? '#1A1A1A' : '#E6F2FF',
+                     
                             maxHeight: 300,
-                            padding: 10
+                        
                         }]}>
                             
                                 {avisos.length > 0 ? (

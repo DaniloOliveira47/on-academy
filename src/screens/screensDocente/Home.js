@@ -95,8 +95,13 @@ export default function HomeDocente() {
                 classSt: { id: turmaSelecionada },
             };
 
-            const response = await axios.post('http://192.168.2.11:3000/api/reminder', avisoData);
-            console.log(`Aviso enviado para a turma ${turmaSelecionada}:`, response.data);
+               // Corrigido a chamada axios.post
+               await axios.post('http://10.92.198.51:3000/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');

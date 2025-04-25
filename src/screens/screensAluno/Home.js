@@ -78,110 +78,111 @@ export default function Home() {
           </View>
 
           <GraficoMedia isDarkMode={isDarkMode} />
-          
-        <View style={styles.containerNotas}>
-          <View style={styles.headerNotas}>
-            <Text style={[styles.tituloNotas, { color: isDarkMode ? '#FFF' : '#000' }]}>Notas</Text>
-            <TouchableOpacity
-              style={[
-                styles.bimestreButton,
-                { backgroundColor: isDarkMode ? '#1E6BE6' : '#0077FF' }
-              ]}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.bimestreButtonText}>
-                {bimestreSelecionado ? `${bimestreSelecionado}º Bimestre` : "Todas"}
-              </Text>
-            </TouchableOpacity>
-          </View>
 
-          <View style={[
-            styles.scrollContainer,
-            {
-              backgroundColor: isDarkMode ? '#1E1E1E' : '#FFF',
-              borderColor: isDarkMode ? '#333' : '#EEE',
-            }
-          ]}>
-            <ScrollView
-              style={styles.scrollContent}
-              contentContainerStyle={styles.scrollContentContainer}
-              indicatorStyle={isDarkMode ? 'white' : 'black'}
-              nestedScrollEnabled={true}
-            >
-              {filtrarNotasPorBimestre().length > 0 ? (
-                filtrarNotasPorBimestre().map((nota, index) => (
-                  <CardNota
-                    key={index}
-                    title={nota.nomeDisciplina}
-                    subtitle={`Bimestre ${nota.bimestre} - ${nota.status}`}
-                    percentage={nota.nota}
-                    isDarkMode={isDarkMode}
-                  />
-                ))
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={{
-                    color: isDarkMode ? '#AAA' : '#888',
-                    fontSize: 16,
-                    textAlign: 'center'
-                  }}>
-                    Nenhuma nota encontrada.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-        <View style={{ padding: 15, paddingTop: 0, marginBottom: 40 }}>
-
-
-          <View style={{
-            backgroundColor: isDarkMode ? '#000' : '#FFF',
-            width: '100%',
-            borderRadius: 20,
-            marginTop: 20,
-            paddingBottom: 20
-
-          }}>
-            <Text style={{
-              fontSize: 24,
-              fontWeight: 'bold',
-              padding: 15,
-              color: isDarkMode ? '#FFF' : '#000'
-            }}>
-              Avisos
-            </Text>
-
-            <View style={{ paddingHorizontal: 10 }}>
-              {avisos.length > 0 ? (
-                avisos.map((aviso) => (
-                  <Avisos
-                    key={aviso.id}
-                    abreviacao={aviso.initials}
-                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
-                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                    texto={aviso.conteudo}
-                    aleatorio={gerarCorAleatoria()}
-                  />
-                ))
-              ) : (
-                <Text style={{
-                  color: isDarkMode ? '#AAA' : '#888',
-                  textAlign: 'center',
-                  paddingVertical: 20
-                }}>
-                  Nenhum aviso disponível.
+          <View style={styles.containerNotas}>
+            <View style={styles.headerNotas}>
+              <Text style={[styles.tituloNotas, { color: isDarkMode ? '#FFF' : '#000' }]}>Notas</Text>
+              <TouchableOpacity
+                style={[
+                  styles.bimestreButton,
+                  { backgroundColor: isDarkMode ? '#1E6BE6' : '#0077FF' }
+                ]}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={styles.bimestreButtonText}>
+                  {bimestreSelecionado ? `${bimestreSelecionado}º Bimestre` : "Todas"}
                 </Text>
-              )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={[
+              styles.scrollContainer,
+              {
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#FFF',
+                borderColor: isDarkMode ? '#333' : '#EEE',
+              }
+            ]}>
+              <ScrollView
+                style={styles.scrollContent}
+                contentContainerStyle={styles.scrollContentContainer}
+                indicatorStyle={isDarkMode ? 'white' : 'black'}
+                nestedScrollEnabled={true}
+              >
+                {filtrarNotasPorBimestre().length > 0 ? (
+                  filtrarNotasPorBimestre().map((nota, index) => (
+                    <CardNota
+                      key={index}
+                      title={nota.nomeDisciplina}
+                      subtitle={`Bimestre ${nota.bimestre} - ${nota.status}`}
+                      percentage={nota.nota}
+                      isDarkMode={isDarkMode}
+                    />
+                  ))
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <Text style={{
+                      color: isDarkMode ? '#AAA' : '#888',
+                      fontSize: 16,
+                      textAlign: 'center'
+                    }}>
+                      Nenhuma nota encontrada.
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
             </View>
           </View>
-        </View>
+        
+
+
+            <View style={{
+              backgroundColor: isDarkMode ? '#000' : '#FFF',
+              width: '100%',
+              borderRadius: 20,
+              marginTop: 20,
+              paddingBottom: 20,
+              marginBottom: 50
+
+            }}>
+              <Text style={{
+                fontSize: 24,
+                fontWeight: 'bold',
+                padding: 15,
+                color: isDarkMode ? '#FFF' : '#000'
+              }}>
+                Avisos
+              </Text>
+
+              <View style={{ paddingHorizontal: 10 }}>
+                {avisos.length > 0 ? (
+                  avisos.map((aviso) => (
+                    <Avisos
+                      key={aviso.id}
+                      abreviacao={aviso.initials}
+                      nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
+                      horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                      texto={aviso.conteudo}
+                      aleatorio={gerarCorAleatoria()}
+                    />
+                  ))
+                ) : (
+                  <Text style={{
+                    color: isDarkMode ? '#AAA' : '#888',
+                    textAlign: 'center',
+                    paddingVertical: 20
+                  }}>
+                    Nenhum aviso disponível.
+                  </Text>
+                )}
+              </View>
+            </View>
+         
         </View>
 
       </ScrollView>
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   subtela: {
     paddingTop: 20,
-    padding: 10,
+    padding: 15,
     alignItems: 'center'
   },
   infoContainer: {

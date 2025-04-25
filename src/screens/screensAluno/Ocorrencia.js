@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     container2: {
-        padding: 20,
+        padding: 10,
         marginTop: 20,
         borderRadius: 10
     },
