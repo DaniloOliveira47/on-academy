@@ -251,7 +251,7 @@ export default function Boletim() {
                                 ) : (
                                     <>
                                         <Image source={require('../../assets/image/baixar.png')} />
-                                        <Text style={{ fontSize: 18, color: '#000', fontWeight: 'bold' }}>PDF</Text>
+                                        <Text style={{ fontSize: 18, color: isDarkMode ? '#FFF' : '#000', fontWeight: 'bold' }}>PDF</Text>
                                     </>
                                 )}
                             </TouchableOpacity>

@@ -13,17 +13,17 @@ export default function CardProfessor({ nome, id, onPress, selecionado, onVerPer
             <View style={[styles.imageContainer,  {borderColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
                 <Image style={styles.image} source={require('../../assets/image/Professor.png')} />
             </View>
-            <Text style={{ marginTop: 50, fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
+            <Text style={{ marginTop: 50, color: isDarkMode ? '#FFF' : '#000', fontWeight: 'bold', textAlign: 'center' }}>
                 {nome}
             </Text>
-            <TouchableOpacity
-                onPress={onVerPerfil} // Clique no botão "Ver" para navegar ao perfil
+            <View
+              
                 style={styles.botao}
             >
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                    Ver
+                   Selecione
                 </Text>
-            </TouchableOpacity>
+            </View>
         </TouchableOpacity>
     );
 }
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     botao: {
         backgroundColor: '#0077FF',
         padding: 5,
-        width: 50,
+        width: 80,
         alignItems: 'center',
         borderRadius: 10,
         marginTop: 10,

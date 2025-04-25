@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     textContainer: { flex: 1, zIndex: 2 },
     titulo: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, width: 150 },
     subtitulo: { fontSize: 14, width: 190 },
-    infoImage: { position: 'absolute', right: -25, bottom: -10, width: 200, height: 150, resizeMode: 'contain' },
+    infoImage: { position: 'absolute', right: -25, bottom: -7, width: 200, height: 150, resizeMode: 'contain' },
     emptyMessage: { textAlign: 'center', color: '#888', marginTop: 10 },
     contAviso: { backgroundColor: '#F0F7FF', padding: 10, borderRadius: 18, marginTop: 8 },
     enviarButton: { backgroundColor: '#1A85FF', alignItems: 'center', width: 100, padding: 8, borderRadius: 10, marginTop: 10 },

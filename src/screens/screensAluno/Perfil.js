@@ -31,11 +31,10 @@ export default function Perfil() {
     fetchUserData();
   }, []);
 
-  const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
-  const formBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
-
+  const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
   return (
     <View>
       <HeaderSimples titulo="PERFIL" />

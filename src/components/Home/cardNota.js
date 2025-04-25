@@ -11,6 +11,16 @@ const CardNota = ({ title, subtitle, percentage, isDarkMode }) => {
   // Pegar as duas primeiras letras do título e converter para maiúsculas
   const initials = title ? title.substring(0, 2).toUpperCase() : '';
 
+  // Determinar a cor do subtítulo baseado no status
+  const getSubtitleColor = () => {
+    if (subtitle.includes('Aprovado')) {
+      return isDarkMode ? '#4CAF50' : '#2E7D32'; // Verde
+    } else if (subtitle.includes('Reprovado')) {
+      return isDarkMode ? '#F44336' : '#C62828'; // Vermelho
+    }
+    return isDarkMode ? '#BBB' : '#8A8A8A'; // Cor padrão
+  };
+
   return (
     <View style={[styles.card, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
       <View style={[styles.initialsContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#0077FF' }]}>
@@ -18,7 +28,7 @@ const CardNota = ({ title, subtitle, percentage, isDarkMode }) => {
       </View>
       <View style={styles.info}>
         <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#000' }]}>{title}</Text>
-        <Text style={[styles.subtitle, { color: isDarkMode ? '#BBB' : '#8A8A8A' }]}>{subtitle}</Text>
+        <Text style={[styles.subtitle, { color: getSubtitleColor(), fontWeight: 'bold' }]}>{subtitle}</Text>
       </View>
       <View style={styles.progressContainer}>
         <Svg width={60} height={60} viewBox="0 0 60 60">

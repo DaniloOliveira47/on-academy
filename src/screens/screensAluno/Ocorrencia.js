@@ -130,7 +130,7 @@ export default function Ocorrencia() {
     };
 
     return (
-        <ScrollView>
+        <ScrollView style={{backgroundColor: perfilBackgroundColor}}>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 {/* Componente de Gráfico Reutilizado */}

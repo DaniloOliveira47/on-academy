@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList, Animated, Easing } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
@@ -11,43 +11,55 @@ export default function GraficoMedia({ isDarkMode }) {
   const [notas, setNotas] = useState([]);
   const [media, setMedia] = useState(0);
   const [materias, setMaterias] = useState(["Média Geral"]);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const fetchNotas = async () => {
       try {
-        // Recupera o ID do aluno do Async Storage
         const alunoId = await AsyncStorage.getItem('@user_id');
         if (!alunoId) {
           console.error('ID do aluno não encontrado no Async Storage');
           return;
         }
 
-        // Faz a requisição à API para buscar as notas do aluno
         const response = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
         console.log('Resposta da API:', response.data);
 
-        // Verifica se a resposta contém as notas do aluno
         if (response.data && Array.isArray(response.data.notas)) {
-          setNotas(response.data.notas); // Atualiza o estado com as notas do aluno
-          calcularMedia(response.data.notas); // Calcula a média geral
-          extrairMaterias(response.data.notas); // Extrai as matérias disponíveis
-        } else {
-         
+          setNotas(response.data.notas);
+          calcularMedia(response.data.notas);
+          extrairMaterias(response.data.notas);
+          // Inicia a animação quando os dados são carregados
+          animateIn();
         }
       } catch (error) {
-    
+        console.error('Erro ao buscar notas:', error);
       }
     };
 
     fetchNotas();
   }, []);
 
+  useEffect(() => {
+    // Anima o gráfico sempre que a matéria selecionada mudar
+    animateIn();
+  }, [materiaSelecionada]);
+
+  const animateIn = () => {
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
   const calcularMedia = (notasLista) => {
     if (notasLista.length === 0) {
       setMedia(0);
       return;
     }
-
     const mediaGeral = notasLista.reduce((acc, nota) => acc + nota.nota, 0) / notasLista.length;
     setMedia(mediaGeral);
   };
@@ -63,7 +75,6 @@ export default function GraficoMedia({ isDarkMode }) {
     }
     const notasMateria = notas.filter(nota => nota.nomeDisciplina === materia);
     if (notasMateria.length === 0) return 0;
-
     return notasMateria.reduce((acc, nota) => acc + nota.nota, 0) / notasMateria.length;
   };
 
@@ -80,15 +91,22 @@ export default function GraficoMedia({ isDarkMode }) {
   };
 
   return (
-    <View style={[styles.card, {
-      backgroundColor: isDarkMode ? '#000' : '#FFFFFF', shadowColor: isDarkMode ? '#FFF' : '#000',
+    <Animated.View style={[styles.card, {
+      backgroundColor: isDarkMode ? '#000' : '#FFFFFF',
+      shadowColor: isDarkMode ? '#FFF' : '#000',
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 5,
+      opacity: fadeAnim, // Aplica a animação de fade no container principal
+      transform: [{
+        scale: fadeAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.95, 1]
+        })
+      }]
     }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#222' }]}>Por Notas</Text>
-
         <TouchableOpacity style={styles.mediaContainer} onPress={() => setModalVisible(true)}>
           <Text style={[styles.mediaText, { color: isDarkMode ? '#BBB' : '#888' }]}>{materiaSelecionada}</Text>
           <FontAwesome name="caret-down" size={20} color={isDarkMode ? '#BBB' : '#888'} />
@@ -114,7 +132,20 @@ export default function GraficoMedia({ isDarkMode }) {
           </G>
         </Svg>
         <Text style={[styles.valorAtual, { color: isDarkMode ? '#AAA' : '#666' }]}>Média</Text>
-        <Text style={[styles.valor, { color: isDarkMode ? '#FFF' : '#333' }]}>{valorAtual.toFixed(1)}</Text>
+        <Animated.Text 
+          style={[styles.valor, { 
+            color: isDarkMode ? '#FFF' : '#333',
+            opacity: fadeAnim,
+            transform: [{
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [10, 0]
+              })
+            }]
+          }]}
+        >
+          {valorAtual.toFixed(1)}
+        </Animated.Text>
       </View>
 
       <Modal visible={modalVisible} transparent animationType="fade">
@@ -138,7 +169,7 @@ export default function GraficoMedia({ isDarkMode }) {
           </View>
         </TouchableOpacity>
       </Modal>
-    </View>
+    </Animated.View>
   );
 }
 

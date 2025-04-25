@@ -117,7 +117,7 @@ export default function Header() {
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
               <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
-           
+
           </View>
         </View>
       </View>
@@ -139,9 +139,8 @@ export default function Header() {
                   style={styles.imgPerfil}
                   source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
                 />
-
                 <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  {aluno ? aluno.nome : 'Carregando...'} {/* Exibe o nome do aluno ou "Carregando..." */}
+                  {aluno ? aluno.nome.split(' ')[0] : 'Carregando...'}
                 </Text>
               </View>
               <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />

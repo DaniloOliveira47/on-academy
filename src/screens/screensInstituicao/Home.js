@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     infoImage: {
         position: 'absolute',
         right: -25,
-        bottom: -10,
+        bottom: -7,
         width: 200,
         height: 150,
         resizeMode: 'contain'

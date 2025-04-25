@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   infoImage: {
     position: 'absolute',
     right: -25,
-    bottom: -10,
+    bottom: -7,
     width: 200,
     height: 150,
     resizeMode: 'contain'
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   bimestreButton: {
     paddingVertical: 8,
     paddingHorizontal: 15,
-    borderRadius: 20,
+    borderRadius: 10,
     minWidth: 120,
     alignItems: 'center',
   },

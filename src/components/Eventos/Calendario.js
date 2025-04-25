@@ -105,6 +105,7 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
         minDate={minDate} // 1º dia do ano atual
         maxDate={maxDate} // Último dia do ano atual
         disabledByDefault={false}
+        
       />
     </View>
   );
