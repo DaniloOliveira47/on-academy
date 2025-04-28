@@ -16,7 +16,7 @@ export default function Perfil() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://10.92.198.51:3000/api/student/${userId}`);
+          const response = await fetch(`http://192.168.2.11:3000/api/student/${userId}`);
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);

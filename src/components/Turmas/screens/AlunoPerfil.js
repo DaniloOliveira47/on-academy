@@ -55,7 +55,7 @@ export default function AlunoPerfil({ route }) {
                 setAluno(response.data);
             } catch (error) {
                 setError('Erro ao carregar os dados do aluno. Tente novamente mais tarde.');
-                
+
             } finally {
                 setLoading(false);
             }
@@ -88,7 +88,7 @@ export default function AlunoPerfil({ route }) {
             setProfessores(professoresUnicos);
             atualizarDadosGrafico(response.data);
         } catch (error) {
-            
+
         }
     };
 
@@ -192,7 +192,7 @@ export default function AlunoPerfil({ route }) {
             setRatings(Array(5).fill(0));
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
-            
+
         }
     };
 
@@ -215,7 +215,7 @@ export default function AlunoPerfil({ route }) {
             setConteudoFeedback('');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
-     
+
         }
     };
 

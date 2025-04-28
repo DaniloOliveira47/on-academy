@@ -31,7 +31,7 @@ export default function Header() {
     const fetchData = async () => {
       try {
         // Busca os eventos
-        const eventsResponse = await axios.get('http://10.92.198.51:3000/api/event');
+        const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
         const events = eventsResponse.data;
 
         // Gerar cores aleatórias para cada evento
@@ -45,7 +45,7 @@ export default function Header() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
 

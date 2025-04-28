@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, TextInput, View, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Text } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native'; // Importe o hook
+import { useFocusEffect } from '@react-navigation/native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import Icon from 'react-native-vector-icons/Feather';
 import CardSelecao from '../../components/Turmas/CardSelecao';
@@ -23,26 +23,37 @@ export default function ProfessoresFeedback() {
     const professoresPorPagina = 6;
     const totalPaginas = Math.ceil(professoresFiltrados.length / professoresPorPagina);
 
-    // Atualiza a lista sempre que a tela receber foco
+    const fetchProfessores = useCallback(async () => {
+        let isActive = true;
+        
+        try {
+            if (isActive) setLoading(true);
+            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
+            if (isActive) {
+                const professoresOrdenados = response.data.sort((a, b) => b.id - a.id);
+                setProfessores(professoresOrdenados);
+                setProfessoresFiltrados(professoresOrdenados);
+                setPaginaSelecionada(1);
+            }
+        } catch {
+            // Em caso de erro, simplesmente limpa a lista sem mostrar mensagem
+            if (isActive) {
+                setProfessores([]);
+                setProfessoresFiltrados([]);
+            }
+        } finally {
+            if (isActive) setLoading(false);
+        }
+
+        return () => { isActive = false };
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
             fetchProfessores();
-        }, [])
+        }, [fetchProfessores])
     );
 
-    const fetchProfessores = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
-            const professoresOrdenados = response.data.sort((a, b) => b.id - a.id);
-            setProfessores(professoresOrdenados);
-            setProfessoresFiltrados(professoresOrdenados);
-        } catch (error) {
-            Alert.alert('Erro', 'Não foi possível carregar os professores');
-        } finally {
-            setLoading(false);
-        }
-    };
     useEffect(() => {
         if (searchTerm === '') {
             setProfessoresFiltrados(professores);
@@ -66,6 +77,10 @@ export default function ProfessoresFeedback() {
             if (paginaSelecionada < totalPaginas) {
                 setPaginaSelecionada(paginaSelecionada + 1);
             }
+        } else if (pagina === '<') {
+            if (paginaSelecionada > 1) {
+                setPaginaSelecionada(paginaSelecionada - 1);
+            }
         } else {
             setPaginaSelecionada(pagina);
         }
@@ -81,33 +96,18 @@ export default function ProfessoresFeedback() {
         try {
             setIsCreating(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.post('http://10.92.198.51:3000/api/teacher', dadosProfessor, {
+            const response = await axios.post('http://192.168.2.11:3000/api/teacher', dadosProfessor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
             if (response.status === 201) {
-                const novoProfessor = response.data;
-                setProfessores(prev => [...prev, novoProfessor]);
-                setProfessoresFiltrados(prev => [...prev, novoProfessor]);
-                
-                Alert.alert('Sucesso', 'Professor criado com sucesso!', [{
-                    text: 'OK',
-                    onPress: () => {
-                        fetchProfessores().then(() => {
-                            const novasPaginas = Math.ceil((professoresFiltrados.length + 1) / professoresPorPagina);
-                            if (novasPaginas > totalPaginas) {
-                                setPaginaSelecionada(novasPaginas);
-                            }
-                        });
-                    }
-                }]);
+                await fetchProfessores();
             }
-        } catch (error) {
-           
-            Alert.alert('Erro', 'Não foi possível criar o professor');
-            fetchProfessores();
+        } catch {
+            // Não mostra mensagem de erro, apenas recarrega
+            await fetchProfessores();
         } finally {
             setIsCreating(false);
             setModalCriarVisible(false);
@@ -152,6 +152,18 @@ export default function ProfessoresFeedback() {
         const paginas = [];
         const maxPaginas = 5;
         
+        if (totalPaginas > 1) {
+            paginas.push(
+                <CardSelecao
+                    key="prev"
+                    numero="<"
+                    selecionado={false}
+                    onPress={() => handlePaginaChange('<')}
+                    disabled={paginaSelecionada <= 1}
+                />
+            );
+        }
+
         if (totalPaginas <= maxPaginas) {
             for (let i = 1; i <= totalPaginas; i++) {
                 paginas.push(
@@ -164,23 +176,33 @@ export default function ProfessoresFeedback() {
                 );
             }
         } else {
-            const inicio = Math.max(1, Math.min(paginaSelecionada - 2, totalPaginas - maxPaginas + 1));
-            const fim = Math.min(totalPaginas, inicio + maxPaginas - 1);
-            
+            let inicio = Math.max(1, paginaSelecionada - 2);
+            let fim = Math.min(totalPaginas, paginaSelecionada + 2);
+
+            if (paginaSelecionada <= 3) {
+                fim = Math.min(maxPaginas, totalPaginas);
+            } else if (paginaSelecionada >= totalPaginas - 2) {
+                inicio = totalPaginas - maxPaginas + 1;
+            }
+
             if (inicio > 1) {
                 paginas.push(
                     <CardSelecao
                         key={1}
                         numero={1}
-                        selecionado={paginaSelecionada === 1}
+                        selecionado={false}
                         onPress={() => handlePaginaChange(1)}
                     />
                 );
                 if (inicio > 2) {
-                    paginas.push(<Text key="left-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>...</Text>);
+                    paginas.push(
+                        <Text key="left-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>
+                            ...
+                        </Text>
+                    );
                 }
             }
-            
+
             for (let i = inicio; i <= fim; i++) {
                 paginas.push(
                     <CardSelecao
@@ -191,22 +213,26 @@ export default function ProfessoresFeedback() {
                     />
                 );
             }
-            
+
             if (fim < totalPaginas) {
                 if (fim < totalPaginas - 1) {
-                    paginas.push(<Text key="right-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>...</Text>);
+                    paginas.push(
+                        <Text key="right-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>
+                            ...
+                        </Text>
+                    );
                 }
                 paginas.push(
                     <CardSelecao
                         key={totalPaginas}
                         numero={totalPaginas}
-                        selecionado={paginaSelecionada === totalPaginas}
+                        selecionado={false}
                         onPress={() => handlePaginaChange(totalPaginas)}
                     />
                 );
             }
         }
-        
+
         if (totalPaginas > 1) {
             paginas.push(
                 <CardSelecao
@@ -224,14 +250,10 @@ export default function ProfessoresFeedback() {
 
     return (
         <View style={styles.mainContainer}>
-            <HeaderSimples
-            titulo= "PROFESSORES"
-            />
-            <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+            <HeaderSimples titulo="PROFESSORES" />
             
-                
+            <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
-                    {/* Barra de busca */}
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
                             style={[styles.input, { color: isDarkMode ? 'white' : 'black' }]}
@@ -243,13 +265,12 @@ export default function ProfessoresFeedback() {
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
 
-                    {/* Conteúdo principal */}
                     <View style={styles.contentWrapper}>
                         {loading ? (
                             <ActivityIndicator size="large" color="#1A85FF" style={styles.loader} />
                         ) : professoresFiltrados.length === 0 ? (
                             <Text style={[styles.textoVazio, { color: isDarkMode ? 'white' : 'black' }]}>
-                                Nenhum professor encontrado
+                                {searchTerm ? 'Nenhum professor encontrado' : 'Nenhum professor cadastrado'}
                             </Text>
                         ) : (
                             <ScrollView 
@@ -261,7 +282,6 @@ export default function ProfessoresFeedback() {
                         )}
                     </View>
 
-                    {/* Footer fixo com paginação */}
                     <View style={styles.footer}>
                         <TouchableOpacity 
                             style={[styles.botaoCriar, isDarkMode && styles.botaoCriarDark]} 
@@ -312,19 +332,6 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         position: 'relative',
     },
-    linha: {
-        marginTop: -5,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 10,
-    },
-    titulo: {
-        fontWeight: 'bold',
-        fontSize: 20,
-        textAlign: 'center',
-        flex: 1,
-    },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -347,7 +354,6 @@ const styles = StyleSheet.create({
     contentWrapper: {
         flex: 1,
         marginBottom: 70,
-         // Espaço para o footer
     },
     scrollContent: {
         paddingBottom: 20,
@@ -362,7 +368,9 @@ const styles = StyleSheet.create({
         width: '45%',
     },
     loader: {
-        marginTop: 20,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     textoVazio: {
         textAlign: 'center',
@@ -383,8 +391,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 60, 
-        // Compensa o botão de adicionar
+        marginRight: 60,
     },
     paginacao: {
         flexDirection: 'row',
@@ -393,6 +400,7 @@ const styles = StyleSheet.create({
     },
     ellipsis: {
         marginHorizontal: 5,
+        fontSize: 16,
     },
     botaoCriar: {
         width: 60,

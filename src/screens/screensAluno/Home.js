@@ -22,7 +22,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAvisos = async () => {
       try {
-        const response = await axios.get('http://10.92.198.51:3000/api/reminder');
+        const response = await axios.get('http://192.168.2.11:3000/api/reminder');
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {
@@ -35,7 +35,7 @@ export default function Home() {
         const alunoId = await AsyncStorage.getItem('@user_id');
         if (!alunoId) return;
 
-        const response = await axios.get(`http://10.92.198.51:3000/api/student/${alunoId}`);
+        const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
         setAluno(response.data);
       } catch (error) {
         console.error('Erro ao buscar aluno:', error);

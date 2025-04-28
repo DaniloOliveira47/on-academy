@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../path/ThemeContext';
 import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -12,12 +12,12 @@ export default function HeaderIns() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  const [events, setEvents] = useState([]); // Estado para armazenar os eventos
-  const [eventColors, setEventColors] = useState({}); // Estado para armazenar as cores dos eventos
-  const [aluno, setAluno] = useState(null); // Estado para armazenar os dados do aluno
+  const [events, setEvents] = useState([]);
+  const [eventColors, setEventColors] = useState({});
+  const [institution, setInstitution] = useState(null);
   const navigation = useNavigation();
 
-  // Função para gerar uma cor aleatória
+  // Função para gerar cor aleatória
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -27,33 +27,42 @@ export default function HeaderIns() {
     return color;
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Busca os eventos
-        const eventsResponse = await axios.get('http://10.92.198.51:3000/api/event');
-        const events = eventsResponse.data;
+  // Função para buscar dados
+  const fetchData = useCallback(async () => {
+    try {
+      // Busca os eventos
+      const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
+      const events = eventsResponse.data;
 
-        // Gerar cores aleatórias para cada evento
-        const colors = {};
-        events.forEach(event => {
-          colors[event.id] = getRandomColor();
-        });
+      // Gerar cores aleatórias para cada evento
+      const colors = {};
+      events.forEach(event => {
+        colors[event.id] = getRandomColor();
+      });
 
-        setEvents(events);
-        setEventColors(colors); // Armazena as cores no estado
+      setEvents(events);
+      setEventColors(colors);
 
-        // Busca os dados do aluno
-        const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://10.92.198.51:3000/api/institution`);
-        setAluno(alunoResponse.data); // Armazena os dados do aluno
-      } catch (error) {
+      // Busca os dados da instituição
+      const institutionId = await AsyncStorage.getItem('@user_id');
+      const institutionResponse = await axios.get(`http://192.168.2.11:3000/api/institution/${institutionId}`);
+      setInstitution(institutionResponse.data);
+    } catch (error) {
 
-      }
-    };
-
-    fetchData();
+    }
   }, []);
+
+  // Atualiza os dados quando o componente monta
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Atualiza os dados quando a tela recebe foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   const toggleMenu = () => {
     const toValue = menuVisible ? 0 : 1;
@@ -82,18 +91,15 @@ export default function HeaderIns() {
   const closeButtonColor = '#FFF';
   const container = isDarkMode ? '#000' : '#FFF';
 
-  // Função para formatar a data e o horário
   const formatDateTime = (date, time) => {
     const dateTimeString = `${date}T${time}`;
     return new Date(dateTimeString);
   };
 
-  // Função para formatar o horário
   const formatTime = (dateTime) => {
     return dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
-  // Função para formatar a data
   const formatDate = (dateTime) => {
     return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
   };
@@ -117,36 +123,40 @@ export default function HeaderIns() {
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
               <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
-          
           </View>
         </View>
       </View>
 
       {menuVisible && <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />}
 
-
       <Animated.View
         style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#141414' : '#1E6BE6' }]}
       >
         <ScrollView>
-
-
           <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
             <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
           </TouchableOpacity>
 
           <View style={styles.menuItem}>
-           
-              <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-                <View style={{ flexDirection: 'row', gap: 20 }}>
-                  <Image style={styles.imgPerfil} source={require('../../assets/image/ins.png')} />
-                  <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  Instituição
-                  </Text>
-                </View>
-                <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
+            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+              <View style={{ flexDirection: 'row', gap: 20 }}>
+                <Image 
+                  style={styles.imgPerfil} 
+                  source={institution?.fotoPerfil 
+                    ? { uri: institution.fotoPerfil } 
+                    : require('../../assets/image/ins.png')} 
+                />
+                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                  {institution?.nome || 'Instituição'}
+                </Text>
               </View>
-
+              <Image 
+                source={isDarkMode 
+                  ? require('../../assets/image/OptionWhite.png') 
+                  : require('../../assets/image/Option.png')} 
+                style={styles.options} 
+              />
+            </View>
           </View>
 
           <View style={[styles.menuItem, { height: 'auto', borderRadius: 20 }]}>
@@ -167,7 +177,7 @@ export default function HeaderIns() {
                         titulo={event.tituloEvento}
                         subData={formatDate(eventDateTime)}
                         periodo={formatTime(eventDateTime)}
-                        color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
+                        color={eventColors[event.id] || '#0077FF'}
                       />
                     );
                   })

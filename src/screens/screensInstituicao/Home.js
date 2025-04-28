@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../components/Home/Header';
 import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
-import HeaderDoc from '../../components/Home/HeaderDoc';
 import HeaderIns from '../../components/Home/HeaderIns';
 
 export default function HomeInstituicao() {
@@ -17,51 +17,46 @@ export default function HomeInstituicao() {
     const [avisos, setAvisos] = useState([]);
     const [turmaSelecionada, setTurmaSelecionada] = useState(null);
 
+    // Carrega os dados sempre que a tela recebe foco
+    useFocusEffect(
+        useCallback(() => {
+            const fetchData = async () => {
+                try {
+                    // Fetch das turmas
+                    const turmasResponse = await axios.get('http://192.168.2.11:3000/api/class');
+                    console.log('Resposta da API (Turmas):', turmasResponse.data);
+                    
+                    if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
+                        setTurmas(turmasResponse.data);
+                    } else {
+                        setTurmas([]);
+                    }
+
+                    // Fetch dos avisos
+                    const avisosResponse = await axios.get('http://192.168.2.11:3000/api/reminder');
+                    const avisosOrdenados = avisosResponse.data.sort((a, b) =>
+                        new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+                    );
+                    setAvisos(avisosOrdenados);
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    setTurmas([]);
+                    setAvisos([]);
+                }
+            };
+
+            fetchData();
+        }, [])
+    );
+
     const handleSelecionarTurma = (id) => {
         setTurmaSelecionada(id);
         console.log('Turma selecionada:', id);
     };
 
     const gerarCorAleatoria = () => {
-        let cor = '#0077FF';
-        return cor;
+        return '#0077FF';
     };
-
-    const fetchMessages = async () => {
-        try {
-            const { data } = await axios.get('http://10.92.198.51:3000/api/reminder');
-
-            data.sort((a, b) =>
-                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
-            );
-
-            setAvisos(data);
-        } catch (error) {
-            
-        }
-    };
-
-    useEffect(() => {
-        const fetchTurmas = async () => {
-            try {
-                const response = await axios.get('http://10.92.198.51:3000/api/class');
-                console.log('Resposta da API:', response.data);
-
-                if (response.data && Array.isArray(response.data)) {
-                    setTurmas(response.data);
-                } else {
-                  
-                    setTurmas([]);
-                }
-            } catch (error) {
-              
-                setTurmas([]);
-            }
-        };
-
-        fetchTurmas();
-        fetchMessages();
-    }, []);
 
     const enviarAviso = async () => {
         try {
@@ -71,7 +66,7 @@ export default function HomeInstituicao() {
             }
     
             const instituicaoId = await AsyncStorage.getItem('@user_id');
-            const token = await AsyncStorage.getItem('@user_token'); // Adicionado obtenção do token
+            const token = await AsyncStorage.getItem('@user_token');
             
             if (!instituicaoId || !token) {
                 Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
@@ -89,8 +84,7 @@ export default function HomeInstituicao() {
                 classSt: { id: turmaSelecionada },
             };
     
-            // Corrigido a chamada axios.post
-            await axios.post('http://10.92.198.51:3000/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
+            await axios.post('http://192.168.2.11:3000/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -98,7 +92,11 @@ export default function HomeInstituicao() {
             });
     
             // Recarrega os avisos após o envio
-            await fetchMessages();
+            const avisosResponse = await axios.get('http://192.168.2.11:3000/api/reminder');
+            const avisosOrdenados = avisosResponse.data.sort((a, b) =>
+                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+            );
+            setAvisos(avisosOrdenados);
     
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
@@ -107,6 +105,7 @@ export default function HomeInstituicao() {
             Alert.alert('Erro', error.response?.data?.message || 'Erro ao enviar aviso. Tente novamente.');
         }
     };
+
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
             <HeaderIns isDarkMode={isDarkMode} />
@@ -132,10 +131,10 @@ export default function HomeInstituicao() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas com ScrollView personalizado */}
+                    {/* Seção de turmas */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
                         <Text style={styles.title}>Turmas</Text>
-                        <View style={[styles.customScrollView]}>
+                        <View style={styles.customScrollView}>
                             <ScrollView
                                 style={styles.customScrollContent}
                                 showsVerticalScrollIndicator={false}
@@ -152,7 +151,7 @@ export default function HomeInstituicao() {
                                         />
                                     ))
                                 ) : (
-                                    <Text style={[styles.emptyMessage]}>
+                                    <Text style={styles.emptyMessage}>
                                         Nenhuma turma disponível
                                     </Text>
                                 )}
@@ -160,8 +159,7 @@ export default function HomeInstituicao() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos */}
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
                             style={[

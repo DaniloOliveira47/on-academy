@@ -24,7 +24,7 @@ export default function Ocorrencia() {
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
-        axios.get('http://10.92.198.51:3000/api/teacher')
+        axios.get('http://192.168.2.11:3000/api/teacher')
             .then(response => {
                 setProfessores(response.data);
             })
@@ -50,7 +50,7 @@ export default function Ocorrencia() {
     // Busca os feedbacks do estudante
     useEffect(() => {
         if (userId) {
-            axios.get(`http://10.92.198.51:3000/api/student/feedback/${userId}`)
+            axios.get(`http://192.168.2.11:3000/api/student/feedback/${userId}`)
                 .then(response => {
                     setFeedbacks(response.data);
                 })
@@ -114,7 +114,7 @@ export default function Ocorrencia() {
                 recipientTeacher: { id: professorSelecionado.id }
             };
 
-            const response = await axios.post('http://10.92.198.51:3000/api/feedbackStudent', feedback);
+            const response = await axios.post('http://192.168.2.11:3000/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');

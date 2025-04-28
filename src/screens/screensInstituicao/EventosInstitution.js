@@ -51,7 +51,7 @@ export default function EventosInstitution() {
   // Função para buscar eventos
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://10.92.198.51:3000/api/event');
+      const response = await fetch('http://192.168.2.11:3000/api/event');
       const data = await response.json();
       setEvents(data);
 
@@ -223,13 +223,13 @@ export default function EventosInstitution() {
       };
 
       const url = isEditMode 
-        ? `http://10.92.198.51:3000/api/event/${selectedEventId}`
-        : 'http://10.92.198.51:3000/api/event';
+        ? `http://192.168.2.11:3000/api/event/${selectedEventId}`
+        : 'http://192.168.2.11:3000/api/event';
       
       const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
-        method, 
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -273,7 +273,7 @@ export default function EventosInstitution() {
           {
             text: 'Excluir',
             onPress: async () => {
-              const response = await fetch(`http://10.92.198.51:3000/api/event/${selectedEventId}`, {
+              const response = await fetch(`http://192.168.2.11:3000/api/event/${selectedEventId}`, {
                 method: 'DELETE',
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -391,165 +391,126 @@ export default function EventosInstitution() {
 
       {/* Modal para Adicionar/Editar Evento */}
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => {
-    setModalVisible(false);
-    resetForm();
-  }}
->
-  <View style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}>
-    <View style={[
-      styles.modalContent, 
-      isDarkMode ? styles.darkModalContent : { backgroundColor: '#FFF' }
-    ]}>
-      <TouchableOpacity 
-        style={[styles.closeButton, isDarkMode && styles.darkCloseButton]} 
-        onPress={() => {
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
           setModalVisible(false);
           resetForm();
         }}
       >
-        <Text style={[styles.closeButtonText, isDarkMode && styles.darkCloseButtonText]}>✖</Text>
-      </TouchableOpacity>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { backgroundColor: '#FFF' }]}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => {
+              setModalVisible(false);
+              resetForm();
+            }}>
+              <Text style={styles.closeButtonText}>✖</Text>
+            </TouchableOpacity>
 
-      <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
-        {isEditMode ? 'Editar Evento' : 'Adicionar Evento'}
-      </Text>
+            <Text style={[styles.modalTitle, { color: '#000' }]}>
+              {isEditMode ? 'Editar Evento' : 'Adicionar Evento'}
+            </Text>
 
-      <TextInput
-        style={[
-          styles.input, 
-          isDarkMode && styles.darkInput,
-          errors.tituloEvento && styles.inputError
-        ]}
-        placeholder="Nome do evento"
-        placeholderTextColor={isDarkMode ? '#888' : '#666'}
-        value={tituloEvento}
-        onChangeText={(text) => {
-          setTituloEvento(text);
-          if (text.trim()) {
-            setErrors(prev => ({...prev, tituloEvento: ''}));
-          }
-        }}
-      />
-      {errors.tituloEvento ? <Text style={styles.errorText}>{errors.tituloEvento}</Text> : null}
+            <TextInput
+              style={[styles.input, errors.tituloEvento && styles.inputError]}
+              placeholder="Nome do evento"
+              placeholderTextColor="#666"
+              value={tituloEvento}
+              onChangeText={(text) => {
+                setTituloEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, tituloEvento: ''}));
+                }
+              }}
+            />
+            {errors.tituloEvento ? <Text style={styles.errorText}>{errors.tituloEvento}</Text> : null}
 
-      <TextInput
-        style={[
-          styles.input, 
-          styles.description, 
-          isDarkMode && styles.darkInput,
-          errors.descricaoEvento && styles.inputError
-        ]}
-        placeholder="Descrição do evento"
-        placeholderTextColor={isDarkMode ? '#888' : '#666'}
-        multiline
-        value={descricaoEvento}
-        onChangeText={(text) => {
-          setDescricaoEvento(text);
-          if (text.trim()) {
-            setErrors(prev => ({...prev, descricaoEvento: ''}));
-          }
-        }}
-      />
-      {errors.descricaoEvento ? <Text style={styles.errorText}>{errors.descricaoEvento}</Text> : null}
+            <TextInput
+              style={[styles.input, styles.description, errors.descricaoEvento && styles.inputError]}
+              placeholder="Descrição do evento"
+              placeholderTextColor="#666"
+              multiline
+              value={descricaoEvento}
+              onChangeText={(text) => {
+                setDescricaoEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, descricaoEvento: ''}));
+                }
+              }}
+            />
+            {errors.descricaoEvento ? <Text style={styles.errorText}>{errors.descricaoEvento}</Text> : null}
 
-      <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data do Evento</Text>
-      <View style={styles.dateContainer}>
-        <TextInput
-          style={[
-            styles.input, 
-            styles.dateInput, 
-            isDarkMode && styles.darkInput,
-            errors.dataEvento && styles.inputError
-          ]}
-          placeholder="Selecione a data"
-          placeholderTextColor={isDarkMode ? '#888' : '#666'}
-          value={selectedDate ? selectedDate.toLocaleDateString('pt-BR') : ''}
-          editable={false}
-        />
-        <TouchableOpacity style={styles.dateIconButton} onPress={() => setShowDatePicker(true)}>
-          <MaterialIcons name="calendar-today" size={24} color={isDarkMode ? '#1A85FF' : '#0077FF'} />
-        </TouchableOpacity>
-      </View>
-      {errors.dataEvento ? <Text style={styles.errorText}>{errors.dataEvento}</Text> : null}
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          minimumDate={new Date()}
-          maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
-          themeVariant={isDarkMode ? 'dark' : 'light'}
-          textColor={isDarkMode ? '#FFF' : '#000'}
-        />
-      )}
+            <Text style={styles.label}>Data do Evento</Text>
+            <View style={styles.dateContainer}>
+              <TextInput
+                style={[styles.input, styles.dateInput, errors.dataEvento && styles.inputError]}
+                placeholder="Selecione a data"
+                placeholderTextColor="#666"
+                value={selectedDate ? selectedDate.toLocaleDateString('pt-BR') : ''}
+                editable={false}
+              />
+              <TouchableOpacity style={styles.dateIconButton} onPress={() => setShowDatePicker(true)}>
+                <MaterialIcons name="calendar-today" size={24} color="#0077FF" />
+              </TouchableOpacity>
+            </View>
+            {errors.dataEvento ? <Text style={styles.errorText}>{errors.dataEvento}</Text> : null}
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+                maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
+              />
+            )}
 
-      <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Horário do Evento</Text>
-      <View style={styles.dateContainer}>
-        <TextInput
-          style={[
-            styles.input, 
-            styles.dateInput, 
-            isDarkMode && styles.darkInput,
-            errors.horarioEvento && styles.inputError
-          ]}
-          placeholder="Selecione o horário"
-          placeholderTextColor={isDarkMode ? '#888' : '#666'}
-          value={selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          editable={false}
-        />
-        <TouchableOpacity style={styles.dateIconButton} onPress={() => setShowTimePicker(true)}>
-          <MaterialIcons name="access-time" size={24} color={isDarkMode ? '#1A85FF' : '#0077FF'} />
-        </TouchableOpacity>
-      </View>
-      {errors.horarioEvento ? <Text style={styles.errorText}>{errors.horarioEvento}</Text> : null}
-      {showTimePicker && (
-        <DateTimePicker
-          value={selectedTime}
-          mode="time"
-          display="default"
-          onChange={handleTimeChange}
-          themeVariant={isDarkMode ? 'dark' : 'light'}
-          textColor={isDarkMode ? '#FFF' : '#000'}
-        />
-      )}
+            <Text style={styles.label}>Horário do Evento</Text>
+            <View style={styles.dateContainer}>
+              <TextInput
+                style={[styles.input, styles.dateInput, errors.horarioEvento && styles.inputError]}
+                placeholder="Selecione o horário"
+                placeholderTextColor="#666"
+                value={selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                editable={false}
+              />
+              <TouchableOpacity style={styles.dateIconButton} onPress={() => setShowTimePicker(true)}>
+                <MaterialIcons name="access-time" size={24} color="#0077FF" />
+              </TouchableOpacity>
+            </View>
+            {errors.horarioEvento ? <Text style={styles.errorText}>{errors.horarioEvento}</Text> : null}
+            {showTimePicker && (
+              <DateTimePicker
+                value={selectedTime}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
+              />
+            )}
 
-      <TextInput
-        style={[
-          styles.input, 
-          isDarkMode && styles.darkInput,
-          errors.localEvento && styles.inputError
-        ]}
-        placeholder="Local"
-        placeholderTextColor={isDarkMode ? '#888' : '#666'}
-        value={localEvento}
-        onChangeText={(text) => {
-          setLocalEvento(text);
-          if (text.trim()) {
-            setErrors(prev => ({...prev, localEvento: ''}));
-          }
-        }}
-      />
-      {errors.localEvento ? <Text style={styles.errorText}>{errors.localEvento}</Text> : null}
+            <TextInput
+              style={[styles.input, errors.localEvento && styles.inputError]}
+              placeholder="Local"
+              placeholderTextColor="#666"
+              value={localEvento}
+              onChangeText={(text) => {
+                setLocalEvento(text);
+                if (text.trim()) {
+                  setErrors(prev => ({...prev, localEvento: ''}));
+                }
+              }}
+            />
+            {errors.localEvento ? <Text style={styles.errorText}>{errors.localEvento}</Text> : null}
 
-      <TouchableOpacity 
-        style={[
-          styles.addButton, 
-          isDarkMode && styles.darkAddButton
-        ]} 
-        onPress={handleAddEvent}
-      >
-        <Text style={styles.addButtonText}>
-          {isEditMode ? 'Atualizar evento' : 'Adicionar evento'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
+              <Text style={styles.addButtonText}>
+                {isEditMode ? 'Atualizar evento' : 'Adicionar evento'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -560,29 +521,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     marginBottom: 50,
-  },
-  darkModalContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
-  darkModalContent: {
-    backgroundColor: '#1E1E1E',
-  },
-  darkInput: {
-    backgroundColor: '#2D2D2D',
-    borderColor: '#444',
-    color: '#FFF',
-  },
-  darkLabel: {
-    color: '#FFF',
-  },
-  darkCloseButton: {
-    backgroundColor: '#D32F2F',
-  },
-  darkCloseButtonText: {
-    color: '#FFF',
-  },
-  darkAddButton: {
-    backgroundColor: '#1A65C0',
   },
   barraAzul: {
     width: '100%',

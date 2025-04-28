@@ -197,7 +197,7 @@ export default function PerfilProfessor() {
     const fetchProfessor = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://10.92.198.51:3000/api/teacher/${professorId}`, {
+            const response = await axios.get(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -249,12 +249,12 @@ export default function PerfilProfessor() {
         try {
             const token = await getAuthToken();
 
-            const turmasResponse = await axios.get('http://10.92.198.51:3000/api/class', {
+            const turmasResponse = await axios.get('http://192.168.2.11:3000/api/class', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllTurmas(turmasResponse.data || []);
 
-            const disciplinasResponse = await axios.get('http://10.92.198.51:3000/api/discipline', {
+            const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/discipline', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllDisciplinas(disciplinasResponse.data || []);
@@ -416,7 +416,7 @@ export default function PerfilProfessor() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://10.92.198.51:3000/api/teacher/upload-image/${professorId}`,
+                `http://192.168.2.11:3000/api/teacher/upload-image/${professorId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -483,7 +483,7 @@ export default function PerfilProfessor() {
             };
 
             const response = await axios.put(
-                `http://10.92.198.51:3000/api/teacher/${professorId}`,
+                `http://192.168.2.11:3000/api/teacher/${professorId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -513,7 +513,7 @@ export default function PerfilProfessor() {
             setLoading(true);
             const token = await getAuthToken();
     
-            const response = await axios.delete(`http://10.92.198.51:3000/api/teacher/${professorId}`, {
+            const response = await axios.delete(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

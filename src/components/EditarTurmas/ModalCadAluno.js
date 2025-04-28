@@ -158,11 +158,12 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}
                 activeOpacity={1}
             >
-                <Image
-                    style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
-                    source={require('../../assets/image/barraAzul.png')}
-                />
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+                    <Image
+                        style={{ width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+                        source={require('../../assets/image/barraAzul.png')}
+                    />
+                    <View style={{width: '100%', padding: 20}}>
                     <TouchableOpacity
                         style={styles.closeButton}
                         onPress={onClose}
@@ -172,9 +173,9 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     </TouchableOpacity>
 
                     <TextInput
-                        style={[ styles.input, 
-                            isDarkMode && styles.darkInput,
-                            errors.nomeAluno && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.nomeAluno && styles.inputError]}
                         placeholder="Nome Completo"
                         placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         value={nomeAluno}
@@ -185,9 +186,9 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     {errors.nomeAluno && <Text style={styles.errorText}>{errors.nomeAluno}</Text>}
 
                     <TextInput
-                        style={[   styles.input, 
-                            isDarkMode && styles.darkInput,
-                            errors.emailAluno && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.emailAluno && styles.inputError]}
                         placeholder="Email"
                         placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="email-address"
@@ -200,9 +201,9 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     {errors.emailAluno && <Text style={styles.errorText}>{errors.emailAluno}</Text>}
 
                     <TextInput
-                        style={[     styles.input, 
-                            isDarkMode && styles.darkInput,
-                            errors.telefoneAluno && styles.inputError]}
+                        style={[styles.input,
+                        isDarkMode && styles.darkInput,
+                        errors.telefoneAluno && styles.inputError]}
                         placeholder="Telefone (XX) XXXXX-XXXX"
                         placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                         keyboardType="phone-pad"
@@ -218,8 +219,8 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     <View style={styles.dateContainer}>
                         <TextInput
                             style={[
-                                styles.input, 
-                                styles.dateInput, 
+                                styles.input,
+                                styles.dateInput,
                                 isDarkMode && styles.darkInput,
                                 errors.dataNascimento && styles.inputError
                             ]}
@@ -264,6 +265,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         )}
                     </TouchableOpacity>
                 </View>
+                </View>
             </TouchableOpacity>
         </Modal>
     );
@@ -290,17 +292,15 @@ const styles = StyleSheet.create({
         color: '#FFF',
     },
     modalContent: {
-        width: '85%',
+        width: '90%',
         backgroundColor: '#FFF',
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-        padding: 20,
+        borderRadius: 20,
         alignItems: 'center',
     },
     closeButton: {
         position: 'absolute',
-        top: 20,
-        right: 20,
+        top: 0,
+        right: 0,
         backgroundColor: 'transparent',
         zIndex: 10,
     },

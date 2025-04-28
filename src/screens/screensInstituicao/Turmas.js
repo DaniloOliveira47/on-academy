@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     StyleSheet,
     View,
@@ -7,6 +7,7 @@ import {
     Text,
     ScrollView,
     Alert,
+    RefreshControl,
 } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
@@ -18,6 +19,7 @@ import CardSelecao from '../../components/Turmas/CardSelecao';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function Turmas() {
     const { isDarkMode } = useTheme();
@@ -47,6 +49,7 @@ export default function Turmas() {
         disciplinas: false
     });
     const [carregando, setCarregando] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const CARDS_POR_PAGINA = 3;
 
@@ -59,15 +62,48 @@ export default function Turmas() {
         borderColor: isDarkMode ? '#555' : '#D1D1D1',
     };
 
-    const handleTurmaExcluida = (turmaId) => {
-        setTurmas(turmas.filter(turma => turma.id !== turmaId));
-        setTurmasFiltradas(turmasFiltradas.filter(turma => turma.id !== turmaId));
-    };
+    useFocusEffect(
+        useCallback(() => {
+            const loadData = async () => {
+                setRefreshing(true);
+                try {
+                    await Promise.all([fetchTurmas(), fetchProfessores(), fetchDisciplinas()]);
+                } catch (error) {
+                    Alert.alert('Erro', 'Não foi possível carregar os dados');
+                } finally {
+                    setRefreshing(false);
+                }
+            };
+
+            loadData();
+
+            return () => {
+                // Limpeza se necessário
+            };
+        }, [])
+    );
+
+    useEffect(() => {
+        const loadDataForModal = async () => {
+            if (modalCriarVisible) {
+                try {
+                    setCarregando(true);
+                    await Promise.all([fetchProfessores(), fetchDisciplinas()]);
+                } catch (error) {
+                    Alert.alert('Erro', 'Não foi possível carregar os dados necessários');
+                } finally {
+                    setCarregando(false);
+                }
+            }
+        };
+
+        loadDataForModal();
+    }, [modalCriarVisible]);
 
     const fetchTurmas = async () => {
         setCarregando(true);
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/class');
+            const response = await axios.get('http://192.168.2.11:3000/api/class');
             setTurmas(response.data || []);
             setTurmasFiltradas(response.data || []);
         } catch (error) {
@@ -81,32 +117,40 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/teacher');
+            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
             setProfessores(response.data || []);
+            return true;
         } catch (error) {
             Alert.alert('Aviso', 'Não foi possível carregar a lista de professores');
+            return false;
         }
     };
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://10.92.198.51:3000/api/discipline');
+            const response = await axios.get('http://192.168.2.11:3000/api/discipline');
             setDisciplinas(response.data || []);
+            return true;
         } catch (error) {
             Alert.alert('Aviso', 'Não foi possível carregar a lista de disciplinas');
+            return false;
         }
     };
 
-    useEffect(() => {
-        fetchTurmas();
-        fetchProfessores();
-        fetchDisciplinas();
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchTurmas().finally(() => setRefreshing(false));
     }, []);
+
+    const handleTurmaExcluida = (turmaId) => {
+        setTurmas(turmas.filter(turma => turma.id !== turmaId));
+        setTurmasFiltradas(turmasFiltradas.filter(turma => turma.id !== turmaId));
+    };
 
     const abrirModalEditar = async (turma) => {
         setCarregando(true);
         try {
-            const response = await axios.get(`http://10.92.198.51:3000/api/class/teacher/disciplinas/${turma.id}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/class/teacher/disciplinas/${turma.id}`);
             const turmaDetalhada = response.data;
 
             setTurmaEditando(turmaDetalhada);
@@ -128,24 +172,21 @@ export default function Turmas() {
     };
 
     const validarCampos = () => {
-        // Objeto que armazena os erros de cada campo
         const novosErros = {
-            nomeTurma: !novaTurma.trim(), // Campo obrigatório
+            nomeTurma: !novaTurma.trim(),
             capacidade: !novaCapacidade.trim() ||
                 isNaN(novaCapacidade) ||
-                parseInt(novaCapacidade) < 20 || // Mínimo de 20 alunos
-                parseInt(novaCapacidade) <= 0, // Valor deve ser positivo
+                parseInt(novaCapacidade) < 20 ||
+                parseInt(novaCapacidade) <= 0,
             sala: !novaSala.trim() ||
                 isNaN(novaSala) ||
-                parseInt(novaSala) <= 0, // Número da sala deve ser válido
-            professores: selectedProfessores.length === 0, // Pelo menos 1 professor
-            disciplinas: selectedDisciplinas.length === 0 // Pelo menos 1 disciplina
+                parseInt(novaSala) <= 0,
+            professores: selectedProfessores.length === 0,
+            disciplinas: selectedDisciplinas.length === 0
         };
 
-        // Atualiza o estado de erros
         setErros(novosErros);
 
-        // Validação específica para capacidade mínima
         if (novosErros.capacidade && novaCapacidade.trim() && !isNaN(novaCapacidade)) {
             if (parseInt(novaCapacidade) < 20) {
                 Alert.alert('Atenção', 'A capacidade mínima da turma é 20 alunos.');
@@ -155,19 +196,16 @@ export default function Turmas() {
             return false;
         }
 
-        // Validação para professores
         if (novosErros.professores) {
             Alert.alert('Atenção', 'Selecione pelo menos um professor.');
             return false;
         }
 
-        // Validação para disciplinas
         if (novosErros.disciplinas) {
             Alert.alert('Atenção', 'Selecione pelo menos uma disciplina.');
             return false;
         }
 
-        // Retorna true apenas se NENHUM erro for encontrado
         return !Object.values(novosErros).some(erro => erro);
     };
 
@@ -183,7 +221,7 @@ export default function Turmas() {
             }
 
             await axios.post(
-                'http://10.92.198.51:3000/api/class',
+                'http://192.168.2.11:3000/api/class',
                 {
                     nomeTurma: novaTurma,
                     anoLetivoTurma: novoAno,
@@ -196,7 +234,6 @@ export default function Turmas() {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-
                     }
                 }
             );
@@ -213,8 +250,6 @@ export default function Turmas() {
         }
     };
 
-
-
     const registrarNovaDisciplina = async () => {
         if (!novaDisciplina.trim()) {
             Alert.alert('Erro', 'Por favor, insira um nome para a disciplina');
@@ -230,7 +265,7 @@ export default function Turmas() {
             }
 
             await axios.post(
-                'http://10.92.198.51:3000/api/discipline',
+                'http://192.168.2.11:3000/api/discipline',
                 { nomeDisciplina: novaDisciplina },
                 {
                     headers: {
@@ -323,36 +358,48 @@ export default function Turmas() {
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
 
-                    {carregando ? (
-                        <View style={styles.carregandoContainer}>
-                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Carregando...</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.cards}>
-
-                            {turmasPaginaAtual.length > 0 ? (
-                                turmasPaginaAtual.map((turma) => (
-                                    <CardTurmas
-                                        key={turma.id}
-                                        turma={`${turma.nomeTurma}`}
-                                        numero={`Nº${turma.id}`}
-                                        alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
-                                        periodo={`Período: ${turma.periodoTurma}`}
-                                        turmaId={turma.id}
-                                        navegacao="Alunos"
-                                        onDelete={handleTurmaExcluida}
-                                        onEditSuccess={fetchTurmas} // Adicione esta linha
-                                    />
-                                ))
+                    <View style={{ flex: 1 }}>
+                        <ScrollView
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                    colors={['#1A85FF']}
+                                    tintColor={isDarkMode ? '#1A85FF' : '#1A85FF'}
+                                />
+                            }
+                        >
+                            {carregando ? (
+                                <View style={styles.carregandoContainer}>
+                                    <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Carregando...</Text>
+                                </View>
                             ) : (
-                                <Text style={{ color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>
-                                    Nenhuma turma disponível.
-                                </Text>
+                                <View style={styles.cards}>
+                                    {turmasPaginaAtual.length > 0 ? (
+                                        turmasPaginaAtual.map((turma) => (
+                                            <CardTurmas
+                                                key={turma.id}
+                                                turma={`${turma.nomeTurma}`}
+                                                numero={`Nº${turma.id}`}
+                                                alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
+                                                periodo={`Período: ${turma.periodoTurma}`}
+                                                turmaId={turma.id}
+                                                navegacao="Alunos"
+                                                onDelete={handleTurmaExcluida}
+                                                onEditSuccess={fetchTurmas}
+                                            />
+                                        ))
+                                    ) : (
+                                        <Text style={{ color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>
+                                            Nenhuma turma disponível.
+                                        </Text>
+                                    )}
+                                </View>
                             )}
-                        </View>
-                    )}
+                        </ScrollView>
+                    </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 70, position: 'absolute', marginTop: 575, padding: 20 }}>
+                    <View style={styles.footerContainer}>
                         <TouchableOpacity
                             style={styles.botaoCriar}
                             onPress={() => setModalCriarVisible(true)}
@@ -551,8 +598,6 @@ export default function Turmas() {
                 </View>
             </Modal>
 
-
-
             {/* Modal para criar nova disciplina */}
             <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
@@ -607,7 +652,8 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 16,
         padding: 10,
-        height: '100%'
+        height: '100%',
+        flexDirection: 'column',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -738,5 +784,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
-    }
+    },
+    footerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 100,
+        padding: 20,
+        paddingBottom: 50,
+
+    },
 });
