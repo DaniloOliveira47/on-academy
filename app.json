@@ -15,7 +15,7 @@
     ],
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/ona.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.danilo_47.nomedoprojeto",
