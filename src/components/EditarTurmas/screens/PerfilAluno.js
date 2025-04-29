@@ -52,7 +52,12 @@ export default function PerfilAluno() {
     const navigation = useNavigation();
     const { alunoId } = route.params;
     const { isDarkMode } = useTheme();
-
+    const [validationErrors, setValidationErrors] = useState({
+        nome: false,
+        email: false,
+        telefone: false,
+        nascimento: false
+    });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
@@ -100,6 +105,32 @@ export default function PerfilAluno() {
                 Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para esta funcionalidade');
             }
         }
+    };
+
+    // Adicione estas funções no início do componente, antes do return
+
+    const formatarTelefone = (telefone) => {
+        if (!telefone) return '';
+
+        // Remove tudo que não é dígito
+        const apenasDigitos = telefone.replace(/\D/g, '');
+
+        // Formatação para telefone fixo (10 dígitos) ou celular (11 dígitos)
+        if (apenasDigitos.length === 10) {
+            return apenasDigitos.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        } else if (apenasDigitos.length === 11) {
+            return apenasDigitos.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        }
+
+        // Se não tiver tamanho válido, retorna sem formatação
+        return telefone;
+    };
+
+    const validarTelefone = (telefone) => {
+        if (!telefone) return true; // Permitir campo vazio
+
+        const apenasDigitos = telefone.replace(/\D/g, '');
+        return apenasDigitos.length === 10 || apenasDigitos.length === 11;
     };
 
     const fetchAluno = async () => {
@@ -161,7 +192,7 @@ export default function PerfilAluno() {
             });
             setFeedbacks(response.data || []);
         } catch (error) {
-           
+
             setFeedbacks([]);
         }
     };
@@ -285,31 +316,70 @@ export default function PerfilAluno() {
     };
 
     const handleEditSave = async () => {
+        // Resetar erros
+        setValidationErrors({
+            nome: false,
+            email: false,
+            telefone: false,
+            nascimento: false
+        });
+
+        // Validar campos
+        let hasError = false;
+        const newErrors = { ...validationErrors };
+
+        if (!perfilEdit.nome) {
+            newErrors.nome = true;
+            hasError = true;
+        }
+
+        if (!perfilEdit.email) {
+            newErrors.email = true;
+            hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfilEdit.email)) {
+            newErrors.email = true;
+            hasError = true;
+        }
+
+        if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
+            newErrors.telefone = true;
+            hasError = true;
+        }
+
+        if (!perfilEdit.nascimento) {
+            newErrors.nascimento = true;
+            hasError = true;
+        }
+
+        setValidationErrors(newErrors);
+
+        if (hasError) {
+            return;
+        }
+
         try {
             setUpdating(true);
             const token = await getAuthToken();
 
-            if (!perfilEdit.nome || !perfilEdit.email) {
-                Alert.alert('Erro', 'Nome e email são campos obrigatórios');
-                return;
-            }
-
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(perfilEdit.email)) {
-                Alert.alert('Erro', 'Por favor, insira um email válido');
-                return;
-            }
-
+            // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
             const formattedDate = `${ano}-${mes}-${dia}`;
 
+            // Preparar os dados no formato esperado pelo backend
             const dadosParaEnviar = {
-                nome: perfilEdit.nome,
+                nomeAluno: perfilEdit.nome,
                 dataNascimentoAluno: formattedDate,
                 emailAluno: perfilEdit.email,
-                telefoneAluno: perfilEdit.telefone,
-                matriculaAluno: perfilEdit.matricula,
+                telefoneAluno: perfilEdit.telefone || null,
+                turmaId: perfilEdit.turma?.id || null
             };
+
+            // Remover campos vazios ou nulos (opcional, dependendo do backend)
+            Object.keys(dadosParaEnviar).forEach(key => {
+                if (dadosParaEnviar[key] === null || dadosParaEnviar[key] === '') {
+                    delete dadosParaEnviar[key];
+                }
+            });
 
             const response = await axios.put(
                 `http://192.168.2.11:3000/api/student/${alunoId}`,
@@ -324,24 +394,28 @@ export default function PerfilAluno() {
 
             if (response.status === 200) {
                 Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
-                await fetchAluno();
+                await fetchAluno(); // Atualiza os dados locais
                 setIsEditing(false);
             }
         } catch (error) {
-            Alert.alert(
-                'Erro',
-                error.response?.data?.message || 'Erro ao atualizar os dados do aluno'
-            );
+            console.error('Erro ao atualizar aluno:', error);
+            let errorMessage = 'Erro ao atualizar os dados do aluno';
+
+            if (error.response) {
+                console.error('Resposta do servidor:', error.response.data);
+                errorMessage = error.response.data.message || errorMessage;
+            }
+
+            Alert.alert('Erro', errorMessage);
         } finally {
             setUpdating(false);
         }
     };
-
     const handleDelete = async () => {
         try {
             setLoading(true);
             const token = await getAuthToken();
-            
+
             const response = await axios.delete(`http://192.168.2.11:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -355,7 +429,7 @@ export default function PerfilAluno() {
             }
         } catch (error) {
             Alert.alert(
-                'Erro', 
+                'Erro',
                 error.response?.data?.message || 'Não foi possível excluir o aluno'
             );
         } finally {
@@ -390,10 +464,10 @@ export default function PerfilAluno() {
 
                             <ScrollView style={styles.feedbackBody}>
                                 {feedbacks.map((item, index) => (
-                                    <FeedbackItem 
-                                        key={index} 
-                                        item={item} 
-                                        onPress={openFeedbackModal} 
+                                    <FeedbackItem
+                                        key={index}
+                                        item={item}
+                                        onPress={openFeedbackModal}
                                         textColor={textColor}
                                     />
                                 ))}
@@ -401,17 +475,17 @@ export default function PerfilAluno() {
                         </View>
                     ) : (
                         <View style={styles.noFeedbackContainer}>
-                            <MaterialIcons 
-                                name="feedback" 
-                                size={40} 
-                                color={isDarkMode ? '#666' : '#999'} 
+                            <MaterialIcons
+                                name="feedback"
+                                size={40}
+                                color={isDarkMode ? '#666' : '#999'}
                             />
                             <Text style={[styles.noFeedbackText, { color: isDarkMode ? '#AAA' : '#888' }]}>
                                 Nenhum feedback enviado ainda
                             </Text>
                         </View>
                     )}
-                    
+
                 </View>
 
                 <Modal visible={feedbackModalVisible} transparent animationType="fade">
@@ -423,8 +497,8 @@ export default function PerfilAluno() {
                             <Text style={[styles.feedbackModalText, { color: textColor }]}>
                                 {selectedFeedback?.conteudo || 'Nenhum conteúdo disponível'}
                             </Text>
-                            <TouchableOpacity 
-                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]} 
+                            <TouchableOpacity
+                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]}
                                 onPress={() => setFeedbackModalVisible(false)}
                             >
                                 <Text style={styles.buttonText}>Fechar</Text>
@@ -445,8 +519,8 @@ export default function PerfilAluno() {
                     </Text>
                 </View>
 
-                <TouchableOpacity 
-                    style={styles.feedbackCellIcon} 
+                <TouchableOpacity
+                    style={styles.feedbackCellIcon}
                     onPress={() => onPress(item)}
                 >
                     <MaterialIcons name="feedback" size={24} color={barraAzulColor} />
@@ -531,20 +605,52 @@ export default function PerfilAluno() {
                             {isEditing ? (
                                 <>
                                     <TextInput
-                                        style={[styles.editNome, { color: textColor }]}
+                                        style={[
+                                            styles.editNome,
+                                            {
+                                                color: textColor,
+                                                borderBottomColor: validationErrors.nome ? 'red' : '#1E6BE6'
+                                            }
+                                        ]}
                                         value={perfilEdit.nome}
-                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, nome: text })}
+                                        onChangeText={(text) => {
+                                            setPerfilEdit({ ...perfilEdit, nome: text });
+                                            if (validationErrors.nome) {
+                                                setValidationErrors({ ...validationErrors, nome: false });
+                                            }
+                                        }}
                                         placeholder="Nome do aluno"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                     />
+                                    {validationErrors.nome && (
+                                        <Text style={styles.errorText}>Nome é obrigatório</Text>
+                                    )}
+
                                     <TextInput
-                                        style={[styles.editEmail, { color: textColor }]}
+                                        style={[
+                                            styles.editEmail,
+                                            {
+                                                color: textColor,
+                                                borderBottomColor: validationErrors.email ? 'red' : '#1E6BE6'
+                                            }
+                                        ]}
                                         value={perfilEdit.email}
-                                        onChangeText={(text) => setPerfilEdit({ ...perfilEdit, email: text })}
+                                        onChangeText={(text) => {
+                                            setPerfilEdit({ ...perfilEdit, email: text });
+                                            if (validationErrors.email) {
+                                                setValidationErrors({ ...validationErrors, email: false });
+                                            }
+                                        }}
                                         placeholder="Email do aluno"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                         keyboardType="email-address"
                                     />
+                                    {validationErrors.email && (
+                                        <Text style={styles.errorText}>
+                                            {!perfilEdit.email ? 'Email é obrigatório' : 'Email inválido'}
+                                        </Text>
+                                    )}
+
                                 </>
                             ) : (
                                 <>
@@ -563,72 +669,104 @@ export default function PerfilAluno() {
                         placeholder="Matrícula do aluno"
                         fixedWidth={width * 0.8}
                     />
+                    <View style={styles.inlineFieldsContainer}>
+                        {/* Telefone */}
+                        <View style={[styles.inline, { width: width * 0.45 }]}>
+                            <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
+                            {isEditing ? (
+                                <>
+                                    <TextInput
+                                        style={[
+                                            styles.inputContainer,
+                                            {
+                                                color: isDarkMode ? '#FFF' : '#000',
+                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                                fontSize: 15,
+                                                borderColor: validationErrors.telefone ? 'red' : 'transparent',
+                                                borderWidth: validationErrors.telefone ? 1 : 0
+                                            }
+                                        ]}
+                                        value={formatarTelefone(perfilEdit.telefone)}
+                                        onChangeText={(text) => {
+                                            const apenasDigitos = text.replace(/\D/g, '');
+                                            setPerfilEdit({ ...perfilEdit, telefone: apenasDigitos });
+                                            if (validationErrors.telefone) {
+                                                setValidationErrors({ ...validationErrors, telefone: false });
+                                            }
+                                        }}
+                                        placeholder="(00) 00000-0000"
+                                        placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                        keyboardType="phone-pad"
+                                        maxLength={15}
+                                    />
+                                    {validationErrors.telefone && (
+                                        <Text style={[styles.errorText, { color: 'red' }]}>
+                                            Telefone inválido (10 ou 11 dígitos)
+                                        </Text>
+                                    )}
+                                </>
+                            ) : (
+                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
+                                        {perfil.telefone ? formatarTelefone(perfil.telefone) : 'Não informado'}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
 
-<View style={styles.inlineFieldsContainer}>
-    {/* Telefone */}
-    <View style={[styles.inline, { width: width * 0.45 }]}>
-        <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
-        {isEditing ? (
-            <TextInput
-                style={[
-                    styles.inputContainer,
-                    { color: isDarkMode ? '#FFF' : '#000', backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }
-                ]}
-                value={perfilEdit.telefone}
-                onChangeText={(text) => setPerfilEdit({ ...perfilEdit, telefone: text })}
-                placeholder="Digite o telefone"
-                placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
-                keyboardType="phone-pad"
-            />
-        ) : (
-            <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
-                <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                    {perfil.telefone || 'Não informado'}
-                </Text>
-            </View>
-        )}
-    </View>
-
-    {/* Data de Nascimento */}
-    <View style={[styles.inline, { width: width * 0.45 }]}>
-        <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Data de Nascimento</Text>
-        {isEditing ? (
-            <>
-                <TouchableOpacity
-                    style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}
-                    onPress={showDatepicker}
-                >
-                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                        {perfilEdit.nascimento || "Selecione a data"}
-                    </Text>
-                    <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
-                </TouchableOpacity>
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={selectedDate}
-                        mode="date"
-                        display="default"
-                        onChange={handleDateChange}
-                        maximumDate={new Date()}
-                    />
-                )}
-            </>
-        ) : (
-            <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
-                <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                    {perfil.nascimento || 'Não informada'}
-                </Text>
-            </View>
-        )}
-    </View>
-</View>
+                        {/* Data de Nascimento */}
+                        <View style={[styles.inline, { width: width * 0.45 }]}>
+                            <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Data de Nascimento</Text>
+                            {isEditing ? (
+                                <>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.inputContainer,
+                                            {
+                                                backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                                justifyContent: 'center',
+                                                borderColor: validationErrors.nascimento ? 'red' : 'transparent',
+                                                borderWidth: validationErrors.nascimento ? 1 : 0
+                                            }
+                                        ]}
+                                        onPress={showDatepicker}
+                                    >
+                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
+                                            {perfilEdit.nascimento || "Selecione a data"}
+                                        </Text>
+                                        <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
+                                    </TouchableOpacity>
+                                    {validationErrors.nascimento && (
+                                        <Text style={[styles.errorText, { color: 'red' }]}>
+                                            Data de nascimento é obrigatória
+                                        </Text>
+                                    )}
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={selectedDate}
+                                            mode="date"
+                                            display="default"
+                                            onChange={handleDateChange}
+                                            maximumDate={new Date()}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
+                                        {perfil.nascimento || 'Não informada'}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
 
 
                     <View style={styles.sectionContainer}>
                         <Text style={[styles.sectionTitle, { color: textColor }]}>Turma</Text>
                         {perfil.turma ? (
                             <View style={styles.itemsContainer}>
-                                <View style={[styles.itemPill, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
+                                <View style={[styles.itemPill, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                                     <Text style={[styles.itemText, { color: textColor }]}>{perfil.turma.nomeTurma}</Text>
                                 </View>
                             </View>
@@ -718,6 +856,10 @@ const styles = StyleSheet.create({
         width: '100%',
         justifyContent: 'space-between',
     },
+    inputError: {
+        borderColor: 'red',
+        borderWidth: 1,
+    },
     colorInput: {
         fontSize: 17,
         flex: 1,
@@ -727,6 +869,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 4,
+        marginLeft: 10,
     },
     tela: {
         padding: 0,
@@ -760,7 +908,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         borderBottomWidth: 1,
-        borderBottomColor: '#1E6BE6',
         paddingBottom: 5,
         marginBottom: 5,
     },
@@ -770,13 +917,13 @@ const styles = StyleSheet.create({
     editEmail: {
         fontSize: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#1E6BE6',
         paddingBottom: 5,
     },
     inlineFieldsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
+        marginTop: 15,
     },
     profileImage: {
         width: 80,
