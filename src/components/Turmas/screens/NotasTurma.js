@@ -30,7 +30,7 @@ export default function NotasTurma() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const alunosResponse = await axios.get(`http://192.168.2.11:3000/api/class/students/${turmaId}`);
+                const alunosResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
 
                 setTurmaInfo({
                     nomeTurma: alunosResponse.data.nomeTurma,
@@ -48,7 +48,7 @@ export default function NotasTurma() {
 
                 setAlunos(alunosComNotas);
 
-                const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/class/discipline');
+                const disciplinasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/discipline');
                 const turma = disciplinasResponse.data.find(t => t.nomeTurma === alunosResponse.data.nomeTurma);
 
                 if (turma && Array.isArray(turma.disciplinas)) {
@@ -78,13 +78,19 @@ export default function NotasTurma() {
 
     const buscarNotasAluno = async (alunoId) => {
         try {
-            const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
-            setNotasAluno(response.data.notas || []);
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
+            const notas = response.data.notas || [];
+            setNotasAluno(notas);
+    
+            // Forçar reavaliação para garantir que o primeiro bimestre carregue
+            setBimestreFiltro(0); // valor temporário
+            setTimeout(() => setBimestreFiltro(1), 50); // redefine para 1 após um curto tempo
         } catch (error) {
             console.error("Erro ao buscar notas:", error);
             setNotasAluno([]);
         }
     };
+    
 
     const adicionarNota = async () => {
         if (!notaInput || !alunoSelecionado || !disciplinaSelecionada) {
@@ -104,7 +110,7 @@ export default function NotasTurma() {
                 nomeDisciplina: disciplina?.nomeDisciplina || 'Desconhecida'
             };
 
-            await axios.post('http://192.168.2.11:3000/api/note', novaNota);
+            await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note', novaNota);
 
             const updatedNotas = [...notasAluno, novaNota];
             setNotasAluno(updatedNotas);
@@ -273,22 +279,26 @@ export default function NotasTurma() {
                                             bimestre={bimestreFiltro}
                                             onNotaUpdated={(novaNota) => {
                                                 const notasAtualizadas = notasAluno.map(nota =>
-                                                    nota.id === notaDisciplina.id ? { ...nota, nota: novaNota } : nota
+                                                    nota.nomeDisciplina === disciplina.nomeDisciplina && nota.bimestre === bimestreFiltro
+                                                        ? { ...nota, nota: novaNota }
+                                                        : nota
                                                 );
                                                 setNotasAluno(notasAtualizadas);
-                                        
+                                            
                                                 const notasFiltradas = notasAtualizadas.filter(nota =>
-                                                    nota.disciplineId === disciplinaSelecionada
+                                                    nota.nomeDisciplina === disciplina.nomeDisciplina && nota.bimestre === bimestreFiltro
                                                 );
-                                                const total = notasFiltradas.reduce((sum, nota) => sum + nota.nota, 0);
-                                                const media = (total / notasFiltradas.length).toFixed(2);
-                                        
+                                                const totalNotasAluno = notasAtualizadas.reduce((sum, nota) => sum + nota.nota, 0);
+                                                const mediaGeral = (totalNotasAluno / notasAtualizadas.length).toFixed(2);
+                                                
                                                 setAlunos(alunos.map(aluno =>
                                                     aluno.id === alunoSelecionado.id
-                                                        ? { ...aluno, mediaNota: media }
+                                                        ? { ...aluno, mediaNota: mediaGeral }
                                                         : aluno
                                                 ));
+                                                
                                             }}
+                                            
                                         />
                                         );
                                     })}

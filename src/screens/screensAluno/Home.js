@@ -20,9 +20,26 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchAvisos = async () => {
+    const fetchAluno = async () => {
       try {
-        const response = await axios.get('http://192.168.2.11:3000/api/reminder');
+        const alunoId = await AsyncStorage.getItem('@user_id');
+        if (!alunoId) return;
+
+        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
+        setAluno(response.data);
+        
+        // After setting aluno, fetch avisos for the student's class
+        if (response.data.turma?.idTurma) {
+          fetchAvisos(response.data.turma.idTurma);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar aluno:', error);
+      }
+    };
+
+    const fetchAvisos = async (turmaId) => {
+      try {
+        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder/${turmaId}`);
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {
@@ -30,19 +47,6 @@ export default function Home() {
       }
     };
 
-    const fetchAluno = async () => {
-      try {
-        const alunoId = await AsyncStorage.getItem('@user_id');
-        if (!alunoId) return;
-
-        const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
-        setAluno(response.data);
-      } catch (error) {
-        console.error('Erro ao buscar aluno:', error);
-      }
-    };
-
-    fetchAvisos();
     fetchAluno();
   }, []);
 
@@ -133,58 +137,53 @@ export default function Home() {
             </View>
           </View>
         
-
-
-            <View style={{
-              backgroundColor: isDarkMode ? '#000' : '#FFF',
-              width: '100%',
-              borderRadius: 20,
-              marginTop: 20,
-              paddingBottom: 20,
-              marginBottom: 50
-
+          <View style={{
+            backgroundColor: isDarkMode ? '#000' : '#FFF',
+            width: '100%',
+            borderRadius: 20,
+            marginTop: 20,
+            paddingBottom: 20,
+            marginBottom: 50
+          }}>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 'bold',
+              padding: 15,
+              color: isDarkMode ? '#FFF' : '#000'
             }}>
-              <Text style={{
-                fontSize: 24,
-                fontWeight: 'bold',
-                padding: 15,
-                color: isDarkMode ? '#FFF' : '#000'
-              }}>
-                Avisos
-              </Text>
+              Avisos
+            </Text>
 
-              <View style={{ paddingHorizontal: 10 }}>
-                {avisos.length > 0 ? (
-                  avisos.map((aviso) => (
-                    <Avisos
-                      key={aviso.id}
-                      abreviacao={aviso.initials}
-                      nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
-                      horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                      texto={aviso.conteudo}
-                      aleatorio={gerarCorAleatoria()}
-                    />
-                  ))
-                ) : (
-                  <Text style={{
-                    color: isDarkMode ? '#AAA' : '#888',
-                    textAlign: 'center',
-                    paddingVertical: 20
-                  }}>
-                    Nenhum aviso disponível.
-                  </Text>
-                )}
-              </View>
+            <View style={{ paddingHorizontal: 10 }}>
+              {avisos.length > 0 ? (
+                avisos.map((aviso) => (
+                  <Avisos
+                    key={aviso.id}
+                    abreviacao={aviso.initials}
+                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
+                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                    texto={aviso.conteudo}
+                    aleatorio={gerarCorAleatoria()}
+                  />
+                ))
+              ) : (
+                <Text style={{
+                  color: isDarkMode ? '#AAA' : '#888',
+                  textAlign: 'center',
+                  paddingVertical: 20
+                }}>
+                  Nenhum aviso disponível.
+                </Text>
+              )}
             </View>
-         
+          </View>
         </View>
-
       </ScrollView>
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>

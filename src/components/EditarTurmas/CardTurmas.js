@@ -48,7 +48,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
             setIsLoading(true);
 
-            const response = await axios.post('http://192.168.2.11:3000/api/discipline', {
+            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline', {
                 nomeDisciplina: novaDisciplina
             }, {
                 headers: {
@@ -80,7 +80,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
         try {
             // Busca os detalhes completos da turma
-            const response = await axios.get(`http://192.168.2.11:3000/api/class/teacher/disciplinas/${turmaId}`);
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/teacher/disciplinas/${turmaId}`);
             const turmaDetalhada = response.data;
 
             // Atualiza os estados com os dados da turma
@@ -129,7 +129,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                         onPress: async () => {
                             setIsLoading(true);
                             try {
-                                await axios.delete(`http://192.168.2.11:3000/api/class/${turmaId}`, {
+                                await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/${turmaId}`, {
                                     headers: {
                                         Authorization: `Bearer ${token}`
                                     }
@@ -179,7 +179,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 disciplineId: selectedDisciplinas
             };
 
-            await axios.put(`http://192.168.2.11:3000/api/class/${turmaId}`, dadosAtualizados, {
+            await axios.put(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/${turmaId}`, dadosAtualizados, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -214,7 +214,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
+            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
@@ -223,7 +223,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('http://192.168.2.11:3000/api/discipline');
+            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline');
             setDisciplinas(response.data);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);

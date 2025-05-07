@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Activi
 import Icon from 'react-native-vector-icons/Feather';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import { useTheme } from '../../../path/ThemeContext';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import CadastroAlunoModal from '../ModalCadAluno';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,7 +42,7 @@ export default function Alunos() {
                 return;
             }
 
-            const url = `http://192.168.2.11:3000/api/class/students/${turmaId}`;
+            const url = `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`;
             console.log("URL da requisição:", url);
 
             const response = await axios.get(url, {
@@ -88,7 +88,7 @@ export default function Alunos() {
     const fetchMediasFeedbacks = async () => {
         try {
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.get(`http://192.168.2.11:3000/api/class/feedback/${turmaId}`, {
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/feedback/${turmaId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -115,12 +115,14 @@ export default function Alunos() {
         }
     };
 
-    useEffect(() => {
-        if (turmaId) {
-            fetchAlunos();
-            fetchMediasFeedbacks();
-        }
-    }, [turmaId]);
+    useFocusEffect(
+        React.useCallback(() => {
+            if (turmaId) {
+                fetchAlunos();
+                fetchMediasFeedbacks();
+            }
+        }, [turmaId])
+    );
 
     const handleCreateAluno = async (alunoData) => {
         try {
@@ -131,7 +133,7 @@ export default function Alunos() {
                 return;
             }
 
-            const response = await axios.post('http://192.168.2.11:3000/api/student', alunoData, {
+            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student', alunoData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

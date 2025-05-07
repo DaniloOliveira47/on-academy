@@ -29,7 +29,7 @@ export default function HomeDocente() {
     // Função para carregar as mensagens (avisos)
     const fetchMessages = async () => {
         try {
-            const { data } = await axios.get('http://192.168.2.11:3000/api/reminder');
+            const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
 
             // Ordenar por data mais recente primeiro
             data.sort((a, b) =>
@@ -52,7 +52,7 @@ export default function HomeDocente() {
                     return;
                 }
 
-                const response = await axios.get(`http://192.168.2.11:3000/api/teacher/classes/${professorId}`);
+                const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/classes/${professorId}`);
                 console.log('Resposta da API:', response.data);
 
                 if (response.data && Array.isArray(response.data.classes)) {
@@ -96,7 +96,7 @@ export default function HomeDocente() {
             };
 
                // Corrigido a chamada axios.post
-               await axios.post('http://192.168.2.11:3000/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
+               await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

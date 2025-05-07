@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Perfil() {
   const { isDarkMode } = useTheme();
   const [dadosAluno, setDadosAluno] = useState(null);
+  const [fotoPerfil, setFotoPerfil] = useState(require('../../assets/image/Professor.png'));
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -16,15 +17,24 @@ export default function Perfil() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://192.168.2.11:3000/api/student/${userId}`);
+          const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${userId}`);
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);
+          
+          // Verifica se há uma URL de imagem no perfil (corrigido para imageUrl)
+          if (data.imageUrl) {
+            setFotoPerfil({ uri: data.imageUrl });
+          } else {
+            setFotoPerfil(require('../../assets/image/Professor.png'));
+          }
         } else {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-
+        console.error('Erro ao buscar dados do aluno:', error);
+        // Em caso de erro, manter a imagem padrão
+        setFotoPerfil(require('../../assets/image/Professor.png'));
       }
     };
 
@@ -35,19 +45,19 @@ export default function Perfil() {
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
   const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
+  
   return (
     <View>
       <HeaderSimples titulo="PERFIL" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor }]}>Bem-Vindo, {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
+          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo, {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
         </View>
         <View>
-
-
           <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
           <View style={[styles.form, {
-            backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
+            backgroundColor: formBackgroundColor, 
+            shadowColor: isDarkMode ? '#FFF' : '#000',
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 3,
@@ -55,10 +65,18 @@ export default function Perfil() {
             {dadosAluno && (
               <>
                 <View style={styles.linhaUser}>
-                  <Image source={require('../../assets/image/Perfill.png')} />
+                  <Image 
+                    source={fotoPerfil} 
+                    style={styles.fotoPerfil}
+                    onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
+                    defaultSource={require('../../assets/image/Professor.png')}
+                  />
                   <View style={styles.name}>
                     <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nome}</Text>
                     <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailAluno}</Text>
+                    {dadosAluno.turma && (
+                      <Text style={[styles.turma, { color: textColor }]}>Turma: {dadosAluno.turma.nomeTurma}</Text>
+                    )}
                   </View>
                 </View>
                 <Campo label="Nome Completo" text={dadosAluno.nome} textColor={textColor} />
@@ -72,6 +90,7 @@ export default function Perfil() {
                     <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoAluno).toLocaleDateString()} textColor={textColor} />
                   </View>
                 </View>
+               
               </>
             )}
           </View>
@@ -90,7 +109,7 @@ const styles = StyleSheet.create({
   conText: {
     alignItems: 'center',
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 10,
   },
   titulo: {
     fontWeight: 'bold',
@@ -109,9 +128,17 @@ const styles = StyleSheet.create({
   linhaUser: {
     flexDirection: 'row',
     gap: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  fotoPerfil: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   name: {
     marginTop: 15,
+    flex: 1,
   },
   nome: {
     fontSize: 18,
@@ -120,12 +147,29 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 15,
   },
+  turma: {
+    fontSize: 14,
+    marginTop: 5,
+  },
   doubleCampo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 10,
   },
   metadeCampo: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  disciplinasContainer: {
+    marginTop: 15,
+  },
+  disciplinasTitulo: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  disciplina: {
+    fontSize: 14,
+    marginLeft: 10,
   },
 });

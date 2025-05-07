@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { 
+    StyleSheet, 
+    Text, 
+    View, 
+    TextInput, 
+    TouchableOpacity, 
+    Modal, 
+    Image, 
+    Alert, 
+    ScrollView, 
+    ActivityIndicator 
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useTheme } from '../../path/ThemeContext';
+
 export default function CadastroProfessorModal({ visible, onClose, onCreate, isCreating }) {
     const [nomeDocente, setNomeDocente] = useState('');
     const [emailDocente, setEmailDocente] = useState('');
@@ -15,6 +29,8 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     const [disciplines, setDisciplines] = useState([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState([]);
     const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+    const [profileImage, setProfileImage] = useState(null);
+    const [imageBase64, setImageBase64] = useState(null);
     const { isDarkMode } = useTheme();
     const [errors, setErrors] = useState({
         nomeDocente: '',
@@ -27,13 +43,15 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     useEffect(() => {
         if (visible) {
             fetchDisciplines();
-            // Limpa os campos quando o modal é aberto
+            // Reset all fields when modal opens
             setNomeDocente('');
             setEmailDocente('');
             setTelefoneDocente('');
             setDataNascimento('');
             setSelectedBirthDate(new Date());
             setSelectedDisciplines([]);
+            setProfileImage(null);
+            setImageBase64(null);
             setErrors({
                 nomeDocente: '',
                 emailDocente: '',
@@ -44,11 +62,23 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         }
     }, [visible]);
 
+    // Request permissions when component mounts
+    useEffect(() => {
+        (async () => {
+            if (Platform.OS !== 'web') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                    Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para adicionar fotos');
+                }
+            }
+        })();
+    }, []);
+
     const fetchDisciplines = async () => {
         try {
             setLoadingDisciplines(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.get('http://192.168.2.11:3000/api/discipline', {
+            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -58,6 +88,35 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
         } finally {
             setLoadingDisciplines(false);
+        }
+    };
+
+    // Image picker function
+    const pickImage = async () => {
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+                base64: true,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedAsset = result.assets[0];
+                if (selectedAsset.base64) {
+                    setProfileImage(`data:image/jpeg;base64,${selectedAsset.base64}`);
+                    setImageBase64(selectedAsset.base64);
+                } else if (selectedAsset.uri) {
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    setProfileImage(`data:image/jpeg;base64,${base64Image}`);
+                    setImageBase64(base64Image);
+                }
+            }
+        } catch (error) {
+            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
         }
     };
 
@@ -86,13 +145,9 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     };
 
     const formatPhoneNumber = (input) => {
-        // Remove tudo que não é dígito
         const cleaned = input.replace(/\D/g, '');
-
-        // Limita a 11 caracteres (DDD + 9 dígitos)
         const limited = cleaned.slice(0, 11);
 
-        // Aplica a formatação
         if (limited.length <= 10) {
             return limited.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
         } else {
@@ -181,6 +236,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             emailDocente: emailDocente.trim(),
             telefoneDocente: telefoneDocente.replace(/\D/g, ''),
             disciplineId: selectedDisciplines,
+            imageUrl: imageBase64 // Include the base64 image in the request
         };
 
         await onCreate(professorData);
@@ -204,6 +260,21 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                     >
                         <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                     </TouchableOpacity>
+
+                    {/* Profile Image Picker */}
+                    <View style={styles.imagePickerContainer}>
+                        <TouchableOpacity onPress={pickImage} disabled={isCreating}>
+                            <Image
+                                source={profileImage ? 
+                                    { uri: profileImage } : 
+                                    require('../../assets/image/icon_add_user.png')}
+                                style={styles.profileImage}
+                            />
+                        </TouchableOpacity>
+                        <Text style={[styles.imagePickerText, isDarkMode && styles.darkText]}>
+                            {profileImage ? 'Alterar Foto' : 'Adicionar Foto'}
+                        </Text>
+                    </View>
 
                     <TextInput
                         style={[styles.input,
@@ -251,7 +322,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         value={telefoneDocente}
                         onChangeText={handlePhoneChange}
                         editable={!isCreating}
-                        maxLength={15} // (XX) XXXXX-XXXX
+                        maxLength={15}
                     />
                     {errors.telefoneDocente ? <Text style={styles.errorText}>{errors.telefoneDocente}</Text> : null}
 
@@ -280,11 +351,10 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         <DateTimePicker
                             value={selectedBirthDate}
                             mode="date"
-
                             onChange={handleBirthDateChange}
                             maximumDate={new Date()}
-                            themeVariant={isDarkMode ? 'dark' : 'light'} // Esta é a linha importante para o dark mode
-                            textColor={isDarkMode ? '#FFF' : '#000'} // Cor do texto no Android
+                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                            textColor={isDarkMode ? '#FFF' : '#000'}
                         />
                     )}
 
@@ -359,6 +429,22 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         zIndex: 10,
     },
+    darkModalContainer: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    darkModalContent: {
+        backgroundColor: '#1E1E1E',
+    },
+    darkInput: {
+        backgroundColor: '#2D2D2D',
+        color: '#FFF',
+    },
+    darkLabel: {
+        color: '#FFF',
+    },
+    darkText: {
+        color: '#FFF',
+    },
     darkErrorText: {
         color: '#FF7D7D',
     },
@@ -375,12 +461,6 @@ const styles = StyleSheet.create({
     darkDisciplineText: {
         color: '#FFF',
     },
-    darkSaveButton: {
-        backgroundColor: '#1A65C0',
-    },
-    darkLabel: {
-        color: '#FFF',
-    },
     input: {
         width: '100%',
         height: 45,
@@ -388,19 +468,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 10,
         marginBottom: 5,
-    },
-    darkModalContainer: {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    },
-    darkModalContent: {
-        backgroundColor: '#1E1E1E',
-    },
-    darkInput: {
-        backgroundColor: '#2D2D2D',
-        color: '#FFF',
-    },
-    darkLabel: {
-        color: '#FFF',
     },
     inputError: {
         borderWidth: 1,
@@ -478,6 +545,20 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: '#FFF',
         fontSize: 16,
+        fontWeight: 'bold',
+    },
+    imagePickerContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 10,
+    },
+    imagePickerText: {
+        color: '#1A85FF',
         fontWeight: 'bold',
     },
 });

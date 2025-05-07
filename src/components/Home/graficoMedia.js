@@ -22,7 +22,7 @@ export default function GraficoMedia({ isDarkMode }) {
           return;
         }
 
-        const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
+        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
         console.log('Resposta da API:', response.data);
 
         if (response.data && Array.isArray(response.data.notas)) {

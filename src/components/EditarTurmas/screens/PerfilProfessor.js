@@ -197,7 +197,7 @@ export default function PerfilProfessor() {
     const fetchProfessor = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -249,12 +249,12 @@ export default function PerfilProfessor() {
         try {
             const token = await getAuthToken();
 
-            const turmasResponse = await axios.get('http://192.168.2.11:3000/api/class', {
+            const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllTurmas(turmasResponse.data || []);
 
-            const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/discipline', {
+            const disciplinasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllDisciplinas(disciplinasResponse.data || []);
@@ -416,7 +416,7 @@ export default function PerfilProfessor() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://192.168.2.11:3000/api/teacher/upload-image/${professorId}`,
+                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/upload-image/${professorId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -443,47 +443,55 @@ export default function PerfilProfessor() {
                 Alert.alert('Erro', 'Por favor, corrija os campos destacados antes de salvar');
                 return;
             }
-
+    
             // Validações adicionais
             if (!perfilEdit.nome || !perfilEdit.email) {
                 Alert.alert('Erro', 'Nome e email são campos obrigatórios');
                 return;
             }
-
+    
             if (!validarEmail(perfilEdit.email)) {
                 Alert.alert('Erro', 'Por favor, insira um email válido');
                 return;
             }
-
+    
             if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
                 Alert.alert('Erro', 'Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
                 return;
             }
-
+    
             const idade = validarDataNascimento(selectedDate);
             if (idade < 18 || idade > 90) {
                 Alert.alert('Erro', 'O professor deve ter entre 18 e 90 anos');
                 return;
             }
-
+    
             setUpdating(true);
             const token = await getAuthToken();
-
+    
+            // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
-            const formattedDate = `${ano}-${mes}-${dia}T00:00:00.000Z`;
-
+            const formattedDate = `${ano}-${mes}-${dia}`;
+    
+            // Remover formatação do telefone (deixar apenas números)
+            const telefoneNumerico = perfilEdit.telefone ? perfilEdit.telefone.replace(/\D/g, '') : null;
+    
+            // Preparar os dados no formato esperado pelo backend
             const dadosParaEnviar = {
                 nomeDocente: perfilEdit.nome,
                 dataNascimentoDocente: formattedDate,
                 emailDocente: perfilEdit.email,
-                telefoneDocente: perfilEdit.telefone,
+                telefoneDocente: telefoneNumerico, // Enviar apenas números
                 identifierCode: perfilEdit.codigoIdentificador,
-                disciplineId: selectedDisciplinas.length > 0 ? selectedDisciplinas : null,
-                classId: selectedTurmas.length > 0 ? selectedTurmas : null,
+                // Se o backend espera arrays de IDs
+                disciplineIds: selectedDisciplinas,
+                classIds: selectedTurmas
             };
-
+    
+            console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
+    
             const response = await axios.put(
-                `http://192.168.2.11:3000/api/teacher/${professorId}`,
+                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -492,17 +500,26 @@ export default function PerfilProfessor() {
                     }
                 }
             );
-
+    
             if (response.status === 200) {
                 Alert.alert('Sucesso', 'Dados do professor atualizados com sucesso!');
                 await fetchProfessor();
                 setIsEditing(false);
             }
         } catch (error) {
-            Alert.alert(
-                'Erro',
-                error.response?.data?.message || 'Erro ao atualizar os dados do professor'
-            );
+            console.error('Erro ao atualizar professor:', error);
+            let errorMessage = 'Erro ao atualizar os dados do professor';
+    
+            if (error.response) {
+                console.error('Resposta do servidor:', error.response.data);
+                errorMessage = error.response.data.message || errorMessage;
+                
+                if (error.response.data.errors) {
+                    errorMessage += '\n' + Object.values(error.response.data.errors).join('\n');
+                }
+            }
+    
+            Alert.alert('Erro', errorMessage);
         } finally {
             setUpdating(false);
         }
@@ -512,14 +529,14 @@ export default function PerfilProfessor() {
         try {
             setLoading(true);
             const token = await getAuthToken();
-    
-            const response = await axios.delete(`http://192.168.2.11:3000/api/teacher/${professorId}`, {
+
+            const response = await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 200) {
                 Alert.alert('Sucesso', 'Professor excluído com sucesso!', [
                     {
@@ -556,91 +573,7 @@ export default function PerfilProfessor() {
         setIsEditing(!isEditing);
     };
 
-    const MultiSelectTurmas = () => (
-        <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Turmas</Text>
-            <View style={styles.itemsContainer}>
-                {allTurmas.map(turma => (
-                    <TouchableOpacity
-                        key={turma.id}
-                        onPress={() => {
-                            const newSelected = selectedTurmas.includes(turma.id)
-                                ? selectedTurmas.filter(id => id !== turma.id)
-                                : [...selectedTurmas, turma.id];
-                            setSelectedTurmas(newSelected);
-                        }}
-                    >
-                        <View style={[
-                            styles.itemPill,
-                            {
-                                backgroundColor: selectedTurmas.includes(turma.id)
-                                    ? barraAzulColor
-                                    : isDarkMode ? '#141414' : '#F0F7FF',
-                                borderColor: perfil.turmas.some(t => t.id === turma.id)
-                                    ? barraAzulColor
-                                    : 'transparent',
-                                borderWidth: 1
-                            }
-                        ]}>
-                            <Text style={[
-                                styles.itemText,
-                                {
-                                    color: selectedTurmas.includes(turma.id)
-                                        ? 'white'
-                                        : textColor
-                                }
-                            ]}>
-                                {turma.nomeTurma}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    );
 
-    const MultiSelectDisciplinas = () => (
-        <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Disciplinas</Text>
-            <View style={styles.itemsContainer}>
-                {allDisciplinas.map(disciplina => (
-                    <TouchableOpacity
-                        key={disciplina.id}
-                        onPress={() => {
-                            const newSelected = selectedDisciplinas.includes(disciplina.id)
-                                ? selectedDisciplinas.filter(id => id !== disciplina.id)
-                                : [...selectedDisciplinas, disciplina.id];
-                            setSelectedDisciplinas(newSelected);
-                        }}
-                    >
-                        <View style={[
-                            styles.itemPill,
-                            {
-                                backgroundColor: selectedDisciplinas.includes(disciplina.id)
-                                    ? barraAzulColor
-                                    : isDarkMode ? '#141414' : '#F0F7FF',
-                                borderColor: perfil.disciplinas.some(d => d.id === disciplina.id)
-                                    ? barraAzulColor
-                                    : 'transparent',
-                                borderWidth: 1
-                            }
-                        ]}>
-                            <Text style={[
-                                styles.itemText,
-                                {
-                                    color: selectedDisciplinas.includes(disciplina.id)
-                                        ? 'white'
-                                        : textColor
-                                }
-                            ]}>
-                                {disciplina.nomeDisciplina}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    );
 
     const FeedbackSection = ({ feedbacks }) => {
         const [modalVisible, setModalVisible] = useState(false);
@@ -791,7 +724,7 @@ export default function PerfilProfessor() {
                             <Image
                                 source={perfil.foto && !imageError ?
                                     { uri: perfil.foto } :
-                                    require('../../../assets/image/add.png')}
+                                    require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                                 onError={() => setImageError(true)}
                             />
@@ -888,12 +821,12 @@ export default function PerfilProfessor() {
                                                 justifyContent: 'center',
                                                 borderColor: validationErrors.nascimento ? 'red' : 'transparent',
                                                 borderWidth: validationErrors.nascimento ? 1 : 0,
-                                                
+
                                             }
                                         ]}
                                         onPress={showDatepicker}
                                     >
-                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000',  fontSize: 15 }]}>
+                                        <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
                                             {perfilEdit.nascimento || "Selecione a data"}
                                         </Text>
                                         <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
@@ -913,7 +846,7 @@ export default function PerfilProfessor() {
                                 </>
                             ) : (
                                 <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', justifyContent: 'center' }]}>
-                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000',  fontSize: 15 }]}>
+                                    <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
                                         {perfil.nascimento}
                                     </Text>
                                 </View>
@@ -922,62 +855,54 @@ export default function PerfilProfessor() {
                     </View>
 
 
-                    {isEditing ? (
-                        <>
-                            <MultiSelectDisciplinas />
-                            <MultiSelectTurmas />
-                        </>
-                    ) : (
-                        <>
-                            <View style={styles.sectionContainer}>
-                                <Text style={[styles.sectionTitle, { color: textColor }]}>Disciplinas</Text>
-                                {perfil.disciplinas.length > 0 ? (
-                                    <View style={styles.itemsContainer}>
-                                        {perfil.disciplinas.map((disciplina, index) => (
-                                            <View
-                                                key={index}
-                                                style={[
-                                                    styles.itemPill,
-                                                    {
-                                                        backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
-                                                        borderColor: barraAzulColor,
-                                                        borderWidth: 1
-                                                    }
-                                                ]}>
-                                                <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                ) : (
-                                    <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma disciplina associada</Text>
-                                )}
-                            </View>
 
-                            <View style={styles.sectionContainer}>
-                                <Text style={[styles.sectionTitle, { color: textColor }]}>Turmas</Text>
-                                {perfil.turmas.length > 0 ? (
-                                    <View style={styles.itemsContainer}>
-                                        {perfil.turmas.map((turma, index) => (
-                                            <View
-                                                key={index}
-                                                style={[
-                                                    styles.itemPill,
-                                                    {
-                                                        backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
-                                                        borderColor: barraAzulColor,
-                                                        borderWidth: 1
-                                                    }
-                                                ]}>
-                                                <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                ) : (
-                                    <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma turma associada</Text>
-                                )}
-                            </View>
-                        </>
-                    )}
+                    <>
+                        <View style={styles.sectionContainer}>
+                            <Text style={[styles.sectionTitle, { color: textColor }]}>Disciplinas</Text>
+                            {perfil.disciplinas.length > 0 ? (
+                                <View style={styles.itemsContainer}>
+                                    {perfil.disciplinas.map((disciplina, index) => (
+                                        <View
+                                            key={index}
+                                            style={[
+                                                styles.itemPill,
+                                                {
+                                                    backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+
+                                                }
+                                            ]}>
+                                            <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ) : (
+                                <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma disciplina associada</Text>
+                            )}
+                        </View>
+
+                        <View style={styles.sectionContainer}>
+                            <Text style={[styles.sectionTitle, { color: textColor }]}>Turmas</Text>
+                            {perfil.turmas.length > 0 ? (
+                                <View style={styles.itemsContainer}>
+                                    {perfil.turmas.map((turma, index) => (
+                                        <View
+                                            key={index}
+                                            style={[
+                                                styles.itemPill,
+                                                {
+                                                    backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+
+                                                }
+                                            ]}>
+                                            <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ) : (
+                                <Text style={[styles.noItemsText, { color: textColor }]}>Nenhuma turma associada</Text>
+                            )}
+                        </View>
+                    </>
 
                     {isEditing ? (
                         <View style={styles.editButtonsContainer}>

@@ -7,7 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PerfilDocente() {
   const { isDarkMode } = useTheme();
-  const [dadosAluno, setDadosAluno] = useState(null);
+  const [dadosDocente, setDadosDocente] = useState(null);
+  const [fotoPerfil, setFotoPerfil] = useState(require('../../assets/image/Professor.png'));
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -16,62 +17,81 @@ export default function PerfilDocente() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`http://192.168.2.11:3000/api/teacher/${userId}`);
+          const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${userId}`);
           const data = await response.json();
-          console.log('Dados do aluno:', data);
-          setDadosAluno(data);
+          console.log('Dados do docente:', data);
+          setDadosDocente(data);
+          
+          // Verifica se há uma URL de imagem no perfil
+          if (data.imageUrl) { // Alterado para fotoDocente (ajuste conforme seu backend)
+            setFotoPerfil({ uri: data.imageUrl });
+          } else {
+            setFotoPerfil(require('../../assets/image/Professor.png'));
+          }
         } else {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-       
+        console.error('Erro ao buscar dados do docente:', error);
+        // Em caso de erro, manter a imagem padrão
+        setFotoPerfil(require('../../assets/image/Professor.png'));
       }
     };
 
     fetchUserData();
   }, []);
 
-  const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
-  const formBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
-
+  const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
+  
   return (
     <View>
-      <HeaderSimples titulo="PERFIL" />
+      <HeaderSimples titulo="PERFIL DOCENTE" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo, Prof.{dadosAluno ? dadosAluno.nomeDocente : 'Carregando...'}</Text>
+          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>
+            Bem-Vindo, Prof. {dadosDocente ? dadosDocente.nomeDocente : 'Carregando...'}
+          </Text>
         </View>
-        <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
-        <View style={[styles.form, {
-          backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }]}>
-          {dadosAluno && (
-            <>
-              <View style={styles.linhaUser}>
-                <Image source={require('../../assets/image/Perfill.png')} />
-                <View style={styles.name}>
-                  <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nomeDocente}</Text>
-                  <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailDocente}</Text>
+        <View>
+          <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
+          <View style={[styles.form, {
+            backgroundColor: formBackgroundColor, 
+            shadowColor: isDarkMode ? '#FFF' : '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }]}>
+            {dadosDocente && (
+              <>
+                <View style={styles.linhaUser}>
+                  <Image 
+                    source={fotoPerfil} 
+                    style={styles.fotoPerfil}
+                    onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
+                    defaultSource={require('../../assets/image/Professor.png')}
+                  />
+                  <View style={styles.name}>
+                    <Text style={[styles.nome, { color: textColor }]}>{dadosDocente.nomeDocente}</Text>
+                    <Text style={[styles.email, { color: textColor }]}>{dadosDocente.emailDocente}</Text>
+                  </View>
                 </View>
-              </View>
-              <Campo label="Nome Completo" text={dadosAluno.nomeDocente} textColor={textColor} />
-              <Campo label="Email" text={dadosAluno.emailDocente} textColor={textColor} />
-              <Campo label="Registro" text={dadosAluno.identifierCode} textColor={textColor} />
-              <View style={styles.doubleCampo}>
-                <View style={styles.metadeCampo}>
-                  <Campo label="Telefone" text={dadosAluno.telefoneDocente} textColor={textColor} />
+                <Campo label="Nome Completo" text={dadosDocente.nomeDocente} textColor={textColor} />
+                <Campo label="Email" text={dadosDocente.emailDocente} textColor={textColor} />
+                <Campo label="Registro" text={dadosDocente.identifierCode} textColor={textColor} />
+                <View style={styles.doubleCampo}>
+                  <View style={styles.metadeCampo}>
+                    <Campo label="Telefone" text={dadosDocente.telefoneDocente} textColor={textColor} />
+                  </View>
+                  <View style={styles.metadeCampo}>
+                    <Campo label="Data de Nascimento" text={new Date(dadosDocente.dataNascimentoDocente).toLocaleDateString()} textColor={textColor} />
+                  </View>
                 </View>
-                <View style={styles.metadeCampo}>
-                  <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoDocente).toLocaleDateString()} textColor={textColor} />
-                </View>
-              </View>
-            </>
-          )}
+              </>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -80,21 +100,21 @@ export default function PerfilDocente() {
 
 const styles = StyleSheet.create({
   tela: {
-    padding: 20,
+    padding: 15,
     width: '100%',
     height: '100%',
   },
   conText: {
     alignItems: 'center',
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 10,
   },
   titulo: {
     fontWeight: 'bold',
     fontSize: 24,
   },
   barraAzul: {
-    width: 347,
+    width: '100%',
     height: 60,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
@@ -106,9 +126,17 @@ const styles = StyleSheet.create({
   linhaUser: {
     flexDirection: 'row',
     gap: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  fotoPerfil: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   name: {
     marginTop: 15,
+    flex: 1,
   },
   nome: {
     fontSize: 18,
@@ -120,6 +148,7 @@ const styles = StyleSheet.create({
   doubleCampo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 10,
   },
   metadeCampo: {
     flex: 1,

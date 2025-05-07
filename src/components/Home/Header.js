@@ -31,7 +31,7 @@ export default function Header() {
     const fetchData = async () => {
       try {
         // Busca os eventos
-        const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
+        const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
         const events = eventsResponse.data;
 
         // Gerar cores aleatórias para cada evento
@@ -45,7 +45,7 @@ export default function Header() {
 
         // Busca os dados do aluno
         const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
-        const alunoResponse = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
         setAluno(alunoResponse.data); // Armazena os dados do aluno
       } catch (error) {
 
@@ -149,7 +149,7 @@ export default function Header() {
         </View>
 
         <View style={[styles.menuItem, { height: 'auto' }]}>
-          <CustomCalendar events={events} />
+        <CustomCalendar events={events} isHeader={true} />
         </View>
 
         <View style={styles.menuItem}>

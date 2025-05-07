@@ -12,7 +12,7 @@ export default function ProfessorPerfil({ route }) {
 
   useEffect(() => {
 
-    axios.get(`http://192.168.2.11:3000/api/teacher/${id}`)
+    axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${id}`)
       .then(response => {
         setDadosProfessor(response.data); 
       })

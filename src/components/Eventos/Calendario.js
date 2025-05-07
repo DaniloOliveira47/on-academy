@@ -80,13 +80,16 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
       onDateSelect(day.dateString);
     }
 
-    const event = events.find((event) => {
-      const eventDate = new Date(event.dataEvento).toISOString().split('T')[0];
-      return eventDate === day.dateString;
-    });
+    // Only proceed if onDayPress is provided
+    if (onDayPress) {
+      const event = events.find((event) => {
+        const eventDate = new Date(event.dataEvento).toISOString().split('T')[0];
+        return eventDate === day.dateString;
+      });
 
-    if (event) {
-      onDayPress(event.id);
+      if (event) {
+        onDayPress(event.id);
+      }
     }
   };
 
@@ -105,7 +108,6 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
         minDate={minDate} // 1º dia do ano atual
         maxDate={maxDate} // Último dia do ano atual
         disabledByDefault={false}
-        
       />
     </View>
   );

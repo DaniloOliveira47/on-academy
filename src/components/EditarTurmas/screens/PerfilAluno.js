@@ -24,18 +24,17 @@ import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
+import GraficoFeedback from '../../Gerais/GraficoFeedback';
 
 const { width } = Dimensions.get('window');
 
+// Funções de validação e formatação
 const formatarData = (dataString) => {
     if (!dataString) return '';
 
     try {
         const data = new Date(dataString);
-
-        if (isNaN(data.getTime())) {
-            return '';
-        }
+        if (isNaN(data.getTime())) return '';
 
         const dia = data.getDate().toString().padStart(2, '0');
         const mes = (data.getMonth() + 1).toString().padStart(2, '0');
@@ -47,17 +46,79 @@ const formatarData = (dataString) => {
     }
 };
 
+const validarDataNascimento = (date) => {
+    const hoje = new Date();
+    const idade = hoje.getFullYear() - date.getFullYear();
+    const mes = hoje.getMonth() - date.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoje.getDate() < date.getDate())) {
+        return idade - 1;
+    }
+    return idade;
+};
+
+const validarTelefone = (telefone) => {
+    // Aceita (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
+    const regex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$/;
+    return regex.test(telefone);
+};
+
+const formatarTelefone = (input) => {
+    if (!input) return '';
+
+    // Remove tudo que não é dígito
+    const numeros = input.replace(/\D/g, '');
+
+    // Limita a 11 caracteres (DD + 9 dígitos)
+    const limite = numeros.substring(0, 11);
+
+    // Se estiver apagando, retorna o valor atual sem forçar a formatação completa
+    if (limite.length < input.replace(/\D/g, '').length) {
+        return input; // Permite apagar caracteres livremente
+    }
+
+    // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
+    if (limite.length > 10) {
+        return limite.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (limite.length > 6) {
+        return limite.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    if (limite.length > 2) {
+        return limite.replace(/(\d{2})(\d{0,4})/, '($1) $2');
+    }
+    if (limite.length > 0) {
+        return `(${limite}`;
+    }
+    return '';
+};
+
+const formatarTelefoneExibicao = (telefone) => {
+    if (!telefone) return 'Não informado';
+    const numeros = telefone.replace(/\D/g, '');
+
+    if (numeros.length > 10) {
+        return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (numeros.length > 6) {
+        return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    if (numeros.length > 0) {
+        return `(${numeros.substring(0, 2)}) ${numeros.substring(2)}`;
+    }
+    return 'Não informado';
+};
+
+const validarEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+};
+
 export default function PerfilAluno() {
     const route = useRoute();
     const navigation = useNavigation();
     const { alunoId } = route.params;
     const { isDarkMode } = useTheme();
-    const [validationErrors, setValidationErrors] = useState({
-        nome: false,
-        email: false,
-        telefone: false,
-        nascimento: false
-    });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
@@ -79,6 +140,22 @@ export default function PerfilAluno() {
     const [feedbacks, setFeedbacks] = useState([]);
     const [selectedFeedback, setSelectedFeedback] = useState(null);
     const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        nascimento: ''
+    });
+
+    const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
+    const [professorSelecionado, setProfessorSelecionado] = useState(null);
+    const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
+    const [modalProfessorVisible, setModalProfessorVisible] = useState(false);
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
+    const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
+    const [semFeedbacks, setSemFeedbacks] = useState(false);
+    const [feedbacksAvaliacao, setFeedbacksAvaliacao] = useState([]);
 
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
@@ -107,36 +184,85 @@ export default function PerfilAluno() {
         }
     };
 
-    // Adicione estas funções no início do componente, antes do return
-
-    const formatarTelefone = (telefone) => {
-        if (!telefone) return '';
-
-        // Remove tudo que não é dígito
-        const apenasDigitos = telefone.replace(/\D/g, '');
-
-        // Formatação para telefone fixo (10 dígitos) ou celular (11 dígitos)
-        if (apenasDigitos.length === 10) {
-            return apenasDigitos.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        } else if (apenasDigitos.length === 11) {
-            return apenasDigitos.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    // Funções de manipulação de dados
+    const handleNomeChange = (text) => {
+        if (text.length > 100) {
+            setValidationErrors(prev => ({
+                ...prev,
+                nome: 'O nome deve ter no máximo 100 caracteres'
+            }));
+            return;
         }
-
-        // Se não tiver tamanho válido, retorna sem formatação
-        return telefone;
+        setPerfilEdit({ ...perfilEdit, nome: text });
+        setValidationErrors(prev => ({
+            ...prev,
+            nome: ''
+        }));
     };
 
-    const validarTelefone = (telefone) => {
-        if (!telefone) return true; // Permitir campo vazio
-
-        const apenasDigitos = telefone.replace(/\D/g, '');
-        return apenasDigitos.length === 10 || apenasDigitos.length === 11;
+    const handleEmailChange = (text) => {
+        setPerfilEdit({ ...perfilEdit, email: text });
+        if (!validarEmail(text)) {
+            setValidationErrors(prev => ({
+                ...prev,
+                email: 'Por favor, insira um email válido'
+            }));
+        } else {
+            setValidationErrors(prev => ({
+                ...prev,
+                email: ''
+            }));
+        }
     };
 
+    const handleTelefoneChange = (text) => {
+        const formatted = formatarTelefone(text);
+        setPerfilEdit({ ...perfilEdit, telefone: formatted });
+
+        if (!validarTelefone(formatted) && formatted.length > 0) {
+            setValidationErrors(prev => ({
+                ...prev,
+                telefone: 'Formato inválido. Use (DD) 9XXXX-XXXX'
+            }));
+        } else {
+            setValidationErrors(prev => ({
+                ...prev,
+                telefone: ''
+            }));
+        }
+    };
+
+    const handleDateChange = (event, date) => {
+        setShowDatePicker(false);
+        if (date) {
+            const idade = validarDataNascimento(date);
+            if (idade < 5 || idade > 90) {
+                setValidationErrors(prev => ({
+                    ...prev,
+                    nascimento: 'O aluno deve ter entre 5 e 90 anos'
+                }));
+                return;
+            }
+
+            setSelectedDate(date);
+            const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+            setPerfilEdit({ ...perfilEdit, nascimento: formattedDate });
+            setValidationErrors(prev => ({
+                ...prev,
+                nascimento: ''
+            }));
+        }
+    };
+
+    const showDatepicker = () => {
+        setShowDatePicker(true);
+    };
+
+    // Funções de API
     const fetchAluno = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`, {
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -185,31 +311,102 @@ export default function PerfilAluno() {
     const fetchFeedbacks = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`http://192.168.2.11:3000/api/feedbackteacher/student/${alunoId}`, {
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackteacher/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             setFeedbacks(response.data || []);
         } catch (error) {
-
             setFeedbacks([]);
         }
     };
 
-    const handleDateChange = (event, date) => {
-        setShowDatePicker(false);
-        if (date) {
-            setSelectedDate(date);
-            const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-            setPerfilEdit({ ...perfilEdit, nascimento: formattedDate });
+    const fetchFeedbacksAvaliacao = async () => {
+        try {
+            const token = await getAuthToken();
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${alunoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setFeedbacksAvaliacao(response.data || []);
+            atualizarDadosGrafico(response.data);
+        } catch (error) {
+            console.error("Error fetching feedback data:", error);
+            setFeedbacksAvaliacao([]);
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            setSemFeedbacks(true);
         }
     };
 
-    const showDatepicker = () => {
-        setShowDatePicker(true);
+    const atualizarDadosGrafico = (feedbacksData) => {
+        let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
+        if (professorSelecionado) {
+            feedbacksFiltrados = feedbacksFiltrados.filter(
+                feedback => feedback.createdByDTO.id === professorSelecionado.id
+            );
+
+            if (feedbacksFiltrados.length > 0) {
+                const feedback = feedbacksFiltrados[0];
+                setDadosGrafico([
+                    feedback.resposta1,
+                    feedback.resposta2,
+                    feedback.resposta3,
+                    feedback.resposta4,
+                    feedback.resposta5
+                ]);
+                setSemFeedbacks(false);
+                return;
+            }
+        }
+
+        if (feedbacksFiltrados.length === 0) {
+            setSemFeedbacks(true);
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            return;
+        }
+
+        setSemFeedbacks(false);
+
+        const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
+            return {
+                resposta1: acc.resposta1 + feedback.resposta1,
+                resposta2: acc.resposta2 + feedback.resposta2,
+                resposta3: acc.resposta3 + feedback.resposta3,
+                resposta4: acc.resposta4 + feedback.resposta4,
+                resposta5: acc.resposta5 + feedback.resposta5,
+            };
+        }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
+
+        const novasMedias = [
+            somaRespostas.resposta1 / feedbacksFiltrados.length,
+            somaRespostas.resposta2 / feedbacksFiltrados.length,
+            somaRespostas.resposta3 / feedbacksFiltrados.length,
+            somaRespostas.resposta4 / feedbacksFiltrados.length,
+            somaRespostas.resposta5 / feedbacksFiltrados.length,
+        ];
+
+        setDadosGrafico(novasMedias);
     };
 
+    const handleBarraClick = (label, value) => {
+        if (value === 0) return;
+        setBarraSelecionada({ label, value });
+        setModalBarraVisible(true);
+    };
+
+    const handleSelecionarProfessor = (professor) => {
+        setProfessorSelecionado(professor);
+        setModalProfessorVisible(false);
+    };
+
+    const handleLimparFiltroProfessor = () => {
+        setProfessorSelecionado(null);
+    };
+
+    // Funções de manipulação de imagem
     const pickImage = async () => {
         try {
             setError(null);
@@ -289,7 +486,7 @@ export default function PerfilAluno() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `http://192.168.2.11:3000/api/student/upload-image/${alunoId}`,
+                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/upload-image/${alunoId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -308,81 +505,90 @@ export default function PerfilAluno() {
         }
     };
 
+    // Funções de edição
     const toggleEdit = () => {
         if (!isEditing) {
             setPerfilEdit(perfil);
+            setValidationErrors({
+                nome: '',
+                email: '',
+                telefone: '',
+                nascimento: ''
+            });
         }
         setIsEditing(!isEditing);
     };
 
     const handleEditSave = async () => {
-        // Resetar erros
-        setValidationErrors({
-            nome: false,
-            email: false,
-            telefone: false,
-            nascimento: false
-        });
-
-        // Validar campos
-        let hasError = false;
-        const newErrors = { ...validationErrors };
-
-        if (!perfilEdit.nome) {
-            newErrors.nome = true;
-            hasError = true;
-        }
-
-        if (!perfilEdit.email) {
-            newErrors.email = true;
-            hasError = true;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfilEdit.email)) {
-            newErrors.email = true;
-            hasError = true;
-        }
-
-        if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
-            newErrors.telefone = true;
-            hasError = true;
-        }
-
-        if (!perfilEdit.nascimento) {
-            newErrors.nascimento = true;
-            hasError = true;
-        }
-
-        setValidationErrors(newErrors);
-
-        if (hasError) {
-            return;
-        }
-
         try {
+            // Verificar se há erros de validação
+            const hasErrors = Object.values(validationErrors).some(error => error !== '');
+            if (hasErrors) {
+                Alert.alert('Erro', 'Por favor, corrija os campos destacados antes de salvar');
+                return;
+            }
+
+            // Validações adicionais
+            if (!perfilEdit.nome) {
+                Alert.alert('Erro', 'Nome é um campo obrigatório');
+                return;
+            }
+
+            if (!perfilEdit.email) {
+                Alert.alert('Erro', 'Email é um campo obrigatório');
+                return;
+            }
+
+            if (!validarEmail(perfilEdit.email)) {
+                Alert.alert('Erro', 'Por favor, insira um email válido');
+                return;
+            }
+
+            if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
+                Alert.alert('Erro', 'Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                return;
+            }
+
+            const idade = validarDataNascimento(selectedDate);
+            if (idade < 5 || idade > 90) {
+                Alert.alert('Erro', 'O aluno deve ter entre 5 e 90 anos');
+                return;
+            }
+
             setUpdating(true);
             const token = await getAuthToken();
 
             // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
-            const [dia, mes, ano] = perfilEdit.nascimento.split('/');
-            const formattedDate = `${ano}-${mes}-${dia}`;
+            let formattedDate = '';
+            if (perfilEdit.nascimento) {
+                const [dia, mes, ano] = perfilEdit.nascimento.split('/');
+                formattedDate = `${ano}-${mes}-${dia}`;
+
+                // Verificar se a data é válida
+                const testDate = new Date(formattedDate);
+                if (isNaN(testDate.getTime())) {
+                    Alert.alert('Erro', 'Data de nascimento inválida');
+                    return;
+                }
+            }
+
+            // Remover formatação do telefone (deixar apenas números)
+            const telefoneNumerico = perfilEdit.telefone ? perfilEdit.telefone.replace(/\D/g, '') : null;
 
             // Preparar os dados no formato esperado pelo backend
             const dadosParaEnviar = {
                 nomeAluno: perfilEdit.nome,
-                dataNascimentoAluno: formattedDate,
+                dataNascimentoAluno: formattedDate || null,
                 emailAluno: perfilEdit.email,
-                telefoneAluno: perfilEdit.telefone || null,
-                turmaId: perfilEdit.turma?.id || null
+                telefoneAluno: telefoneNumerico, // Enviar apenas números
+                turmaId: perfilEdit.turma?.id || null,
+                imageUrl: perfil.foto
             };
 
-            // Remover campos vazios ou nulos (opcional, dependendo do backend)
-            Object.keys(dadosParaEnviar).forEach(key => {
-                if (dadosParaEnviar[key] === null || dadosParaEnviar[key] === '') {
-                    delete dadosParaEnviar[key];
-                }
-            });
+            console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
 
             const response = await axios.put(
-                `http://192.168.2.11:3000/api/student/${alunoId}`,
+                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -394,7 +600,7 @@ export default function PerfilAluno() {
 
             if (response.status === 200) {
                 Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
-                await fetchAluno(); // Atualiza os dados locais
+                await fetchAluno();
                 setIsEditing(false);
             }
         } catch (error) {
@@ -404,6 +610,10 @@ export default function PerfilAluno() {
             if (error.response) {
                 console.error('Resposta do servidor:', error.response.data);
                 errorMessage = error.response.data.message || errorMessage;
+
+                if (error.response.data.errors) {
+                    errorMessage += '\n' + Object.values(error.response.data.errors).join('\n');
+                }
             }
 
             Alert.alert('Erro', errorMessage);
@@ -416,7 +626,7 @@ export default function PerfilAluno() {
             setLoading(true);
             const token = await getAuthToken();
 
-            const response = await axios.delete(`http://192.168.2.11:3000/api/student/${alunoId}`, {
+            const response = await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -438,6 +648,7 @@ export default function PerfilAluno() {
         }
     };
 
+    // Componentes
     const FeedbackSection = ({ feedbacks }) => {
         const openFeedbackModal = (item) => {
             setSelectedFeedback(item);
@@ -485,7 +696,6 @@ export default function PerfilAluno() {
                             </Text>
                         </View>
                     )}
-
                 </View>
 
                 <Modal visible={feedbackModalVisible} transparent animationType="fade">
@@ -529,16 +739,24 @@ export default function PerfilAluno() {
         );
     };
 
+    // Efeitos
     useEffect(() => {
         requestPermissions();
         if (alunoId) {
             fetchAluno();
             fetchFeedbacks();
+            fetchFeedbacksAvaliacao();
         } else {
             setError('ID do aluno não fornecido.');
             setLoading(false);
         }
     }, [alunoId]);
+
+    useEffect(() => {
+        if (feedbacksAvaliacao.length > 0) {
+            atualizarDadosGrafico(feedbacksAvaliacao);
+        }
+    }, [bimestreSelecionado, professorSelecionado]);
 
     if (loading) {
         return (
@@ -596,7 +814,7 @@ export default function PerfilAluno() {
                             <Image
                                 source={perfil.foto && !imageError ?
                                     { uri: perfil.foto } :
-                                    require('../../../assets/image/add.png')}
+                                    require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                                 onError={() => setImageError(true)}
                             />
@@ -613,19 +831,14 @@ export default function PerfilAluno() {
                                             }
                                         ]}
                                         value={perfilEdit.nome}
-                                        onChangeText={(text) => {
-                                            setPerfilEdit({ ...perfilEdit, nome: text });
-                                            if (validationErrors.nome) {
-                                                setValidationErrors({ ...validationErrors, nome: false });
-                                            }
-                                        }}
+                                        onChangeText={handleNomeChange}
                                         placeholder="Nome do aluno"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
+                                        maxLength={100}
                                     />
-                                    {validationErrors.nome && (
-                                        <Text style={styles.errorText}>Nome é obrigatório</Text>
-                                    )}
-
+                                    {validationErrors.nome ? (
+                                        <Text style={styles.errorText}>{validationErrors.nome}</Text>
+                                    ) : null}
                                     <TextInput
                                         style={[
                                             styles.editEmail,
@@ -635,22 +848,14 @@ export default function PerfilAluno() {
                                             }
                                         ]}
                                         value={perfilEdit.email}
-                                        onChangeText={(text) => {
-                                            setPerfilEdit({ ...perfilEdit, email: text });
-                                            if (validationErrors.email) {
-                                                setValidationErrors({ ...validationErrors, email: false });
-                                            }
-                                        }}
+                                        onChangeText={handleEmailChange}
                                         placeholder="Email do aluno"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                         keyboardType="email-address"
                                     />
-                                    {validationErrors.email && (
-                                        <Text style={styles.errorText}>
-                                            {!perfilEdit.email ? 'Email é obrigatório' : 'Email inválido'}
-                                        </Text>
-                                    )}
-
+                                    {validationErrors.email ? (
+                                        <Text style={styles.errorText}>{validationErrors.email}</Text>
+                                    ) : null}
                                 </>
                             ) : (
                                 <>
@@ -669,6 +874,7 @@ export default function PerfilAluno() {
                         placeholder="Matrícula do aluno"
                         fixedWidth={width * 0.8}
                     />
+
                     <View style={styles.inlineFieldsContainer}>
                         {/* Telefone */}
                         <View style={[styles.inline, { width: width * 0.45 }]}>
@@ -681,34 +887,24 @@ export default function PerfilAluno() {
                                             {
                                                 color: isDarkMode ? '#FFF' : '#000',
                                                 backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
-                                                fontSize: 15,
                                                 borderColor: validationErrors.telefone ? 'red' : 'transparent',
                                                 borderWidth: validationErrors.telefone ? 1 : 0
                                             }
                                         ]}
                                         value={formatarTelefone(perfilEdit.telefone)}
-                                        onChangeText={(text) => {
-                                            const apenasDigitos = text.replace(/\D/g, '');
-                                            setPerfilEdit({ ...perfilEdit, telefone: apenasDigitos });
-                                            if (validationErrors.telefone) {
-                                                setValidationErrors({ ...validationErrors, telefone: false });
-                                            }
-                                        }}
+                                        onChangeText={handleTelefoneChange}
                                         placeholder="(00) 00000-0000"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
                                         keyboardType="phone-pad"
-                                        maxLength={15}
                                     />
-                                    {validationErrors.telefone && (
-                                        <Text style={[styles.errorText, { color: 'red' }]}>
-                                            Telefone inválido (10 ou 11 dígitos)
-                                        </Text>
-                                    )}
+                                    {validationErrors.telefone ? (
+                                        <Text style={styles.errorText}>{validationErrors.telefone}</Text>
+                                    ) : null}
                                 </>
                             ) : (
                                 <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                                     <Text style={[styles.colorInput, { color: isDarkMode ? '#FFF' : '#000', fontSize: 15 }]}>
-                                        {perfil.telefone ? formatarTelefone(perfil.telefone) : 'Não informado'}
+                                        {formatarTelefoneExibicao(perfil.telefone)}
                                     </Text>
                                 </View>
                             )}
@@ -736,11 +932,9 @@ export default function PerfilAluno() {
                                         </Text>
                                         <Icon name="calendar" size={16} color={isDarkMode ? '#FFF' : '#666'} style={styles.calendarIcon} />
                                     </TouchableOpacity>
-                                    {validationErrors.nascimento && (
-                                        <Text style={[styles.errorText, { color: 'red' }]}>
-                                            Data de nascimento é obrigatória
-                                        </Text>
-                                    )}
+                                    {validationErrors.nascimento ? (
+                                        <Text style={styles.errorText}>{validationErrors.nascimento}</Text>
+                                    ) : null}
                                     {showDatePicker && (
                                         <DateTimePicker
                                             value={selectedDate}
@@ -760,7 +954,6 @@ export default function PerfilAluno() {
                             )}
                         </View>
                     </View>
-
 
                     <View style={styles.sectionContainer}>
                         <Text style={[styles.sectionTitle, { color: textColor }]}>Turma</Text>
@@ -808,7 +1001,24 @@ export default function PerfilAluno() {
                     )}
                 </View>
 
+
                 <FeedbackSection feedbacks={feedbacks} />
+                <View style={[styles.graficoContainer, { backgroundColor: formBackgroundColor }]}>
+                    <Text style={[styles.sectionTitle, { color: textColor }]}>Avaliação do Aluno</Text>
+
+                    <GraficoFeedback
+                        dadosGrafico={dadosGrafico}
+                        bimestreSelecionado={bimestreSelecionado}
+                        professorSelecionado={professorSelecionado}
+                        semFeedbacks={semFeedbacks}
+
+                        onSelecionarBimestre={() => setModalBimestreVisible(true)}
+                        onSelecionarProfessor={() => setModalProfessorVisible(true)}
+                        onLimparFiltroProfessor={handleLimparFiltroProfessor}
+                        onBarraClick={handleBarraClick}
+                        isDarkMode={isDarkMode}
+                    />
+                </View>
             </View>
 
             <Modal visible={modalDeleteVisible} transparent animationType="slide">
@@ -826,6 +1036,83 @@ export default function PerfilAluno() {
                     </View>
                 </View>
             </Modal>
+            {/* Bimestre Selection Modal */}
+            <Modal visible={modalBimestreVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+                        {[1, 2, 3, 4].map((bimestre) => (
+                            <TouchableOpacity
+                                key={bimestre}
+                                style={styles.modalItem}
+                                onPress={() => {
+                                    setBimestreSelecionado(bimestre);
+                                    setModalBimestreVisible(false);
+                                }}
+                            >
+                                <Text style={[styles.modalText, { color: textColor }]}>
+                                    {bimestre}º Bimestre
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Professor Selection Modal */}
+            <Modal visible={modalProfessorVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+                        <TouchableOpacity
+                            style={styles.modalItem}
+                            onPress={() => {
+                                handleSelecionarProfessor(null);
+                            }}
+                        >
+                            <Text style={[styles.modalText, { color: textColor }]}>
+                                Todos Professores
+                            </Text>
+                        </TouchableOpacity>
+                        {feedbacksAvaliacao
+                            .filter((feedback, index, self) =>
+                                feedback.createdByDTO &&
+                                self.findIndex(f => f.createdByDTO.id === feedback.createdByDTO.id) === index
+                            )
+                            .map((feedback) => (
+                                <TouchableOpacity
+                                    key={feedback.createdByDTO.id}
+                                    style={styles.modalItem}
+                                    onPress={() => {
+                                        handleSelecionarProfessor(feedback.createdByDTO);
+                                    }}
+                                >
+                                    <Text style={[styles.modalText, { color: textColor }]}>
+                                        {feedback.createdByDTO.nomeDocente}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Bar Value Modal */}
+            <Modal visible={modalBarraVisible} transparent animationType="slide">
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
+                        <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
+                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                            {barraSelecionada.value.toFixed(1)}
+                        </Text>
+                        <TouchableOpacity
+                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                            onPress={() => setModalBarraVisible(false)}
+                        >
+                            <Text style={{ fontWeight: 18, color: '#1E6BE6' }}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -838,6 +1125,17 @@ const styles = StyleSheet.create({
     },
     campo: {
         marginTop: 15,
+    },
+    graficoContainer: {
+        marginTop: 0,
+        borderRadius: 10,
+        padding: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginBottom: 70
     },
     inline: {
         flex: 1,
@@ -979,6 +1277,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
+        alignItems: 'center',
         padding: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },

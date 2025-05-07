@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ActivityIndicator } from 'react-native';
+import { 
+    StyleSheet, 
+    Text, 
+    View, 
+    TextInput, 
+    TouchableOpacity, 
+    Modal, 
+    Image, 
+    Alert, 
+    ActivityIndicator,
+    Platform 
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useTheme } from '../../path/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
 export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreating, onCreate }) {
     const [nomeAluno, setNomeAluno] = useState('');
     const [emailAluno, setEmailAluno] = useState('');
@@ -12,7 +28,37 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
+    const [profileImage, setProfileImage] = useState(null);
+    const [imageBase64, setImageBase64] = useState(null);
     const { isDarkMode } = useTheme();
+
+    // Request permissions when component mounts
+    useEffect(() => {
+        (async () => {
+            if (Platform.OS !== 'web') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                    Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para adicionar fotos');
+                }
+            }
+        })();
+    }, []);
+
+    // Reset form when modal opens
+    useEffect(() => {
+        if (visible) {
+            setNomeAluno('');
+            setEmailAluno('');
+            setTelefoneAluno('');
+            setDataNascimento('');
+            setSelectedBirthDate(new Date());
+            setProfileImage(null);
+            setImageBase64(null);
+            setTouched({});
+            setErrors({});
+        }
+    }, [visible]);
+
     // Validação em tempo real
     useEffect(() => {
         const validationErrors = {};
@@ -89,8 +135,37 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         setTelefoneAluno(formatted);
     };
 
+    // Image picker function
+    const pickImage = async () => {
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+                base64: true,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedAsset = result.assets[0];
+                if (selectedAsset.base64) {
+                    setProfileImage(`data:image/jpeg;base64,${selectedAsset.base64}`);
+                    setImageBase64(selectedAsset.base64);
+                } else if (selectedAsset.uri) {
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    setProfileImage(`data:image/jpeg;base64,${base64Image}`);
+                    setImageBase64(base64Image);
+                }
+            }
+        } catch (error) {
+            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+        }
+    };
+
     const handleCadastrar = async () => {
-        // Marca todos os campos como tocados para mostrar todos os erros
+        // Mark all fields as touched to show all errors
         setTouched({
             nomeAluno: true,
             emailAluno: true,
@@ -98,7 +173,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             dataNascimento: true
         });
 
-        // Verifica se há erros
+        // Check for errors
         if (Object.keys(errors).length > 0 ||
             !nomeAluno ||
             !emailAluno ||
@@ -109,6 +184,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         }
 
         try {
+            const token = await AsyncStorage.getItem('@user_token');
             const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
             const phoneDigits = telefoneAluno.replace(/\D/g, '');
 
@@ -118,16 +194,20 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 emailAluno: emailAluno.trim().toLowerCase(),
                 telefoneAluno: phoneDigits,
                 turmaId,
+                imageUrl: null
             };
 
-            await onCreate(alunoData);
+            // Se você estiver usando a função onCreate passada como prop
+            await onCreate(alunoData, token);
 
-            // Limpa o formulário após cadastro bem-sucedido
+            // Reset form after successful creation
             setNomeAluno('');
             setEmailAluno('');
             setTelefoneAluno('');
             setDataNascimento('');
             setSelectedBirthDate(new Date());
+            setProfileImage(null);
+            setImageBase64(null);
             setTouched({});
         } catch (error) {
             let errorMessage = 'Erro ao cadastrar aluno. Tente novamente mais tarde.';
@@ -137,6 +217,8 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     errorMessage = 'Dados inválidos. Verifique as informações.';
                 } else if (error.response.status === 409) {
                     errorMessage = 'Email já cadastrado para outro aluno.';
+                } else if (error.response.status === 401) {
+                    errorMessage = 'Autenticação necessária. Faça login novamente.';
                 }
             }
 
@@ -164,107 +246,122 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         source={require('../../assets/image/barraAzul.png')}
                     />
                     <View style={{width: '100%', padding: 20}}>
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={onClose}
-                        disabled={isCreating}
-                    >
-                        <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
-                    </TouchableOpacity>
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.nomeAluno && styles.inputError]}
-                        placeholder="Nome Completo"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        value={nomeAluno}
-                        onChangeText={setNomeAluno}
-                        onBlur={() => handleBlur('nomeAluno')}
-                        editable={!isCreating}
-                    />
-                    {errors.nomeAluno && <Text style={styles.errorText}>{errors.nomeAluno}</Text>}
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.emailAluno && styles.inputError]}
-                        placeholder="Email"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        value={emailAluno}
-                        onChangeText={setEmailAluno}
-                        onBlur={() => handleBlur('emailAluno')}
-                        editable={!isCreating}
-                    />
-                    {errors.emailAluno && <Text style={styles.errorText}>{errors.emailAluno}</Text>}
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.telefoneAluno && styles.inputError]}
-                        placeholder="Telefone (XX) XXXXX-XXXX"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        keyboardType="phone-pad"
-                        value={telefoneAluno}
-                        onChangeText={handlePhoneChange}
-                        onBlur={() => handleBlur('telefoneAluno')}
-                        editable={!isCreating}
-                        maxLength={15}
-                    />
-                    {errors.telefoneAluno && <Text style={styles.errorText}>{errors.telefoneAluno}</Text>}
-
-                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
-                    <View style={styles.dateContainer}>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                styles.dateInput,
-                                isDarkMode && styles.darkInput,
-                                errors.dataNascimento && styles.inputError
-                            ]}
-                            placeholder="Selecione a data de nascimento"
-                            placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                            value={dataNascimento}
-                            editable={false}
-                            onFocus={() => !isCreating && setShowBirthDatePicker(true)}
-                        />
                         <TouchableOpacity
-                            style={styles.dateIconButton}
-                            onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                            style={styles.closeButton}
+                            onPress={onClose}
                             disabled={isCreating}
                         >
-                            <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
+                            <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
+                        </TouchableOpacity>
+
+                        {/* Profile Image Picker */}
+                        <View style={styles.imagePickerContainer}>
+                            <TouchableOpacity onPress={pickImage} disabled={isCreating}>
+                                <Image
+                                    source={profileImage ? 
+                                        { uri: profileImage } : 
+                                        require('../../assets/image/icon_add_user.png')}
+                                    style={styles.profileImage}
+                                />
+                            </TouchableOpacity>
+                            <Text style={[styles.imagePickerText, isDarkMode && styles.darkText]}>
+                                {profileImage ? 'Alterar Foto' : 'Adicionar Foto'}
+                            </Text>
+                        </View>
+
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.nomeAluno && styles.inputError]}
+                            placeholder="Nome Completo"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            value={nomeAluno}
+                            onChangeText={setNomeAluno}
+                            onBlur={() => handleBlur('nomeAluno')}
+                            editable={!isCreating}
+                        />
+                        {errors.nomeAluno && <Text style={styles.errorText}>{errors.nomeAluno}</Text>}
+
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.emailAluno && styles.inputError]}
+                            placeholder="Email"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={emailAluno}
+                            onChangeText={setEmailAluno}
+                            onBlur={() => handleBlur('emailAluno')}
+                            editable={!isCreating}
+                        />
+                        {errors.emailAluno && <Text style={styles.errorText}>{errors.emailAluno}</Text>}
+
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.telefoneAluno && styles.inputError]}
+                            placeholder="Telefone (XX) XXXXX-XXXX"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            keyboardType="phone-pad"
+                            value={telefoneAluno}
+                            onChangeText={handlePhoneChange}
+                            onBlur={() => handleBlur('telefoneAluno')}
+                            editable={!isCreating}
+                            maxLength={15}
+                        />
+                        {errors.telefoneAluno && <Text style={styles.errorText}>{errors.telefoneAluno}</Text>}
+
+                        <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
+                        <View style={styles.dateContainer}>
+                            <TextInput
+                                style={[
+                                    styles.input,
+                                    styles.dateInput,
+                                    isDarkMode && styles.darkInput,
+                                    errors.dataNascimento && styles.inputError
+                                ]}
+                                placeholder="Selecione a data de nascimento"
+                                placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                                value={dataNascimento}
+                                editable={false}
+                                onFocus={() => !isCreating && setShowBirthDatePicker(true)}
+                            />
+                            <TouchableOpacity
+                                style={styles.dateIconButton}
+                                onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                                disabled={isCreating}
+                            >
+                                <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
+                            </TouchableOpacity>
+                        </View>
+                        {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
+                        {showBirthDatePicker && (
+                            <DateTimePicker
+                                value={selectedBirthDate}
+                                mode="date"
+                                display="default"
+                                onChange={handleBirthDateChange}
+                                maximumDate={new Date()}
+                                minimumDate={new Date(1900, 0, 1)}
+                            />
+                        )}
+
+                        <TouchableOpacity
+                            style={[
+                                styles.saveButton,
+                                (!isFormValid() || isCreating) && styles.saveButtonDisabled
+                            ]}
+                            onPress={handleCadastrar}
+                            disabled={!isFormValid() || isCreating}
+                        >
+                            {isCreating ? (
+                                <ActivityIndicator size="small" color="#FFF" />
+                            ) : (
+                                <Text style={styles.saveButtonText}>Salvar Aluno</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
-                    {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
-                    {showBirthDatePicker && (
-                        <DateTimePicker
-                            value={selectedBirthDate}
-                            mode="date"
-                            display="default"
-                            onChange={handleBirthDateChange}
-                            maximumDate={new Date()}
-                            minimumDate={new Date(1900, 0, 1)}
-                        />
-                    )}
-
-                    <TouchableOpacity
-                        style={[
-                            styles.saveButton,
-                            (!isFormValid() || isCreating) && styles.saveButtonDisabled
-                        ]}
-                        onPress={handleCadastrar}
-                        disabled={!isFormValid() || isCreating}
-                    >
-                        {isCreating ? (
-                            <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Salvar Aluno</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
                 </View>
             </TouchableOpacity>
         </Modal>
@@ -289,6 +386,9 @@ const styles = StyleSheet.create({
         color: '#FFF',
     },
     darkLabel: {
+        color: '#FFF',
+    },
+    darkText: {
         color: '#FFF',
     },
     modalContent: {
@@ -357,6 +457,20 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: '#FFF',
         fontSize: 16,
+        fontWeight: 'bold',
+    },
+    imagePickerContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 10,
+    },
+    imagePickerText: {
+        color: '#1A85FF',
         fontWeight: 'bold',
     },
 });

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OnAcademy",
-    "slug": "nome-do-projeto", 
+    "slug": "OnAcademy", 
     "version": "1.0.0",
     "cli": {
       "appVersionSource": "remote"

@@ -44,7 +44,7 @@ export default function Boletim() {
             try {
                 setLoading(true);
                 const alunoId = await AsyncStorage.getItem('@user_id');
-                const alunoResponse = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
+                const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
                 
                 setAluno(alunoResponse.data);
                 
@@ -87,7 +87,7 @@ export default function Boletim() {
         try {
             setDownloading(true);
             const alunoId = await AsyncStorage.getItem('@user_id');
-            const url = `http://192.168.2.11:3000/api/boletim/${alunoId}`;
+            const url = `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/boletim/${alunoId}`;
             const fileName = `boletim_${alunoId}_${new Date().toISOString().slice(0,10)}.pdf`;
             
             const downloadUri = FileSystem.cacheDirectory + fileName;

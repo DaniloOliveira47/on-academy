@@ -6,7 +6,7 @@ import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View, Alert, Modal
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
-import GraficoFeedback from '../../components/Gerais/GraficoFeedback'; // Importando o mesmo componente usado no AlunoPerfil
+import GraficoFeedback from '../../components/Gerais/GraficoFeedback';
 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
@@ -17,19 +17,26 @@ export default function Ocorrencia() {
     const [feedbacks, setFeedbacks] = useState([]);
     const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
     const [userId, setUserId] = useState(null);
+    const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
+    const [modalProfessorVisible, setModalProfessorVisible] = useState(false);
+    const [modalBarraVisible, setModalBarraVisible] = useState(false);
+    const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
+    const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
+    const [semFeedbacks, setSemFeedbacks] = useState(false);
 
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
+    const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
-        axios.get('http://192.168.2.11:3000/api/teacher')
+        axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher')
             .then(response => {
                 setProfessores(response.data);
             })
             .catch(error => {
-            
+                console.error("Error fetching teachers:", error);
             });
     }, []);
 
@@ -40,7 +47,7 @@ export default function Ocorrencia() {
                 const id = await AsyncStorage.getItem('@user_id');
                 setUserId(id);
             } catch (error) {
-               
+                console.error("Error fetching user ID:", error);
             }
         };
 
@@ -50,24 +57,30 @@ export default function Ocorrencia() {
     // Busca os feedbacks do estudante
     useEffect(() => {
         if (userId) {
-            axios.get(`http://192.168.2.11:3000/api/student/feedback/${userId}`)
-                .then(response => {
-                    setFeedbacks(response.data);
-                })
-                .catch(error => {
-                   
-                });
+            fetchFeedbacks();
         }
-    }, [userId]);
+    }, [userId, bimestreSelecionado]);
 
-    // Filtra os feedbacks pelo bimestre selecionado
-    const feedbacksFiltrados = feedbacks.filter(feedback => feedback.bimestre === bimestreSelecionado);
+    const fetchFeedbacks = async () => {
+        try {
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${userId}`);
+            setFeedbacks(response.data);
+            atualizarDadosGrafico(response.data);
+        } catch (error) {
+            console.error("Error fetching feedbacks:", error);
+        }
+    };
 
-    // Calcula as médias das respostas para o gráfico
-    const calcularDadosGrafico = () => {
+    const atualizarDadosGrafico = (feedbacksData) => {
+        const feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
         if (feedbacksFiltrados.length === 0) {
-            return [0, 0, 0, 0, 0];
+            setSemFeedbacks(true);
+            setDadosGrafico([0, 0, 0, 0, 0]);
+            return;
         }
+
+        setSemFeedbacks(false);
 
         const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
             return {
@@ -79,16 +92,16 @@ export default function Ocorrencia() {
             };
         }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
 
-        return [
+        const novasMedias = [
             somaRespostas.resposta1 / feedbacksFiltrados.length,
             somaRespostas.resposta2 / feedbacksFiltrados.length,
             somaRespostas.resposta3 / feedbacksFiltrados.length,
             somaRespostas.resposta4 / feedbacksFiltrados.length,
             somaRespostas.resposta5 / feedbacksFiltrados.length,
         ];
-    };
 
-    const dadosGrafico = calcularDadosGrafico();
+        setDadosGrafico(novasMedias);
+    };
 
     const selecionarProfessor = (professor) => {
         setProfessorSelecionado(professor);
@@ -114,7 +127,7 @@ export default function Ocorrencia() {
                 recipientTeacher: { id: professorSelecionado.id }
             };
 
-            const response = await axios.post('http://192.168.2.11:3000/api/feedbackStudent', feedback);
+            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
@@ -124,52 +137,71 @@ export default function Ocorrencia() {
                 Alert.alert('Erro', 'Não foi possível enviar o feedback.');
             }
         } catch (error) {
-          
+            console.error("Error sending feedback:", error);
             Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
         }
+    };
+
+    const handleBarraClick = (label, value) => {
+        if (value === 0) return;
+        setBarraSelecionada({ label, value });
+        setModalBarraVisible(true);
     };
 
     return (
         <ScrollView style={{backgroundColor: perfilBackgroundColor}}>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                {/* Componente de Gráfico Reutilizado */}
+                {/* Componente de Gráfico */}
                 <GraficoFeedback
                     dadosGrafico={dadosGrafico}
                     bimestreSelecionado={bimestreSelecionado}
-                    onSelecionarBimestre={() => setModalVisible(true)}
-                    professorSelecionado={null} // Não há filtro por professor
-                    semFeedbacks={feedbacksFiltrados.length === 0}
-                    professores={[]} // Não precisa da lista de professores para filtrar
+                    professorSelecionado={null}
+                    semFeedbacks={semFeedbacks}
+                    professores={[]}
+                    onSelecionarBimestre={() => setModalBimestreVisible(true)}
+                    onSelecionarProfessor={() => setModalProfessorVisible(true)}
                     onLimparFiltroProfessor={() => {}}
-                    onBarraClick={(label, value) => {
-                        if (value === 0) return;
-                        Alert.alert(label, `Valor: ${value.toFixed(1)}`);
-                    }}
+                    onBarraClick={handleBarraClick}
                 />
 
                 {/* Modal para seleção de bimestre */}
-                <Modal
-                    visible={modalVisible}
-                    transparent={true}
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
+                <Modal visible={modalBimestreVisible} transparent animationType="slide">
+                    <View style={styles.modalBackdrop}>
                         <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                            <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
                             {[1, 2, 3, 4].map((bimestre) => (
                                 <TouchableOpacity
                                     key={bimestre}
                                     style={styles.modalItem}
                                     onPress={() => {
                                         setBimestreSelecionado(bimestre);
-                                        setModalVisible(false);
+                                        setModalBimestreVisible(false);
                                     }}
                                 >
                                     <Text style={[styles.modalText, { color: textColor }]}>
-                                        {bimestre}º Bim.
+                                        {bimestre}º Bimestre
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Modal para valor da barra */}
+                <Modal visible={modalBarraVisible} transparent animationType="slide">
+                    <View style={styles.modalBackdrop}>
+                        <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
+                            <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
+                            <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                                {barraSelecionada.value.toFixed(1)}
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                                onPress={() => setModalBarraVisible(false)}
+                            >
+                                <Text style={[styles.buttonText, { color: '#1E6BE6' }]}>Fechar</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>
@@ -279,26 +311,47 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
     },
-    modalOverlay: {
+    modalBackdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContainer: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
         width: '80%',
-        borderRadius: 10,
-        padding: 15,
-        alignItems: 'center',
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
+        alignItems: 'center'
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
     },
     modalItem: {
-        paddingVertical: 15,
+        padding: 15,
         width: '100%',
-        alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
     modalText: {
-        fontSize: 18,
+        fontSize: 16,
+        textAlign: 'center'
+    },
+    cancelButton: {
+        paddingVertical: 12,
+        borderRadius: 8,
+        width: '45%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontWeight: 'bold',
     },
 });
