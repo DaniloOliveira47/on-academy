@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  TextInput, 
-  View, 
-  ActivityIndicator, 
-  TouchableOpacity, 
-  Text, 
-  ScrollView, 
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  ActivityIndicator,
+  TouchableOpacity,
+  Text,
+  ScrollView,
   Alert,
   Image,
   Modal
@@ -20,7 +20,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
-
+ 
 export default function AlunosFeedback({ route }) {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
@@ -35,24 +35,24 @@ export default function AlunosFeedback({ route }) {
     const [modalBarraVisible, setModalBarraVisible] = useState(false);
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const navigation = useNavigation();
-
+ 
     const { turmaId } = route.params;
     const ALUNOS_POR_PAGINA = 10;
-
+ 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // Buscar dados da turma
                 const turmaResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
                 setTurma(turmaResponse.data);
-                
+               
                 // Buscar médias dos feedbacks
                 await fetchMediasFeedbacks();
-                
+               
                 // Buscar ID do professor
                 const id = await AsyncStorage.getItem('@user_id');
                 setProfessorId(id);
-                
+               
                 // Buscar token
                 const token = await AsyncStorage.getItem('@user_token');
                 setUserToken(token);
@@ -62,15 +62,15 @@ export default function AlunosFeedback({ route }) {
                 setLoading(false);
             }
         };
-
+ 
         fetchData();
     }, [turmaId]);
-
+ 
     const fetchMediasFeedbacks = async () => {
         try {
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/feedback/${turmaId}`);
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
-            
+           
             setDadosGrafico([
                 mediaResposta1 || 0,
                 mediaResposta2 || 0,
@@ -84,31 +84,31 @@ export default function AlunosFeedback({ route }) {
             setTotalFeedbacks(0);
         }
     };
-
+ 
     // Função para obter alunos da página atual
     const getAlunosPaginaAtual = () => {
         if (!turma || !turma.students) return [[], []];
-        
+       
         const inicio = (paginaSelecionada - 1) * ALUNOS_POR_PAGINA;
         const fim = inicio + ALUNOS_POR_PAGINA;
         const alunosPagina = turma.students.slice(inicio, fim);
-        
+       
         // Dividir em duas colunas
         const metade = Math.ceil(alunosPagina.length / 2);
         const coluna1 = alunosPagina.slice(0, metade);
         const coluna2 = alunosPagina.slice(metade);
-        
+       
         return [coluna1, coluna2];
     };
-
+ 
     // Calcular o número total de páginas
     const totalPaginas = turma ? Math.ceil(turma.students.length / ALUNOS_POR_PAGINA) : 1;
-
+ 
     // Gerar array de números de página ou '>' para próxima página
     const getBotoesPagina = () => {
         const botoes = [];
         const maxBotoes = 3; // Número máximo de botões de página a mostrar
-        
+       
         if (totalPaginas <= maxBotoes) {
             for (let i = 1; i <= totalPaginas; i++) {
                 botoes.push(i);
@@ -130,10 +130,10 @@ export default function AlunosFeedback({ route }) {
                 botoes.push('>');
             }
         }
-        
+       
         return botoes;
     };
-
+ 
     const handleMudarPagina = (pagina) => {
         if (pagina === '<') {
             setPaginaSelecionada(prev => Math.max(1, prev - 1));
@@ -143,7 +143,7 @@ export default function AlunosFeedback({ route }) {
             setPaginaSelecionada(pagina);
         }
     };
-
+ 
     // Função para lidar com o clique em uma barra do gráfico
     const handleBarraClick = (categoria, valor) => {
         if (valor > 0) {
@@ -154,19 +154,19 @@ export default function AlunosFeedback({ route }) {
             setModalBarraVisible(true);
         }
     };
-
+ 
     const handleAdicionarFeedback = async () => {
         if (!feedbackConteudo.trim()) {
             alert('Por favor, insira um feedback.');
             return;
         }
-    
+   
         const feedbackData = {
             conteudo: feedbackConteudo,
             createdBy: professorId,  // Apenas o ID como string
             classSt: turmaId        // Apenas o ID como string
         };
-    
+   
         try {
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/student', feedbackData, {
                 headers: {
@@ -174,7 +174,7 @@ export default function AlunosFeedback({ route }) {
                     'Content-Type': 'application/json'
                 }
             });
-    
+   
             if (response.status >= 200 && response.status < 300) {
                 alert('Feedback adicionado com sucesso!');
                 setFeedbackConteudo('');
@@ -185,7 +185,7 @@ export default function AlunosFeedback({ route }) {
             alert('Erro ao enviar feedback. Tente novamente mais tarde.');
         }
     };
-
+ 
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -193,7 +193,7 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
+ 
     if (error) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -201,7 +201,7 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
+ 
     if (!turma) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -209,10 +209,10 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
+ 
     const [coluna1, coluna2] = getAlunosPaginaAtual();
     const botoesPagina = getBotoesPagina();
-
+ 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView>
@@ -224,7 +224,7 @@ export default function AlunosFeedback({ route }) {
                         </Text>
                         <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº{turma.id}</Text>
                     </View>
-                    
+                   
                     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                             <TextInput
@@ -234,7 +234,7 @@ export default function AlunosFeedback({ route }) {
                             />
                             <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                         </View>
-
+ 
                         <View style={styles.contColumn}>
                             <View>
                                 {coluna1.map((aluno) => (
@@ -257,7 +257,7 @@ export default function AlunosFeedback({ route }) {
                                 ))}
                             </View>
                         </View>
-
+ 
                         <View style={styles.selecao}>
                             {botoesPagina.map((numero, index) => (
                                 <CardSelecao
@@ -268,7 +268,7 @@ export default function AlunosFeedback({ route }) {
                                 />
                             ))}
                         </View>
-                        
+                       
                         <View style={styles.graficoContainer}>
                             {totalFeedbacks === 0 ? (
                                 <View style={styles.semFeedbacksContainer}>
@@ -290,32 +290,12 @@ export default function AlunosFeedback({ route }) {
                                 />
                             )}
                         </View>
-                        
-                        <View style={styles.feedbackSection}>
-                            <Text style={[styles.feedbackLabel, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                                Adicionar Feedback à Turma
-                            </Text>
-                            <View style={[styles.feedbackInputContainer, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
-                                <TextInput
-                                    style={[styles.feedbackInput, { color: isDarkMode ? '#FFF' : '#000' }]}
-                                    placeholder="Digite seu feedback..."
-                                    placeholderTextColor="#756262"
-                                    value={feedbackConteudo}
-                                    onChangeText={setFeedbackConteudo}
-                                    multiline
-                                />
-                            </View>
-                            <TouchableOpacity 
-                                onPress={handleAdicionarFeedback} 
-                                style={[styles.feedbackButton, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}
-                            >
-                                <Text style={styles.feedbackButtonText}>Enviar</Text>
-                            </TouchableOpacity>
-                        </View>
+                       
+                     
                     </View>
                 </View>
             </ScrollView>
-
+ 
             {/* Modal para exibir detalhes da barra do gráfico */}
             <Modal visible={modalBarraVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
@@ -324,7 +304,7 @@ export default function AlunosFeedback({ route }) {
                         <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
                             {barraSelecionada.value.toFixed(1)}
                         </Text>
-
+ 
                         <TouchableOpacity
                             style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
                             onPress={() => setModalBarraVisible(false)}
@@ -337,7 +317,7 @@ export default function AlunosFeedback({ route }) {
         </View>
     );
 }
-
+ 
 const styles = StyleSheet.create({
     loadingContainer: {
         flex: 1,
@@ -379,7 +359,7 @@ const styles = StyleSheet.create({
     },
     graficoContainer: {
         marginBottom: 20,
-        padding: 10
+       
     },
     inputContainer: {
         flexDirection: 'row',
@@ -403,10 +383,10 @@ const styles = StyleSheet.create({
     selecao: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 30,
+        marginTop: 100,
     },
     feedbackSection: {
-        marginTop: 30, 
+        marginTop: 30,
         padding: 10
     },
     feedbackLabel: {
@@ -456,7 +436,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
         marginBottom: 20,
-        lineHeight: 20, 
+        lineHeight: 20,
     },
     modalBackdrop: {
         flex: 1,

@@ -3,77 +3,80 @@ import { Text, TextInput, TouchableOpacity, View, StyleSheet, Alert } from 'reac
 import { useTheme } from '../../path/ThemeContext';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
-
+ 
 export default function CardNota({ nota: initialNota, notaId, alunoId, disciplinaId, bimestre, onNotaUpdated }) {
     const { isDarkMode } = useTheme();
     const [editing, setEditing] = useState(false);
     const [nota, setNota] = useState(initialNota);
     const [tempNota, setTempNota] = useState(initialNota);
-    
+   
     const backgroundColor = isDarkMode ? '#000' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const inputBackground = isDarkMode ? '#333' : '#FFF';
-
+ 
     const handleEditPress = () => {
         if (nota === '-') {
             Alert.alert('Aviso', 'Não é possível editar uma nota que não existe. Adicione uma nota primeiro.');
             return;
         }
-        
+       
         setTempNota(nota);
         setEditing(true);
     };
-
+ 
     const handleSave = async () => {
-      
-
         if (tempNota === nota) {
             setEditing(false);
             return;
         }
-
+ 
         const novaNota = parseFloat(tempNota);
         if (isNaN(novaNota)) {
             Alert.alert('Erro', 'Por favor, insira um valor numérico válido');
             return;
         }
-
+ 
         try {
-            // Atualização para usar o formato esperado pela API
             await axios.put(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note/${notaId}`, {
-                nota: novaNota,  // Alterado de "valorNota" para "nota"
+                nota: novaNota,
                 bimestre: bimestre,
                 disciplineId: disciplinaId,
                 studentId: alunoId
             });
-
+ 
             setNota(tempNota);
             setEditing(false);
-            
+           
             if (onNotaUpdated) {
                 onNotaUpdated(novaNota);
             }
-
+ 
             Alert.alert('Sucesso', 'Nota atualizada com sucesso!');
         } catch (error) {
             console.error('Erro ao atualizar nota:', error);
             Alert.alert('Erro', 'Não foi possível atualizar a nota. Tente novamente.');
         }
     };
-
+ 
     const handleCancel = () => {
         setTempNota(nota);
         setEditing(false);
     };
-
+ 
     return (
-        <View style={[styles.container, { backgroundColor }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor,
+                padding: editing ? 3 : 12 // Only change: adjusted padding when editing
+            }
+        ]}>
             {editing ? (
                 <View style={styles.editContainer}>
                     <TextInput
                         style={[
                             styles.input,
-                            { 
+                            {
                                 color: textColor,
                                 backgroundColor: inputBackground
                             }
@@ -99,10 +102,10 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
                     </Text>
                     {nota !== '-' && (
                         <TouchableOpacity onPress={handleEditPress}>
-                            <Icon 
-                                name="edit-2" 
-                                size={14} 
-                                color={textColor} 
+                            <Icon
+                                name="edit-2"
+                                size={14}
+                                color={textColor}
                                 style={styles.editIcon}
                             />
                         </TouchableOpacity>
@@ -112,12 +115,11 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
         </View>
     );
 }
-
+ 
 const styles = StyleSheet.create({
     container: {
         width: 100,
         alignItems: 'center',
-        padding: 12,
         marginBottom: 20,
         shadowColor: '#000',
         shadowOpacity: 0.1,
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
     },
     input: {
         width: 50,
-        height: 30,
+        height: 38,
         borderWidth: 1,
         borderColor: '#1A85FF',
         borderRadius: 4,
