@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    View, 
-    TextInput, 
-    TouchableOpacity, 
-    Modal, 
-    Image, 
-    Alert, 
-    ScrollView, 
-    ActivityIndicator 
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    Modal,
+    Image,
+    Alert,
+    ScrollView,
+    ActivityIndicator
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
@@ -248,11 +248,21 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                 style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}
                 activeOpacity={1}
             >
-                <Image
-                    style={{ width: 327, borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
-                    source={require('../../assets/image/barraAzul.png')}
-                />
+
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+                    <Image
+                        style={{ width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10, height
+                            
+                            
+                            
+                            
+                            
+                             : 100 }}
+                        source={require('../../assets/image/barraAzul.png')}
+                    />
+                    <View style={{width: '100%', padding: 20}}>
+
+                    
                     <TouchableOpacity
                         style={styles.closeButton}
                         onPress={onClose}
@@ -265,8 +275,8 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                     <View style={styles.imagePickerContainer}>
                         <TouchableOpacity onPress={pickImage} disabled={isCreating}>
                             <Image
-                                source={profileImage ? 
-                                    { uri: profileImage } : 
+                                source={profileImage ?
+                                    { uri: profileImage } :
                                     require('../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                             />
@@ -400,6 +410,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             <Text style={styles.saveButtonText}>Salvar Professor</Text>
                         )}
                     </TouchableOpacity>
+                    </View>
                 </View>
             </TouchableOpacity>
         </Modal>
@@ -414,13 +425,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '85%',
+        width: '90%',
         backgroundColor: '#FFF',
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10,
-        padding: 20,
+        borderRadius: 20,
         alignItems: 'center',
-        maxHeight: '80%',
+        
     },
     closeButton: {
         position: 'absolute',

@@ -6,7 +6,7 @@ import Campo from '../../components/Perfil/Campo';
 import axios from 'axios'; // Importe o axios
 
 export default function ProfessorPerfil({ route }) {
-  const { id } = route.params; 
+  const { id } = route.params;
   const { isDarkMode } = useTheme();
   const [dadosProfessor, setDadosProfessor] = useState(null);
 
@@ -14,7 +14,7 @@ export default function ProfessorPerfil({ route }) {
 
     axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${id}`)
       .then(response => {
-        setDadosProfessor(response.data); 
+        setDadosProfessor(response.data);
       })
       .catch(error => {
 
@@ -30,7 +30,7 @@ export default function ProfessorPerfil({ route }) {
     <View>
       <HeaderSimples titulo="PERFIL DO PROFESSOR" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-     
+
         <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 90 }]} source={require('../../assets/image/barraAzul.png')} />
         <View style={[styles.form, {
           backgroundColor: formBackgroundColor, shadowColor: isDarkMode ? '#FFF' : '#000',

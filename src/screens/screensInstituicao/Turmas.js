@@ -431,165 +431,212 @@ export default function Turmas() {
             </View>
 
             {/* Modal para criar nova turma */}
+            {/* Modal para criar nova turma - Versão melhorada */}
             <Modal visible={modalCriarVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
-                        <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Criar Nova Turma</Text>
-
-                        <ScrollView>
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Turma</Text>
-                            <TextInput
-                                style={[
-                                    styles.modalInput,
-                                    {
-                                        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
-                                        color: isDarkMode ? 'white' : 'black',
-                                        borderColor: erros.nomeTurma ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
-                                    }
-                                ]}
-                                value={novaTurma}
-                                onChangeText={(text) => {
-                                    setNovaTurma(text);
-                                    setErros({ ...erros, nomeTurma: false });
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Criar Nova Turma</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setModalCriarVisible(false);
+                                    limparCampos();
                                 }}
-                                placeholder="Digite o nome da turma"
-                                placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-                            />
-                            {erros.nomeTurma && <Text style={styles.erroTexto}>Campo obrigatório</Text>}
+                                style={styles.closeButton}
+                            >
+                                <Icon name="x" size={24} color={isDarkMode ? 'white' : 'black'} />
+                            </TouchableOpacity>
+                        </View>
 
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Ano Letivo</Text>
-                            <Picker
-                                selectedValue={novoAno}
-                                style={pickerStyle}
-                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                onValueChange={(itemValue) => setNovoAno(itemValue)}>
-                                <Picker.Item label="2024" value="2024" />
-                                <Picker.Item label="2025" value="2025" />
-                                <Picker.Item label="2026" value="2026" />
-                            </Picker>
+                        <ScrollView
+                            contentContainerStyle={styles.scrollContent}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {/* Seção de Informações Básicas */}
+                            <View style={styles.section}>
+                                <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Informações Básicas</Text>
 
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Período</Text>
-                            <Picker
-                                selectedValue={novoPeriodo}
-                                style={pickerStyle}
-                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                onValueChange={(itemValue) => setNovoPeriodo(itemValue)}>
-                                <Picker.Item label="Vespertino" value="Vesprtino" />
-                                <Picker.Item label="Matutino" value="Matutino" />
-                                <Picker.Item label="Noturno" value="Noturno" />
-                                <Picker.Item label="Integral" value="Integral" />
-                            </Picker>
-
-                            <View style={styles.rowLabels}>
-                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Capacidade Máxima</Text>
-                                <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Nº da Sala</Text>
-                            </View>
-                            <View style={styles.rowInputs}>
-                                <View style={{ width: '48%' }}>
+                                {/* Nome da Turma */}
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Nome da Turma *</Text>
                                     <TextInput
                                         style={[
                                             styles.modalInput,
-                                            styles.smallInput,
-                                            {
-                                                backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
-                                                borderColor: erros.capacidade ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
-                                            }
-                                        ]}
-                                        value={novaCapacidade}
-                                        onChangeText={(text) => {
-                                            setNovaCapacidade(text);
-                                            setErros({ ...erros, capacidade: false });
-                                        }}
-                                        keyboardType="numeric"
-                                        placeholder="Ex: 40"
-                                        placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-                                    />
-                                    {erros.capacidade && (
-                                        <Text style={styles.erroTexto}>
-                                            {parseInt(novaCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Valor inválido'}
-                                        </Text>
-                                    )}
-                                </View>
-                                <View style={{ width: '48%' }}>
-                                    <TextInput
-                                        style={[
-                                            styles.modalInput,
-                                            styles.smallInput,
                                             {
                                                 backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
                                                 color: isDarkMode ? 'white' : 'black',
-                                                borderColor: erros.sala ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                borderColor: erros.nomeTurma ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
                                             }
                                         ]}
-                                        value={novaSala}
+                                        value={novaTurma}
                                         onChangeText={(text) => {
-                                            setNovaSala(text);
-                                            setErros({ ...erros, sala: false });
+                                            setNovaTurma(text);
+                                            setErros({ ...erros, nomeTurma: false });
                                         }}
-                                        keyboardType="numeric"
-                                        placeholder="Ex: 101"
+                                        placeholder="Ex: Turma A"
                                         placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                     />
-                                    {erros.sala && <Text style={styles.erroTexto}>Valor inválido</Text>}
+                                    {erros.nomeTurma && <Text style={styles.erroTexto}>Este campo é obrigatório</Text>}
+                                </View>
+
+                                {/* Ano Letivo e Período */}
+                                <View style={styles.row}>
+                                    <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Ano Letivo</Text>
+                                        <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
+                                            <Picker
+                                                selectedValue={novoAno}
+                                                onValueChange={(itemValue) => setNovoAno(itemValue)}
+                                                style={{ color: isDarkMode ? 'white' : 'black' }}
+                                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
+                                            >
+                                                <Picker.Item label="2024" value="2024" />
+                                                <Picker.Item label="2025" value="2025" />
+                                                <Picker.Item label="2026" value="2026" />
+                                            </Picker>
+                                        </View>
+                                    </View>
+
+                                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Período</Text>
+                                        <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
+                                            <Picker
+                                                selectedValue={novoPeriodo}
+                                                onValueChange={(itemValue) => setNovoPeriodo(itemValue)}
+                                                style={{ color: isDarkMode ? 'white' : 'black' }}
+                                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
+                                            >
+                                                <Picker.Item label="Matutino" value="Matutino" />
+                                                <Picker.Item label="Vespertino" value="Vespertino" />
+                                                <Picker.Item label="Noturno" value="Noturno" />
+                                                <Picker.Item label="Integral" value="Integral" />
+                                            </Picker>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                {/* Capacidade e Sala */}
+                                <View style={styles.row}>
+                                    <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Capacidade *</Text>
+                                        <TextInput
+                                            style={[
+                                                styles.modalInput,
+                                                {
+                                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                                    color: isDarkMode ? 'white' : 'black',
+                                                    borderColor: erros.capacidade ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                }
+                                            ]}
+                                            value={novaCapacidade}
+                                            onChangeText={(text) => {
+                                                setNovaCapacidade(text);
+                                                setErros({ ...erros, capacidade: false });
+                                            }}
+                                            keyboardType="numeric"
+                                            placeholder="Ex: 40"
+                                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                        />
+                                        {erros.capacidade && (
+                                            <Text style={styles.erroTexto}>
+                                                {parseInt(novaCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Valor inválido'}
+                                            </Text>
+                                        )}
+                                    </View>
+
+                                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Sala *</Text>
+                                        <TextInput
+                                            style={[
+                                                styles.modalInput,
+                                                {
+                                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                                    color: isDarkMode ? 'white' : 'black',
+                                                    borderColor: erros.sala ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                }
+                                            ]}
+                                            value={novaSala}
+                                            onChangeText={(text) => {
+                                                setNovaSala(text);
+                                                setErros({ ...erros, sala: false });
+                                            }}
+                                            keyboardType="numeric"
+                                            placeholder="Ex: 101"
+                                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                                        />
+                                        {erros.sala && <Text style={styles.erroTexto}>Valor inválido</Text>}
+                                    </View>
                                 </View>
                             </View>
 
-                            <View style={styles.checkboxRow}>
-                                <View style={styles.checkboxColumn}>
-                                    <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione os Professores</Text>
+                            {/* Seção de Professores */}
+                            <View style={styles.section}>
+                                <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Professores *</Text>
+                                {erros.professores && <Text style={[styles.erroTexto, { marginBottom: 10 }]}>Selecione pelo menos um professor</Text>}
+
+                                <View style={styles.checkboxList}>
                                     {professores.map((professor) => (
-                                        <View key={professor.id} style={styles.checkboxContainer}>
+                                        <View key={professor.id} style={styles.checkboxItem}>
                                             <Checkbox
                                                 status={selectedProfessores.includes(professor.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleProfessorSelect(professor.id)}
                                                 color={isDarkMode ? '#1A85FF' : '#007AFF'}
                                             />
-                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{professor.nomeDocente}</Text>
+                                            <Text style={[styles.checkboxLabel, { color: isDarkMode ? 'white' : 'black' }]}>
+                                                {professor.nomeDocente.split(' ')[0]} {professor.nomeDocente.split(' ')[1]}
+                                            </Text>
                                         </View>
                                     ))}
                                 </View>
+                            </View>
 
-                                <View style={styles.checkboxColumn}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: -11 }}>
-                                        <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Selecione as Disciplinas</Text>
-                                        <TouchableOpacity
-                                            onPress={() => setModalNovaDisciplinaVisible(true)}
-                                            style={styles.botaoNovaDisciplina}
-                                        >
-                                            <Icon name="plus" size={20} color={isDarkMode ? '#1A85FF' : '#007AFF'} />
-                                        </TouchableOpacity>
-                                    </View>
+                            {/* Seção de Disciplinas */}
+                            <View style={styles.section}>
+                                <View style={styles.sectionHeader}>
+                                    <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Disciplinas *</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setModalNovaDisciplinaVisible(true)}
+                                        style={styles.addButton}
+                                    >
+                                        <Icon name="plus" size={20} color={isDarkMode ? '#1A85FF' : '#007AFF'} />
+                                    </TouchableOpacity>
+                                </View>
+                                {erros.disciplinas && <Text style={[styles.erroTexto, { marginBottom: 10 }]}>Selecione pelo menos uma disciplina</Text>}
+
+                                <View style={styles.checkboxList}>
                                     {disciplinas.map((disciplina) => (
-                                        <View key={disciplina.id} style={styles.checkboxContainer}>
+                                        <View key={disciplina.id} style={styles.checkboxItem}>
                                             <Checkbox
                                                 status={selectedDisciplinas.includes(disciplina.id) ? 'checked' : 'unchecked'}
                                                 onPress={() => handleDisciplinaSelect(disciplina.id)}
                                                 color={isDarkMode ? '#1A85FF' : '#007AFF'}
                                             />
-                                            <Text style={{ color: isDarkMode ? 'white' : 'black' }}>{disciplina.nomeDisciplina}</Text>
+                                            <Text style={[styles.checkboxLabel, { color: isDarkMode ? 'white' : 'black' }]}>
+                                                {disciplina.nomeDisciplina}
+                                            </Text>
                                         </View>
                                     ))}
                                 </View>
                             </View>
                         </ScrollView>
 
-                        <View style={styles.modalButtons}>
+                        <View style={styles.modalFooter}>
                             <TouchableOpacity
-                                style={[styles.botaoAcao, styles.botaoCancelar]}
+                                style={[styles.actionButton, styles.cancelButton]}
                                 onPress={() => {
                                     setModalCriarVisible(false);
                                     limparCampos();
                                 }}
                                 disabled={carregando}
                             >
-                                <Text style={styles.textoBotao}>Cancelar</Text>
+                                <Text style={styles.actionButtonText}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.botaoAcao, styles.botaoSalvar]}
+                                style={[styles.actionButton, styles.saveButton, carregando && { opacity: 0.6 }]}
                                 onPress={criarTurma}
                                 disabled={carregando}
                             >
-                                <Text style={styles.textoBotao}>
+                                <Text style={styles.actionButtonText}>
                                     {carregando ? 'Criando...' : 'Criar Turma'}
                                 </Text>
                             </TouchableOpacity>
@@ -687,96 +734,120 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
     },
     modalContent: {
         width: '100%',
-        maxHeight: '85%',
-        borderRadius: 15,
-        padding: 25,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
+        maxHeight: '90%',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        paddingBottom: 30,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     modalTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center'
+    },
+    closeButton: {
+        padding: 5,
+    },
+    scrollContent: {
+        paddingBottom: 20,
+    },
+    section: {
+        marginBottom: 25,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    inputGroup: {
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 14,
+        marginBottom: 8,
+        fontWeight: '500',
     },
     modalInput: {
-        borderRadius: 12,
-        padding: 14,
-        marginBottom: 5,
+        borderRadius: 10,
+        padding: 12,
+        fontSize: 16,
         borderWidth: 1,
-        fontSize: 16
     },
-    rowLabels: {
+    pickerContainer: {
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        overflow: 'hidden',
+    },
+    row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 5
     },
-    rowInputs: {
+    checkboxList: {
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
     },
-    smallInput: {
-        width: '100%'
+    checkboxItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '48%',
+        marginBottom: 12,
     },
-    modalButtons: {
+    checkboxLabel: {
+        marginLeft: 8,
+        fontSize: 15,
+    },
+    addButton: {
+        padding: 5,
+        borderRadius: 20,
+    },
+    modalFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20
+        marginTop: 20,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
     },
-    botaoAcao: {
+    actionButton: {
         flex: 1,
-        padding: 14,
+        padding: 15,
         borderRadius: 10,
         alignItems: 'center',
-        marginHorizontal: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 6
+        justifyContent: 'center',
     },
-    textoBotao: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 17
+    cancelButton: {
+        backgroundColor: '#FF3B30',
+        marginRight: 10,
     },
-    checkboxContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12
-    },
-    checkboxRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    checkboxColumn: {
-        width: '48%',
-    },
-    botaoSalvar: {
+    saveButton: {
         backgroundColor: '#007AFF',
     },
-    botaoCancelar: {
-        backgroundColor: '#FF453A',
-    },
-    botaoNovaDisciplina: {
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 10,
-        marginBottom: 20,
+    actionButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
     },
     erroTexto: {
         color: 'red',
         fontSize: 12,
+        marginTop: -10,
         marginBottom: 10,
         marginLeft: 5
     },

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -131,35 +131,35 @@ export default function HomeInstituicao() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas */}
+                    {/* Seção de turmas com ScrollView */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-                        <Text style={styles.title}>Turmas</Text>
-                        <View style={styles.customScrollView}>
-                            <ScrollView
-                                style={styles.customScrollContent}
-                                showsVerticalScrollIndicator={false}
-                                nestedScrollEnabled={true}
-                            >
-                                {turmas.length > 0 ? (
-                                    turmas.map((turma, index) => (
-                                        <CardTurmas
-                                            key={turma.id}
-                                            titulo={`${turma.nomeTurma}`}
-                                            subTitulo={`Sala ${index + 1}`}
-                                            isSelected={turmaSelecionada === turma.id}
-                                            onPress={() => handleSelecionarTurma(turma.id)}
-                                        />
-                                    ))
-                                ) : (
-                                    <Text style={styles.emptyMessage}>
-                                        Nenhuma turma disponível
-                                    </Text>
-                                )}
-                            </ScrollView>
-                        </View>
+                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
+                        <ScrollView
+                            style={styles.turmasScrollView}
+                            contentContainerStyle={styles.turmasScrollContent}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                        >
+                            {turmas.length > 0 ? (
+                                turmas.map((turma, index) => (
+                                    <CardTurmas
+                                        key={turma.id}
+                                        titulo={`${turma.nomeTurma}`}
+                                        subTitulo={`Sala ${index + 1}`}
+                                        isSelected={turmaSelecionada === turma.id}
+                                        onPress={() => handleSelecionarTurma(turma.id)}
+                                    />
+                                ))
+                            ) : (
+                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                    Nenhuma turma disponível
+                                </Text>
+                            )}
+                        </ScrollView>
                     </View>
 
-                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    {/* Seção de avisos com TextInput */}
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
                             style={[
@@ -186,46 +186,47 @@ export default function HomeInstituicao() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos gerais com ScrollView personalizado */}
-                    <View style={{ backgroundColor: isDarkMode ? '#000' : '#FFF', width: '100%', borderRadius: 20, marginTop: 20, padding: 15, marginBottom: 20, height: 'auto' }}>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: isDarkMode ? '#FFF' : '#000' }}>
+                    {/* Seção de avisos gerais com ScrollView */}
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos
                         </Text>
-                        <View style={[styles.customScrollView, {
-                        
-                        }]}>
-                            
-                                {avisos.length > 0 ? (
-                                    avisos.map((aviso) => {
-                                        // Extrai os dois primeiros nomes do criador do aviso
-                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
-                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
-                                            'Instituição';
+                        <ScrollView
+                            style={styles.avisosScrollView}
+                            contentContainerStyle={styles.avisosScrollContent}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                        >
+                            {avisos.length > 0 ? (
+                                avisos.map((aviso) => {
+                                    // Extrai os dois primeiros nomes do criador do aviso
+                                    const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                        aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                        'Instituição';
 
-                                        return (
-                                            <Avisos
-                                                key={aviso.id}
-                                                abreviacao={aviso.initials}
-                                                nome={doisPrimeirosNomes} // Passa apenas os dois primeiros nomes
-                                                horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                                texto={aviso.conteudo}
-                                                aleatorio={gerarCorAleatoria()}
-                                            />
-                                        );
-                                    })
-                                ) : (
-                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                        Nenhum aviso disponível.
-                                    </Text>
-                                )}
-                          
-                        </View>
+                                    return (
+                                        <Avisos
+                                            key={aviso.id}
+                                            abreviacao={aviso.initials}
+                                            nome={doisPrimeirosNomes}
+                                            horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                            texto={aviso.conteudo}
+                                            aleatorio={gerarCorAleatoria()}
+                                        />
+                                    );
+                                })
+                            ) : (
+                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                    Nenhum aviso disponível.
+                                </Text>
+                            )}
+                        </ScrollView>
                     </View>
                 </View>
             </ScrollView>
@@ -245,14 +246,14 @@ const styles = StyleSheet.create({
     contTurmas: {
         backgroundColor: 'white',
         width: '100%',
-        borderRadius: 30,
+        borderRadius: 20,
         padding: 15,
         marginTop: 20
     },
     title: {
-        color: '#0077FF',
         fontSize: 20,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        marginBottom: 10
     },
     subtela: {
         paddingTop: 10,
@@ -290,11 +291,10 @@ const styles = StyleSheet.create({
     },
     emptyMessage: {
         textAlign: 'center',
-        color: '#888',
-        marginTop: 10
+        marginTop: 10,
+        paddingVertical: 20
     },
     contAviso: {
-        backgroundColor: '#F0F7FF',
         padding: 10,
         borderRadius: 18,
         marginTop: 8
@@ -312,11 +312,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 17
     },
-    customScrollView: {
-        borderRadius: 15,
-        marginTop: 10,
+    turmasScrollView: {
+        maxHeight: Dimensions.get('window').height * 0.3,
     },
-    customScrollContent: {
+    turmasScrollContent: {
+        paddingRight: 10,
+    },
+    avisosScrollView: {
+        maxHeight: Dimensions.get('window').height * 0.4,
+    },
+    avisosScrollContent: {
         paddingRight: 10,
     },
 });

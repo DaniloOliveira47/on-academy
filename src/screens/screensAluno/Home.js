@@ -59,9 +59,8 @@ export default function Home() {
 
   return (
     <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+          <Header isDarkMode={isDarkMode} />
       <ScrollView>
-        <Header isDarkMode={isDarkMode} />
-
         <View style={styles.subtela}>
           <View style={[styles.infoContainer, {
             backgroundColor: '#1E6BE6',

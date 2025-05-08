@@ -1,22 +1,25 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CheckList from '../../components/Emocional/CheckList';
 import List from '../../components/Emocional/List';
-import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 
 export default function Emocional() {
-        const { isDarkMode } = useTheme();
-        const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
-        const cont = isDarkMode ? '#000' : '#FFF';
-        const text = isDarkMode ? '#FFF' : '#000'
+    const { isDarkMode } = useTheme();
+    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const cont = isDarkMode ? '#000' : '#FFF';
+    const text = isDarkMode ? '#FFF' : '#000';
+    
+    const handleOpenForm = () => {
+        const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfG-Q-ecWsjrEOd_wz3b5fwT5vJdwFDHparoeiKLVtp3WxB3Q/viewform?usp=header';
+        Linking.openURL(formUrl).catch(err => console.error("Erro ao abrir o formulário:", err));
+    };
+
     return (
         <ScrollView>
-             <HeaderSimples
-                    titulo="EMOCIONAL" />
+            <HeaderSimples titulo="EMOCIONAL" />
             <View style={[styles.tela, {backgroundColor: perfilBackgroundColor}]}>
-               
                 <View style={[styles.subTela, {backgroundColor: cont}]}>
                     <Text style={styles.title}>
                         Seu bem-estar importa
@@ -30,13 +33,13 @@ export default function Emocional() {
                     </Text>
                     <View style={styles.conText}>
                         <CheckList
-                            texto="Expressar suas emoções,um espaço para compartilhar como você está se sentindo."
+                            texto="Expressar suas emoções, um espaço para compartilhar como você está se sentindo."
                         />
                         <CheckList
                             texto="Sugerir melhorias, se há algo que pode ser ajustado, queremos ouvir você."
                         />
                         <CheckList
-                            texto=" Ser ouvido com respeito, suas respostas serão analisadas com empatia e seriedade."
+                            texto="Ser ouvido com respeito, suas respostas serão analisadas com empatia e seriedade."
                         />
                     </View>
                     <Text style={styles.title}>
@@ -52,7 +55,10 @@ export default function Emocional() {
                         texto="• Juntos, podemos construir um ambiente escolar mais saudável e acolhedor para todos."
                     />
                     <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.botao}>
+                        <TouchableOpacity 
+                            style={styles.botao}
+                            onPress={handleOpenForm}
+                        >
                             <Text style={{ fontWeight: 'bold', fontSize: 16, color: text }}>Acesse o Formulário aqui.</Text>
                         </TouchableOpacity>
                     </View>
@@ -100,4 +106,4 @@ const styles = StyleSheet.create({
         width: 290,
         marginBottom: 15
     }
-})
+});

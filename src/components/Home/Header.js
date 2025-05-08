@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../path/ThemeContext';
-import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import CustomCalendar from '../Eventos/Calendario';
 import ProximosEventos from '../Eventos/proximosEventos';
@@ -12,12 +12,11 @@ export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  const [events, setEvents] = useState([]); // Estado para armazenar os eventos
-  const [eventColors, setEventColors] = useState({}); // Estado para armazenar as cores dos eventos
-  const [aluno, setAluno] = useState(null); // Estado para armazenar os dados do aluno
+  const [events, setEvents] = useState([]);
+  const [eventColors, setEventColors] = useState({});
+  const [aluno, setAluno] = useState(null);
   const navigation = useNavigation();
 
-  // Função para gerar uma cor aleatória
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -30,25 +29,22 @@ export default function Header() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Busca os eventos
         const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
         const events = eventsResponse.data;
 
-        // Gerar cores aleatórias para cada evento
         const colors = {};
         events.forEach(event => {
           colors[event.id] = getRandomColor();
         });
 
         setEvents(events);
-        setEventColors(colors); // Armazena as cores no estado
+        setEventColors(colors);
 
-        // Busca os dados do aluno
-        const alunoId = await AsyncStorage.getItem('@user_id'); // Obtém o ID do aluno logado
+        const alunoId = await AsyncStorage.getItem('@user_id');
         const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
-        setAluno(alunoResponse.data); // Armazena os dados do aluno
+        setAluno(alunoResponse.data);
       } catch (error) {
-
+        console.error('Error fetching data:', error);
       }
     };
 
@@ -82,18 +78,15 @@ export default function Header() {
   const closeButtonColor = '#FFF';
   const container = isDarkMode ? '#000' : '#FFF';
 
-  // Função para formatar a data e o horário
   const formatDateTime = (date, time) => {
     const dateTimeString = `${date}T${time}`;
     return new Date(dateTimeString);
   };
 
-  // Função para formatar o horário
   const formatTime = (dateTime) => {
     return dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
-  // Função para formatar a data
   const formatDate = (dateTime) => {
     return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
   };
@@ -117,7 +110,6 @@ export default function Header() {
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
               <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
-
           </View>
         </View>
       </View>
@@ -131,51 +123,60 @@ export default function Header() {
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
         </TouchableOpacity>
 
-        <View style={styles.menuItem}>
-          <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-              <View style={{ flexDirection: 'row', gap: 20 }}>
-                <Image
-                  style={styles.imgPerfil}
-                  source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.menuItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+              <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+                <View style={{ flexDirection: 'row', gap: 20 }}>
+                  <Image
+                    style={styles.imgPerfil}
+                    source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                  />
+                  <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                    {aluno ? aluno.nome.split(' ')[0] : 'Carregando...'}
+                  </Text>
+                </View>
+                <Image 
+                  source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} 
+                  style={styles.options} 
                 />
-                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  {aluno ? aluno.nome.split(' ')[0] : 'Carregando...'}
-                </Text>
               </View>
-              <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
-            </View>
-          </TouchableOpacity>
-        </View>
+            </TouchableOpacity>
+          </View>
 
-        <View style={[styles.menuItem, { height: 'auto' }]}>
-        <CustomCalendar events={events} isHeader={true} />
-        </View>
+          <View style={[styles.menuItem, { height: 'auto' }]}>
+            <CustomCalendar events={events} isHeader={true} />
+          </View>
 
-        <View style={styles.menuItem}>
-          <View style={[styles.contEventos, { backgroundColor: container }]}>
-            <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
-            <View>
-              {events.length > 0 ? (
-                events.map((event, index) => {
-                  const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-                  return (
-                    <ProximosEventos
-                      key={index}
-                      data={eventDateTime.getDate()}
-                      titulo={event.tituloEvento}
-                      subData={formatDate(eventDateTime)}
-                      periodo={formatTime(eventDateTime)}
-                      color={eventColors[event.id] || '#0077FF'} // Usa a cor do evento ou uma cor padrão
-                    />
-                  );
-                })
-              ) : (
-                <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
-              )}
+          <View style={styles.menuItem}>
+            <View style={[styles.contEventos, { backgroundColor: container }]}>
+              <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
+              <View>
+                {events.length > 0 ? (
+                  events.map((event, index) => {
+                    const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                    return (
+                      <ProximosEventos
+                        key={index}
+                        data={eventDateTime.getDate()}
+                        titulo={event.tituloEvento}
+                        subData={formatDate(eventDateTime)}
+                        periodo={formatTime(eventDateTime)}
+                        color={eventColors[event.id] || '#0077FF'}
+                      />
+                    );
+                  })
+                ) : (
+                  <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </Animated.View>
     </>
   );
@@ -278,5 +279,12 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 25,
+  },
+  scrollContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
 });

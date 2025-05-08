@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../components/Home/Header';
 import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
-import HeaderDoc from '../../components/Home/HeaderDoc';
+import HeaderIns from '../../components/Home/HeaderIns';
 
-export default function HomeDocente() {
+export default function HomeInstituicao() {
     const { isDarkMode } = useTheme();
     const [scrollY] = useState(new Animated.Value(0));
     const [turmas, setTurmas] = useState([]);
@@ -16,60 +17,46 @@ export default function HomeDocente() {
     const [avisos, setAvisos] = useState([]);
     const [turmaSelecionada, setTurmaSelecionada] = useState(null);
 
+    // Carrega os dados sempre que a tela recebe foco
+    useFocusEffect(
+        useCallback(() => {
+            const fetchData = async () => {
+                try {
+                    // Fetch das turmas
+                    const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
+                    console.log('Resposta da API (Turmas):', turmasResponse.data);
+                    
+                    if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
+                        setTurmas(turmasResponse.data);
+                    } else {
+                        setTurmas([]);
+                    }
+
+                    // Fetch dos avisos
+                    const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
+                    const avisosOrdenados = avisosResponse.data.sort((a, b) =>
+                        new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+                    );
+                    setAvisos(avisosOrdenados);
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    setTurmas([]);
+                    setAvisos([]);
+                }
+            };
+
+            fetchData();
+        }, [])
+    );
+
     const handleSelecionarTurma = (id) => {
         setTurmaSelecionada(id);
         console.log('Turma selecionada:', id);
     };
 
     const gerarCorAleatoria = () => {
-        let cor = '#0077FF';
-        return cor;
+        return '#0077FF';
     };
-
-    // Função para carregar as mensagens (avisos)
-    const fetchMessages = async () => {
-        try {
-            const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
-
-            // Ordenar por data mais recente primeiro
-            data.sort((a, b) =>
-                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
-            );
-
-            setAvisos(data);
-        } catch (error) {
-          
-        }
-    };
-
-    useEffect(() => {
-        const fetchTurmas = async () => {
-            try {
-                const professorId = await AsyncStorage.getItem('@user_id');
-                if (!professorId) {
-                    
-                    setTurmas([]);
-                    return;
-                }
-
-                const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/classes/${professorId}`);
-                console.log('Resposta da API:', response.data);
-
-                if (response.data && Array.isArray(response.data.classes)) {
-                    setTurmas(response.data.classes);
-                } else {
-                    
-                    setTurmas([]);
-                }
-            } catch (error) {
-              
-                setTurmas([]);
-            }
-        };
-
-        fetchTurmas();
-        fetchMessages(); // Carrega os avisos inicialmente
-    }, []);
 
     const enviarAviso = async () => {
         try {
@@ -77,46 +64,51 @@ export default function HomeDocente() {
                 Alert.alert('Aviso', 'Por favor, selecione uma turma.');
                 return;
             }
-
+    
             const instituicaoId = await AsyncStorage.getItem('@user_id');
-            if (!instituicaoId) {
-                
+            const token = await AsyncStorage.getItem('@user_token');
+            
+            if (!instituicaoId || !token) {
+                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
                 return;
             }
-
+    
             if (!conteudoAviso.trim()) {
                 Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
                 return;
             }
-
+    
             const avisoData = {
                 conteudo: conteudoAviso,
-                createdBy: { id: parseInt(instituicaoId) },
+                createdByInstitution: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
-
-               // Corrigido a chamada axios.post
-               await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
+    
+            await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-
+    
+            // Recarrega os avisos após o envio
+            const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
+            const avisosOrdenados = avisosResponse.data.sort((a, b) =>
+                new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
+            );
+            setAvisos(avisosOrdenados);
+    
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
-
-            // Recarrega os avisos após o envio
-            await fetchMessages();
         } catch (error) {
-       
-            Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
+            console.error('Erro ao enviar aviso:', error);
+            Alert.alert('Erro', error.response?.data?.message || 'Erro ao enviar aviso. Tente novamente.');
         }
     };
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderDoc isDarkMode={isDarkMode} />
+            <HeaderIns isDarkMode={isDarkMode} />
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
                 <View style={styles.subtela}>
@@ -130,7 +122,7 @@ export default function HomeDocente() {
                     }]}>
                         <View style={styles.textContainer}>
                             <Text style={[styles.titulo, { color: '#FFF' }]}>
-                                Seja bem-vindo, Docente 👋
+                                Seja bem-vindo, Instituição 👋
                             </Text>
                             <Text style={[styles.subtitulo, { color: '#FFF' }]}>
                                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
@@ -139,42 +131,41 @@ export default function HomeDocente() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas */}
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
-                        <Text style={styles.title}>Turmas</Text>
-                        <View style={[styles.customScrollView]}>
-                            <ScrollView
-                                style={styles.customScrollContent}
-                                showsVerticalScrollIndicator={false}
-                                nestedScrollEnabled={true}
-                            >
-                                {turmas.length > 0 ? (
-                                    turmas.map((turma, index) => (
-                                        <CardTurmas
-                                            key={turma.id}
-                                            titulo={`${turma.nomeTurma}`}
-                                            subTitulo={`Sala ${index + 1}`}
-                                            isSelected={turmaSelecionada === turma.id}
-                                            onPress={() => handleSelecionarTurma(turma.id)}
-                                        />
-                                    ))
-                                ) : (
-                                    <Text style={[styles.emptyMessage]}>
-                                        Nenhuma turma disponível
-                                    </Text>
-                                )}
-                            </ScrollView>
-                        </View>
+                    {/* Seção de turmas com ScrollView */}
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
+                        <ScrollView
+                            style={styles.turmasScrollView}
+                            contentContainerStyle={styles.turmasScrollContent}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                        >
+                            {turmas.length > 0 ? (
+                                turmas.map((turma, index) => (
+                                    <CardTurmas
+                                        key={turma.id}
+                                        titulo={`${turma.nomeTurma}`}
+                                        subTitulo={`Sala ${index + 1}`}
+                                        isSelected={turmaSelecionada === turma.id}
+                                        onPress={() => handleSelecionarTurma(turma.id)}
+                                    />
+                                ))
+                            ) : (
+                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                    Nenhuma turma disponível
+                                </Text>
+                            )}
+                        </ScrollView>
                     </View>
 
-                    {/* Seção de avisos */}
+                    {/* Seção de avisos com TextInput */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
                             style={[
                                 styles.contAviso,
                                 {
-                                    backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
+                                    backgroundColor: isDarkMode ? '#121212' : '#F0F7FF',
                                     height: 200,
                                     textAlignVertical: 'top',
                                     color: isDarkMode ? '#fff' : '#000'
@@ -195,29 +186,47 @@ export default function HomeDocente() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos gerais */}
-                    <View style={{ backgroundColor: isDarkMode ? '#000' : '#FFF', width: '100%', borderRadius: 20, marginTop: 20 }}>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10, color: isDarkMode ? '#FFF' : '#000' }}>
+                    {/* Seção de avisos gerais com ScrollView */}
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos
                         </Text>
-                        <View style={{ padding: 10 }}>
+                        <ScrollView
+                            style={styles.avisosScrollView}
+                            contentContainerStyle={styles.avisosScrollContent}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                        >
                             {avisos.length > 0 ? (
-                                avisos.map((aviso) => (
-                                    <Avisos
-                                        key={aviso.id}
-                                        abreviacao={aviso.initials}
-                                        nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')} // Mostra apenas os dois primeiros nomes
-                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                        texto={aviso.conteudo}
-                                        aleatorio={gerarCorAleatoria()}
-                                    />
-                                ))
+                                avisos.map((aviso) => {
+                                    // Extrai os dois primeiros nomes do criador do aviso
+                                    const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                        aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                        'Instituição';
+
+                                    return (
+                                        <Avisos
+                                            key={aviso.id}
+                                            abreviacao={aviso.initials}
+                                            nome={doisPrimeirosNomes}
+                                            horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                            texto={aviso.conteudo}
+                                            aleatorio={gerarCorAleatoria()}
+                                        />
+                                    );
+                                })
                             ) : (
-                                <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>
+                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
                                     Nenhum aviso disponível.
                                 </Text>
                             )}
-                        </View>
+                        </ScrollView>
                     </View>
                 </View>
             </ScrollView>
@@ -226,18 +235,93 @@ export default function HomeDocente() {
 }
 
 const styles = StyleSheet.create({
-    tela: { flex: 1, backgroundColor: '#F0F7FF' },
-    scrollTela: { flex: 1, marginBottom: 40 },
-    contTurmas: { backgroundColor: 'white', width: '100%', borderRadius: 30, padding: 15, marginTop: 20 },
-    title: { color: '#0077FF', fontSize: 20, fontWeight: 'bold' },
-    subtela: { paddingTop: 10, alignItems: 'center', padding: 20 },
-    infoContainer: { flexDirection: 'row', width: '100%', padding: 20, borderRadius: 20, position: 'relative' },
-    textContainer: { flex: 1, zIndex: 2 },
-    titulo: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, width: 150 },
-    subtitulo: { fontSize: 14, width: 190 },
-    infoImage: { position: 'absolute', right: -25, bottom: -7, width: 200, height: 150, resizeMode: 'contain' },
-    emptyMessage: { textAlign: 'center', color: '#888', marginTop: 10 },
-    contAviso: { backgroundColor: '#F0F7FF', padding: 10, borderRadius: 18, marginTop: 8 },
-    enviarButton: { backgroundColor: '#1A85FF', alignItems: 'center', width: 100, padding: 8, borderRadius: 10, marginTop: 10 },
-    enviarText: { color: 'white', fontWeight: 'bold', fontSize: 17 },
+    tela: {
+        flex: 1,
+        backgroundColor: '#F0F7FF'
+    },
+    scrollTela: {
+        flex: 1,
+        marginBottom: 40
+    },
+    contTurmas: {
+        backgroundColor: 'white',
+        width: '100%',
+        borderRadius: 20,
+        padding: 15,
+        marginTop: 20
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10
+    },
+    subtela: {
+        paddingTop: 10,
+        alignItems: 'center',
+        padding: 20
+    },
+    infoContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        padding: 20,
+        borderRadius: 20,
+        position: 'relative'
+    },
+    textContainer: {
+        flex: 1,
+        zIndex: 2
+    },
+    titulo: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        width: 150
+    },
+    subtitulo: {
+        fontSize: 14,
+        width: 190
+    },
+    infoImage: {
+        position: 'absolute',
+        right: -25,
+        bottom: -7,
+        width: 200,
+        height: 150,
+        resizeMode: 'contain'
+    },
+    emptyMessage: {
+        textAlign: 'center',
+        marginTop: 10,
+        paddingVertical: 20
+    },
+    contAviso: {
+        padding: 10,
+        borderRadius: 18,
+        marginTop: 8
+    },
+    enviarButton: {
+        backgroundColor: '#1A85FF',
+        alignItems: 'center',
+        width: 100,
+        padding: 8,
+        borderRadius: 10,
+        marginTop: 10
+    },
+    enviarText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 17
+    },
+    turmasScrollView: {
+        maxHeight: Dimensions.get('window').height * 0.3,
+    },
+    turmasScrollContent: {
+        paddingRight: 10,
+    },
+    avisosScrollView: {
+        maxHeight: Dimensions.get('window').height * 0.4,
+    },
+    avisosScrollContent: {
+        paddingRight: 10,
+    },
 });

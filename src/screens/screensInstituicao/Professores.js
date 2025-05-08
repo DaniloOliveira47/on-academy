@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 60,
+        marginRight: 0,
     },
     paginacao: {
         flexDirection: 'row',
