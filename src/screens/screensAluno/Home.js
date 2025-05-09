@@ -25,7 +25,7 @@ export default function Home() {
         const alunoId = await AsyncStorage.getItem('@user_id');
         if (!alunoId) return;
 
-        const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
+        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
         setAluno(response.data);
         
         // After setting aluno, fetch avisos for the student's class
@@ -39,7 +39,7 @@ export default function Home() {
 
     const fetchAvisos = async (turmaId) => {
       try {
-        const response = await axios.get(`http://192.168.2.11:3000/api/reminder/${turmaId}`);
+        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder/${turmaId}`);
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {

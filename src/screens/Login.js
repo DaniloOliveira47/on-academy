@@ -48,11 +48,11 @@ export default function Login() {
 
     let url = '';
     if (matricula.charAt(0).toLowerCase() === 'a') {
-      url = 'http://192.168.2.11:3000/api/student/login';
+      url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/login';
     } else if (matricula.charAt(0).toLowerCase() === 'p') {
-      url = 'http://192.168.2.11:3000/api/teacher/login';
+      url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/login';
     } else {
-      url = 'http://192.168.2.11:3000/api/institution/login';
+      url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/login';
     }
 
     try {

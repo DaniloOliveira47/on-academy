@@ -21,7 +21,7 @@ import axios from 'axios';
 import Swiper from 'react-native-swiper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
- 
+
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
     const { alunoId } = route.params;
@@ -41,65 +41,65 @@ export default function AlunoPerfil({ route }) {
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [semFeedbacks, setSemFeedbacks] = useState(false);
     const scrollViewRef = React.useRef();
- 
+
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const sombra = isDarkMode ? '#FFF' : '#000';
- 
+
     useEffect(() => {
         const fetchAluno = async () => {
             try {
-                const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
+                const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
                 setAluno(response.data);
             } catch (error) {
                 setError('Erro ao carregar os dados do aluno. Tente novamente mais tarde.');
- 
+
             } finally {
                 setLoading(false);
             }
         };
- 
+
         fetchAluno();
     }, [alunoId]);
- 
+
     useEffect(() => {
         if (alunoId) {
             fetchFeedbacks();
         }
     }, [alunoId, bimestreSelecionado, professorSelecionado]);
- 
+
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://192.168.2.11:3000/api/student/feedback/${alunoId}`);
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${alunoId}`);
             setFeedbacks(response.data);
- 
+
             const professoresUnicos = [];
             const professoresMap = new Map();
- 
+
             response.data.forEach(feedback => {
                 if (feedback.createdByDTO && !professoresMap.has(feedback.createdByDTO.id)) {
                     professoresMap.set(feedback.createdByDTO.id, true);
                     professoresUnicos.push(feedback.createdByDTO);
                 }
             });
- 
+
             setProfessores(professoresUnicos);
             atualizarDadosGrafico(response.data);
         } catch (error) {
- 
+
         }
     };
- 
+
     const atualizarDadosGrafico = (feedbacksData) => {
         let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
- 
+
         if (professorSelecionado) {
             feedbacksFiltrados = feedbacksFiltrados.filter(
                 feedback => feedback.createdByDTO.id === professorSelecionado.id
             );
- 
+
             if (feedbacksFiltrados.length > 0) {
                 const feedback = feedbacksFiltrados[0];
                 setDadosGrafico([
@@ -113,15 +113,15 @@ export default function AlunoPerfil({ route }) {
                 return;
             }
         }
- 
+
         if (feedbacksFiltrados.length === 0) {
             setSemFeedbacks(true);
             setDadosGrafico([0, 0, 0, 0, 0]);
             return;
         }
- 
+
         setSemFeedbacks(false);
- 
+
         const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
             return {
                 resposta1: acc.resposta1 + feedback.resposta1,
@@ -131,7 +131,7 @@ export default function AlunoPerfil({ route }) {
                 resposta5: acc.resposta5 + feedback.resposta5,
             };
         }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
- 
+
         const novasMedias = [
             somaRespostas.resposta1 / feedbacksFiltrados.length,
             somaRespostas.resposta2 / feedbacksFiltrados.length,
@@ -139,38 +139,38 @@ export default function AlunoPerfil({ route }) {
             somaRespostas.resposta4 / feedbacksFiltrados.length,
             somaRespostas.resposta5 / feedbacksFiltrados.length,
         ];
- 
+
         setDadosGrafico(novasMedias);
     };
- 
+
     const formatarData = (dataCompleta) => {
         if (!dataCompleta) return '';
         const [data, horario] = dataCompleta.split(' ');
         const [ano, mes, dia] = data.split('-');
         return `${dia}/${mes}/${ano}`;
     };
- 
+
     const handleBarraClick = (label, value) => {
         if (value === 0) return;
         setBarraSelecionada({ label, value });
         setModalBarraVisible(true);
     };
- 
+
     const handleSelecionarProfessor = (professor) => {
         setProfessorSelecionado(professor);
         setModalProfessorVisible(false);
     };
- 
+
     const handleLimparFiltroProfessor = () => {
         setProfessorSelecionado(null);
     };
- 
+
     const enviarFeedback = async () => {
         if (ratings.some(rating => rating === 0)) {
             Alert.alert('Erro', 'Por favor, avalie todas as perguntas antes de enviar.');
             return;
         }
- 
+
         try {
             const professorId = await AsyncStorage.getItem('@user_id');
             const feedbackData = {
@@ -184,24 +184,24 @@ export default function AlunoPerfil({ route }) {
                 recipientStudent: { id: alunoId },
                 conteudo: conteudoFeedback,
             };
- 
-            await axios.post('http://192.168.2.11:3000/api/feedbackForm', feedbackData);
+
+            await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackForm', feedbackData);
             Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
- 
+
             fetchFeedbacks();
             setRatings(Array(5).fill(0));
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
- 
+
         }
     };
- 
+
     const enviarFeedbackEscrito = async () => {
         if (!conteudoFeedback.trim()) {
             Alert.alert('Erro', 'Por favor, escreva algo antes de enviar.');
             return;
         }
- 
+
         try {
             const professorId = await AsyncStorage.getItem('@user_id');
             const feedbackData = {
@@ -209,16 +209,16 @@ export default function AlunoPerfil({ route }) {
                 createdBy: { id: professorId },
                 recipientStudent: { id: alunoId },
             };
- 
-            await axios.post('http://192.168.2.11:3000/api/teacher/student', feedbackData);
+
+            await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/student', feedbackData);
             Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
             setConteudoFeedback('');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
- 
+
         }
     };
- 
+
     const renderPergunta = (pergunta, index) => {
         return (
             <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
@@ -240,7 +240,7 @@ export default function AlunoPerfil({ route }) {
             </View>
         );
     };
- 
+
     const perguntas = [
         "Nível de Engajamento (O quanto a aula prendeu a atenção e motivou a participação?)",
         "Nível de Desempenho (O quanto o aluno demonstrou compreensão do conteúdo?)",
@@ -248,7 +248,7 @@ export default function AlunoPerfil({ route }) {
         "Nível de Atenção (O quanto o aluno se manteve focado durante a aula?)",
         "Nível de Comportamento (O quanto o aluno se comportou adequadamente?)",
     ];
- 
+
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -256,7 +256,7 @@ export default function AlunoPerfil({ route }) {
             </View>
         );
     }
- 
+
     if (error) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -264,7 +264,7 @@ export default function AlunoPerfil({ route }) {
             </View>
         );
     }
- 
+
     if (!aluno) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: perfilBackgroundColor }]}>
@@ -272,7 +272,7 @@ export default function AlunoPerfil({ route }) {
             </View>
         );
     }
- 
+
     return (
         <ScrollView ref={scrollViewRef}>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
@@ -287,10 +287,10 @@ export default function AlunoPerfil({ route }) {
                         elevation: 3,
                     }]}>
                         <View style={styles.linhaUser}>
-                        <Image
-    source={aluno.imageUrl ? { uri: aluno.imageUrl } : require('../../../assets/image/Professor.png')}
-    style={styles.profileImage}
-/>
+                            <Image
+                                source={aluno.imageUrl ? { uri: aluno.imageUrl } : require('../../../assets/image/Professor.png')}
+                                style={styles.profileImage}
+                            />
                             <View style={styles.name}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={[styles.nome, { color: textColor }]}>{aluno.nome}</Text>
@@ -322,7 +322,7 @@ export default function AlunoPerfil({ route }) {
                         </View>
                         <Campo label="Turma" text={aluno.turma.nomeTurma} textColor={textColor} />
                     </View>
- 
+
                     <View style={[styles.grafico, {
                         shadowColor: sombra,
                         shadowOffset: { width: 0, height: 4 },
@@ -342,7 +342,7 @@ export default function AlunoPerfil({ route }) {
                             onLimparFiltroProfessor={handleLimparFiltroProfessor}
                             onBarraClick={handleBarraClick}
                         />
- 
+
                         <View style={{ width: '100%', marginTop: 20 }}>
                             <Text style={{ color: '#0077FF', fontSize: 16, fontWeight: 'bold' }}>
                                 Dê seu feedback sobre o aluno(a)!
@@ -369,7 +369,7 @@ export default function AlunoPerfil({ route }) {
                             </View>
                         </View>
                     </View>
- 
+
                     <View style={[styles.feedbackContainer, { backgroundColor: formBackgroundColor }]}>
                         <Text style={[styles.feedbackLabel, { color: textColor }]}>Escreva sobre esse aluno:</Text>
                         <TextInput
@@ -393,7 +393,7 @@ export default function AlunoPerfil({ route }) {
                     </View>
                 </View>
             </View>
- 
+
             <Modal visible={modalBimestreVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
@@ -415,12 +415,12 @@ export default function AlunoPerfil({ route }) {
                     </View>
                 </View>
             </Modal>
- 
+
             <Modal visible={modalProfessorVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
                         <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
- 
+
                         <TouchableOpacity
                             style={styles.modalItem}
                             onPress={() => {
@@ -431,7 +431,7 @@ export default function AlunoPerfil({ route }) {
                                 Todos Professores
                             </Text>
                         </TouchableOpacity>
- 
+
                         {professores.map((professor) => (
                             <TouchableOpacity
                                 key={professor.id}
@@ -448,7 +448,7 @@ export default function AlunoPerfil({ route }) {
                     </View>
                 </View>
             </Modal>
- 
+
             <Modal visible={modalBarraVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
@@ -456,7 +456,7 @@ export default function AlunoPerfil({ route }) {
                         <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
                             {barraSelecionada.value.toFixed(1)}
                         </Text>
- 
+
                         <TouchableOpacity
                             style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
                             onPress={() => setModalBarraVisible(false)}
@@ -469,7 +469,7 @@ export default function AlunoPerfil({ route }) {
         </ScrollView>
     );
 }
- 
+
 const styles = StyleSheet.create({
     loadingContainer: {
         flex: 1,

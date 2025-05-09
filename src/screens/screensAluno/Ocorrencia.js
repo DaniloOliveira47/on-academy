@@ -31,7 +31,7 @@ export default function Ocorrencia() {
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
-        axios.get('http://192.168.2.11:3000/api/teacher')
+        axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher')
             .then(response => {
                 setProfessores(response.data);
             })
@@ -63,7 +63,7 @@ export default function Ocorrencia() {
 
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://192.168.2.11:3000/api/student/feedback/${userId}`);
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${userId}`);
             setFeedbacks(response.data);
             atualizarDadosGrafico(response.data);
         } catch (error) {
@@ -161,7 +161,7 @@ export default function Ocorrencia() {
                 recipientTeacher: { id: professorSelecionado.id }
             };
 
-            const response = await axios.post('http://192.168.2.11:3000/api/feedbackStudent', feedback);
+            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');

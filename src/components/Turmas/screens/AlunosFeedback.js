@@ -43,7 +43,7 @@ export default function AlunosFeedback({ route }) {
         const fetchData = async () => {
             try {
                 // Buscar dados da turma
-                const turmaResponse = await axios.get(`http://192.168.2.11:3000/api/class/students/${turmaId}`);
+                const turmaResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
                 setTurma(turmaResponse.data);
                
                 // Buscar médias dos feedbacks
@@ -68,7 +68,7 @@ export default function AlunosFeedback({ route }) {
  
     const fetchMediasFeedbacks = async () => {
         try {
-            const response = await axios.get(`http://192.168.2.11:3000/api/class/feedback/${turmaId}`);
+            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/feedback/${turmaId}`);
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
            
             setDadosGrafico([
@@ -168,7 +168,7 @@ export default function AlunosFeedback({ route }) {
         };
    
         try {
-            const response = await axios.post('http://192.168.2.11:3000/api/teacher/student', feedbackData, {
+            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/student', feedbackData, {
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
                     'Content-Type': 'application/json'

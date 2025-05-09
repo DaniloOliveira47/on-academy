@@ -31,7 +31,7 @@ export default function HeaderIns() {
   const fetchData = useCallback(async () => {
     try {
       // Busca os eventos
-      const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
+      const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
       const events = eventsResponse.data;
 
       // Gerar cores aleatórias para cada evento
@@ -45,7 +45,7 @@ export default function HeaderIns() {
 
       // Busca os dados da instituição
       const institutionId = await AsyncStorage.getItem('@user_id');
-      const institutionResponse = await axios.get(`http://192.168.2.11:3000/api/institution/${institutionId}`);
+      const institutionResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/${institutionId}`);
       setInstitution(institutionResponse.data);
     } catch (error) {
 

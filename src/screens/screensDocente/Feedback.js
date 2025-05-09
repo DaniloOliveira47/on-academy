@@ -50,7 +50,7 @@ export default function Turmas() {
                 return;
             }
 
-            const response = await axios.get('http://192.168.2.11:3000/api/class');
+            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
             const turmasDoProfessor = response.data.filter(turma =>
                 turma.teachers.some(teacher => teacher.id === parseInt(professorId))
             );

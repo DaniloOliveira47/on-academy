@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../components/Home/Header';
@@ -30,8 +29,8 @@ export default function HomeDocente() {
     // Função para carregar as mensagens (avisos)
     const fetchMessages = async () => {
         try {
-            const { data } = await axios.get('http://192.168.2.11:3000/api/reminder');
-           
+            const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
+
             // Ordenar por data mais recente primeiro
             data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
@@ -39,40 +38,38 @@ export default function HomeDocente() {
 
             setAvisos(data);
         } catch (error) {
-            console.error('Erro ao carregar avisos:', error);
+          
         }
     };
 
-    const fetchTurmas = async () => {
-        try {
-            const professorId = await AsyncStorage.getItem('@user_id');
-            if (!professorId) {
+    useEffect(() => {
+        const fetchTurmas = async () => {
+            try {
+                const professorId = await AsyncStorage.getItem('@user_id');
+                if (!professorId) {
+                    
+                    setTurmas([]);
+                    return;
+                }
+
+                const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/classes/${professorId}`);
+                console.log('Resposta da API:', response.data);
+
+                if (response.data && Array.isArray(response.data.classes)) {
+                    setTurmas(response.data.classes);
+                } else {
+                    
+                    setTurmas([]);
+                }
+            } catch (error) {
+              
                 setTurmas([]);
-                return;
             }
+        };
 
-            const response = await axios.get(`http://192.168.2.11:3000/api/teacher/classes/${professorId}`);
-            
-            console.log('Resposta da API:', response.data);
-
-            if (response.data && Array.isArray(response.data.classes)) {
-                setTurmas(response.data.classes);
-            } else {
-                setTurmas([]);
-            }
-        } catch (error) {
-            console.error('Erro ao carregar turmas:', error);
-            setTurmas([]);
-        }
-    };
-
-    // Carrega os dados sempre que a tela recebe foco
-    useFocusEffect(
-        useCallback(() => {
-            fetchTurmas();
-            fetchMessages();
-        }, [])
-    );
+        fetchTurmas();
+        fetchMessages(); // Carrega os avisos inicialmente
+    }, []);
 
     const enviarAviso = async () => {
         try {
@@ -81,10 +78,9 @@ export default function HomeDocente() {
                 return;
             }
 
-            const professorId = await AsyncStorage.getItem('@user_id');
-            const token = await AsyncStorage.getItem('@user_token');
-            if (!professorId || !token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+            const instituicaoId = await AsyncStorage.getItem('@user_id');
+            if (!instituicaoId) {
+                
                 return;
             }
 
@@ -95,11 +91,12 @@ export default function HomeDocente() {
 
             const avisoData = {
                 conteudo: conteudoAviso,
-                createdBy: { id: parseInt(professorId) },
+                createdBy: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
 
-            await axios.post('http://192.168.2.11:3000/api/reminder', avisoData, {
+               // Corrigido a chamada axios.post
+               await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, { // Note o avisoData como segundo parâmetro
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -112,7 +109,7 @@ export default function HomeDocente() {
             // Recarrega os avisos após o envio
             await fetchMessages();
         } catch (error) {
-            console.error('Erro ao enviar aviso:', error);
+       
             Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
         }
     };
@@ -142,31 +139,32 @@ export default function HomeDocente() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas com ScrollView */}
+                    {/* Seção de turmas */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
-                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
-                        <ScrollView
-                            style={styles.turmasScrollView}
-                            contentContainerStyle={styles.turmasScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
-                            {turmas.length > 0 ? (
-                                turmas.map((turma, index) => (
-                                    <CardTurmas
-                                        key={turma.id}
-                                        titulo={`${turma.nomeTurma}`}
-                                        subTitulo={`Sala ${index + 1}`}
-                                        isSelected={turmaSelecionada === turma.id}
-                                        onPress={() => handleSelecionarTurma(turma.id)}
-                                    />
-                                ))
-                            ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                    Nenhuma turma disponível
-                                </Text>
-                            )}
-                        </ScrollView>
+                        <Text style={styles.title}>Turmas</Text>
+                        <View style={[styles.customScrollView]}>
+                            <ScrollView
+                                style={styles.customScrollContent}
+                                showsVerticalScrollIndicator={false}
+                                nestedScrollEnabled={true}
+                            >
+                                {turmas.length > 0 ? (
+                                    turmas.map((turma, index) => (
+                                        <CardTurmas
+                                            key={turma.id}
+                                            titulo={`${turma.nomeTurma}`}
+                                            subTitulo={`Sala ${index + 1}`}
+                                            isSelected={turmaSelecionada === turma.id}
+                                            onPress={() => handleSelecionarTurma(turma.id)}
+                                        />
+                                    ))
+                                ) : (
+                                    <Text style={[styles.emptyMessage]}>
+                                        Nenhuma turma disponível
+                                    </Text>
+                                )}
+                            </ScrollView>
+                        </View>
                     </View>
 
                     {/* Seção de avisos */}
@@ -197,40 +195,29 @@ export default function HomeDocente() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos gerais com ScrollView */}
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
-                        <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
+                    {/* Seção de avisos gerais */}
+                    <View style={{ backgroundColor: isDarkMode ? '#000' : '#FFF', width: '100%', borderRadius: 20, marginTop: 20 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', padding: 10, color: isDarkMode ? '#FFF' : '#000' }}>
                             Avisos
                         </Text>
-                        <ScrollView
-                            style={styles.avisosScrollView}
-                            contentContainerStyle={styles.avisosScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
+                        <View style={{ padding: 10 }}>
                             {avisos.length > 0 ? (
                                 avisos.map((aviso) => (
                                     <Avisos
                                         key={aviso.id}
                                         abreviacao={aviso.initials}
-                                        nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
-                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { 
-                                            day: '2-digit', 
-                                            month: '2-digit', 
-                                            year: 'numeric', 
-                                            hour: '2-digit', 
-                                            minute: '2-digit' 
-                                        })}
+                                        nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')} // Mostra apenas os dois primeiros nomes
+                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         texto={aviso.conteudo}
                                         aleatorio={gerarCorAleatoria()}
                                     />
                                 ))
                             ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>
                                     Nenhum aviso disponível.
                                 </Text>
                             )}
-                        </ScrollView>
+                        </View>
                     </View>
                 </View>
             </ScrollView>
@@ -239,93 +226,18 @@ export default function HomeDocente() {
 }
 
 const styles = StyleSheet.create({
-    tela: {
-        flex: 1,
-        backgroundColor: '#F0F7FF'
-    },
-    scrollTela: {
-        flex: 1,
-        marginBottom: 40
-    },
-    contTurmas: {
-        backgroundColor: 'white',
-        width: '100%',
-        borderRadius: 20,
-        padding: 15,
-        marginTop: 20
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10
-    },
-    subtela: {
-        paddingTop: 10,
-        alignItems: 'center',
-        padding: 20
-    },
-    infoContainer: {
-        flexDirection: 'row',
-        width: '100%',
-        padding: 20,
-        borderRadius: 20,
-        position: 'relative'
-    },
-    textContainer: {
-        flex: 1,
-        zIndex: 2
-    },
-    titulo: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        width: 150
-    },
-    subtitulo: {
-        fontSize: 14,
-        width: 190
-    },
-    infoImage: {
-        position: 'absolute',
-        right: -25,
-        bottom: -7,
-        width: 200,
-        height: 150,
-        resizeMode: 'contain'
-    },
-    emptyMessage: {
-        textAlign: 'center',
-        marginTop: 10,
-        paddingVertical: 20
-    },
-    contAviso: {
-        padding: 10,
-        borderRadius: 18,
-        marginTop: 8
-    },
-    enviarButton: {
-        backgroundColor: '#1A85FF',
-        alignItems: 'center',
-        width: 100,
-        padding: 8,
-        borderRadius: 10,
-        marginTop: 10
-    },
-    enviarText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 17
-    },
-    turmasScrollView: {
-        maxHeight: Dimensions.get('window').height * 0.3,
-    },
-    turmasScrollContent: {
-        paddingRight: 10,
-    },
-    avisosScrollView: {
-        maxHeight: Dimensions.get('window').height * 0.4,
-    },
-    avisosScrollContent: {
-        paddingRight: 10,
-    },
+    tela: { flex: 1, backgroundColor: '#F0F7FF' },
+    scrollTela: { flex: 1, marginBottom: 40 },
+    contTurmas: { backgroundColor: 'white', width: '100%', borderRadius: 30, padding: 15, marginTop: 20 },
+    title: { color: '#0077FF', fontSize: 20, fontWeight: 'bold' },
+    subtela: { paddingTop: 10, alignItems: 'center', padding: 20 },
+    infoContainer: { flexDirection: 'row', width: '100%', padding: 20, borderRadius: 20, position: 'relative' },
+    textContainer: { flex: 1, zIndex: 2 },
+    titulo: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, width: 150 },
+    subtitulo: { fontSize: 14, width: 190 },
+    infoImage: { position: 'absolute', right: -25, bottom: -7, width: 200, height: 150, resizeMode: 'contain' },
+    emptyMessage: { textAlign: 'center', color: '#888', marginTop: 10 },
+    contAviso: { backgroundColor: '#F0F7FF', padding: 10, borderRadius: 18, marginTop: 8 },
+    enviarButton: { backgroundColor: '#1A85FF', alignItems: 'center', width: 100, padding: 8, borderRadius: 10, marginTop: 10 },
+    enviarText: { color: 'white', fontWeight: 'bold', fontSize: 17 },
 });
