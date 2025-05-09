@@ -23,7 +23,7 @@ export default function HomeInstituicao() {
             const fetchData = async () => {
                 try {
                     // Fetch das turmas
-                    const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
+                    const turmasResponse = await axios.get('http://192.168.2.11:3000/api/class');
                     console.log('Resposta da API (Turmas):', turmasResponse.data);
                     
                     if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
@@ -33,7 +33,7 @@ export default function HomeInstituicao() {
                     }
 
                     // Fetch dos avisos
-                    const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
+                    const avisosResponse = await axios.get('http://192.168.2.11:3000/api/reminder');
                     const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                         new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
                     );
@@ -84,7 +84,7 @@ export default function HomeInstituicao() {
                 classSt: { id: turmaSelecionada },
             };
     
-            await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, {
+            await axios.post('http://192.168.2.11:3000/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -92,7 +92,7 @@ export default function HomeInstituicao() {
             });
     
             // Recarrega os avisos após o envio
-            const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
+            const avisosResponse = await axios.get('http://192.168.2.11:3000/api/reminder');
             const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
             );

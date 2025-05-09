@@ -51,7 +51,7 @@ export default function EventosInstitution() {
   // Função para buscar eventos
   const fetchEvents = async () => {
     try {
-      const response = await fetch('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
+      const response = await fetch('http://192.168.2.11:3000/api/event');
       const data = await response.json();
       setEvents(data);
 
@@ -128,12 +128,15 @@ export default function EventosInstitution() {
     setLocalEvento(event.localEvento);
     setDescricaoEvento(event.descricaoEvento);
     
-    // Formata a data e hora do evento para os estados
+    // Formata a data do evento
     const [year, month, day] = event.dataEvento.split('-');
-    const [hours, minutes, seconds] = event.horarioEvento.split(':');
-    
     setSelectedDate(new Date(year, month - 1, day));
-    setSelectedTime(new Date(0, 0, 0, hours, minutes));
+    
+    // Formata o horário do evento
+    const [hours, minutes] = event.horarioEvento.split(':');
+    const timeDate = new Date();
+    timeDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    setSelectedTime(timeDate);
     
     setIsEditMode(true);
     setSelectedEventId(event.id);
@@ -211,8 +214,13 @@ export default function EventosInstitution() {
         return;
       }
 
+      // Formata a data como YYYY-MM-DD
       const formattedDate = selectedDate.toISOString().split('T')[0];
-      const formattedTime = selectedTime.toTimeString().split(' ')[0];
+      
+      // Formata o horário como HH:MM:SS
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}:00`;
 
       const eventData = {
         tituloEvento: tituloEvento.trim(),
@@ -223,8 +231,8 @@ export default function EventosInstitution() {
       };
 
       const url = isEditMode 
-        ? `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event/${selectedEventId}`
-        : 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event';
+        ? `http://192.168.2.11:3000/api/event/${selectedEventId}`
+        : 'http://192.168.2.11:3000/api/event';
       
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -273,7 +281,7 @@ export default function EventosInstitution() {
           {
             text: 'Excluir',
             onPress: async () => {
-              const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event/${selectedEventId}`, {
+              const response = await fetch(`http://192.168.2.11:3000/api/event/${selectedEventId}`, {
                 method: 'DELETE',
                 headers: {
                   Authorization: `Bearer ${token}`,

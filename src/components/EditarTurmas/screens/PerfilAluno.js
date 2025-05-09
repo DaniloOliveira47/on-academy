@@ -262,7 +262,7 @@ export default function PerfilAluno() {
     const fetchAluno = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`, {
+            const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -311,7 +311,7 @@ export default function PerfilAluno() {
     const fetchFeedbacks = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackteacher/student/${alunoId}`, {
+            const response = await axios.get(`http://192.168.2.11:3000/api/feedbackteacher/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -325,7 +325,7 @@ export default function PerfilAluno() {
     const fetchFeedbacksAvaliacao = async () => {
         try {
             const token = await getAuthToken();
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${alunoId}`, {
+            const response = await axios.get(`http://192.168.2.11:3000/api/student/feedback/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -486,7 +486,7 @@ export default function PerfilAluno() {
             const token = await getAuthToken();
 
             const response = await axios.post(
-                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/upload-image/${alunoId}`,
+                `http://192.168.2.11:3000/api/student/upload-image/${alunoId}`,
                 { image: base64Image },
                 {
                     headers: {
@@ -588,7 +588,7 @@ export default function PerfilAluno() {
             console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
 
             const response = await axios.put(
-                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`,
+                `http://192.168.2.11:3000/api/student/${alunoId}`,
                 dadosParaEnviar,
                 {
                     headers: {
@@ -626,7 +626,7 @@ export default function PerfilAluno() {
             setLoading(true);
             const token = await getAuthToken();
 
-            const response = await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`, {
+            const response = await axios.delete(`http://192.168.2.11:3000/api/student/${alunoId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

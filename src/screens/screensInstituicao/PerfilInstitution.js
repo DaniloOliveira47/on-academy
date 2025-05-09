@@ -16,7 +16,7 @@ export default function PerfilInstitution() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution`);
+          const response = await fetch(`http://192.168.2.11:3000/api/institution`);
           const data = await response.json();
           console.log('Dados da instituição:', data);
           setDadosInstituicao(data);

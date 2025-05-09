@@ -103,7 +103,7 @@ export default function Turmas() {
     const fetchTurmas = async () => {
         setCarregando(true);
         try {
-            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
+            const response = await axios.get('http://192.168.2.11:3000/api/class');
             setTurmas(response.data || []);
             setTurmasFiltradas(response.data || []);
         } catch (error) {
@@ -117,7 +117,7 @@ export default function Turmas() {
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher');
+            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
             setProfessores(response.data || []);
             return true;
         } catch (error) {
@@ -128,7 +128,7 @@ export default function Turmas() {
 
     const fetchDisciplinas = async () => {
         try {
-            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline');
+            const response = await axios.get('http://192.168.2.11:3000/api/discipline');
             setDisciplinas(response.data || []);
             return true;
         } catch (error) {
@@ -150,7 +150,7 @@ export default function Turmas() {
     const abrirModalEditar = async (turma) => {
         setCarregando(true);
         try {
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/teacher/disciplinas/${turma.id}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/class/teacher/disciplinas/${turma.id}`);
             const turmaDetalhada = response.data;
 
             setTurmaEditando(turmaDetalhada);
@@ -221,7 +221,7 @@ export default function Turmas() {
             }
 
             await axios.post(
-                'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class',
+                'http://192.168.2.11:3000/api/class',
                 {
                     nomeTurma: novaTurma,
                     anoLetivoTurma: novoAno,
@@ -265,7 +265,7 @@ export default function Turmas() {
             }
 
             await axios.post(
-                'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline',
+                'http://192.168.2.11:3000/api/discipline',
                 { nomeDisciplina: novaDisciplina },
                 {
                     headers: {
@@ -646,40 +646,67 @@ export default function Turmas() {
             </Modal>
 
             {/* Modal para criar nova disciplina */}
-            <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
-                <View style={styles.modalContainer}>
-                    <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
-                        <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Registrar Nova Disciplina</Text>
-
-                        <Text style={{ color: isDarkMode ? 'white' : 'black', marginBottom: 5 }}>Nome da Disciplina</Text>
-                        <TextInput
-                            style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
-                            value={novaDisciplina}
-                            onChangeText={setNovaDisciplina}
-                            placeholder="Digite o nome da disciplina"
-                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-                        />
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.botaoAcao, styles.botaoCancelar]}
-                                onPress={() => {
-                                    setModalNovaDisciplinaVisible(false);
-                                    setNovaDisciplina('');
-                                }}
-                            >
-                                <Text style={styles.textoBotao}>Cancelar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.botaoAcao, styles.botaoSalvar]}
-                                onPress={registrarNovaDisciplina}
-                            >
-                                <Text style={styles.textoBotao}>Registrar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+           {/* Modal para criar nova disciplina */}
+<Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
+    <View style={styles.modalContainer}>
+        <View style={[styles.modalDisciplinaContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
+            <Text style={[styles.modalDisciplinaTitle, { color: isDarkMode ? 'white' : 'black' }]}>
+                Registrar Nova Disciplina
+            </Text>
+            
+            <Text style={{ 
+                color: isDarkMode ? 'white' : 'black', 
+                marginBottom: 5,
+                alignSelf: 'flex-start'
+            }}>
+                Nome da Disciplina *
+            </Text>
+            
+            <TextInput
+                style={[
+                    styles.modalDisciplinaInput,
+                    { 
+                        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                        color: isDarkMode ? 'white' : 'black'
+                    }
+                ]}
+                value={novaDisciplina}
+                onChangeText={setNovaDisciplina}
+                placeholder="Digite o nome da disciplina"
+                placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+            />
+            
+            <View style={styles.modalDisciplinaButtons}>
+                <TouchableOpacity
+                    style={[
+                        styles.modalDisciplinaButton,
+                        styles.modalDisciplinaCancelButton
+                    ]}
+                    onPress={() => {
+                        setModalNovaDisciplinaVisible(false);
+                        setNovaDisciplina('');
+                    }}
+                >
+                    <Text style={styles.modalDisciplinaButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                    style={[
+                        styles.modalDisciplinaButton,
+                        styles.modalDisciplinaConfirmButton,
+                        carregando && { opacity: 0.6 }
+                    ]}
+                    onPress={registrarNovaDisciplina}
+                    disabled={carregando}
+                >
+                    <Text style={styles.modalDisciplinaButtonText}>
+                        {carregando ? 'Registrando...' : 'Registrar'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    </View>
+</Modal>
         </View>
     );
 }
@@ -863,6 +890,51 @@ const styles = StyleSheet.create({
         gap: 100,
         padding: 20,
         paddingBottom: 50,
-
     },
+        modalDisciplinaContent: {
+            width: '100%',
+            borderTopRightRadius: 15,
+            borderTopLeftRadius: 15,
+            padding: 25,
+            alignItems: 'center',
+        },
+        modalDisciplinaTitle: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            marginBottom: 20,
+         
+        },
+        modalDisciplinaInput: {
+            width: '100%',
+        
+            borderRadius: 10,
+            padding: 14,
+            marginBottom: 20,
+            borderWidth: 1,
+            
+        },
+        modalDisciplinaButtons: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '100%',
+        },
+        modalDisciplinaButton: {
+            flex: 1,
+            padding: 14,
+            borderRadius: 10,
+            alignItems: 'center',
+            marginHorizontal: 5,
+        },
+        modalDisciplinaCancelButton: {
+            backgroundColor: '#FF3B30',
+        },
+        modalDisciplinaConfirmButton: {
+            backgroundColor: '#007AFF',
+        },
+        modalDisciplinaButtonText: {
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 16,
+        },
+ 
 });

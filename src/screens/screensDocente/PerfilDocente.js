@@ -17,7 +17,7 @@ export default function PerfilDocente() {
         console.log('userId recuperado:', userId);
 
         if (userId) {
-          const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${userId}`);
+          const response = await fetch(`http://192.168.2.11:3000/api/teacher/${userId}`);
           const data = await response.json();
           console.log('Dados do docente:', data);
           setDadosDocente(data);

@@ -30,7 +30,7 @@ export default function NotasTurma() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const alunosResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
+                const alunosResponse = await axios.get(`http://192.168.2.11:3000/api/class/students/${turmaId}`);
  
                 setTurmaInfo({
                     nomeTurma: alunosResponse.data.nomeTurma,
@@ -48,7 +48,7 @@ export default function NotasTurma() {
  
                 setAlunos(alunosComNotas);
  
-                const disciplinasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/discipline');
+                const disciplinasResponse = await axios.get('http://192.168.2.11:3000/api/class/discipline');
                 const turma = disciplinasResponse.data.find(t => t.nomeTurma === alunosResponse.data.nomeTurma);
  
                 if (turma && Array.isArray(turma.disciplinas)) {
@@ -78,7 +78,7 @@ export default function NotasTurma() {
  
     const buscarNotasAluno = async (alunoId) => {
         try {
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
             const notas = response.data.notas || [];
             setNotasAluno(notas);
    
@@ -135,7 +135,7 @@ export default function NotasTurma() {
                 nomeDisciplina: disciplina?.nomeDisciplina || 'Desconhecida'
             };
        
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note', novaNota);
+            const response = await axios.post('http://192.168.2.11:3000/api/note', novaNota);
            
             console.log('Resposta da API:', response.data); // Verifique isso no console
            

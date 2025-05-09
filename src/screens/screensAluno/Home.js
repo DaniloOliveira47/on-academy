@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Modal, FlatList, Dimensions } from 'react-native';
 import axios from 'axios';
 import Header from '../../components/Home/Header';
 import GraficoMedia from '../../components/Home/graficoMedia';
@@ -25,7 +25,7 @@ export default function Home() {
         const alunoId = await AsyncStorage.getItem('@user_id');
         if (!alunoId) return;
 
-        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
+        const response = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
         setAluno(response.data);
         
         // After setting aluno, fetch avisos for the student's class
@@ -39,7 +39,7 @@ export default function Home() {
 
     const fetchAvisos = async (turmaId) => {
       try {
-        const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder/${turmaId}`);
+        const response = await axios.get(`http://192.168.2.11:3000/api/reminder/${turmaId}`);
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {
@@ -59,7 +59,7 @@ export default function Home() {
 
   return (
     <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
-          <Header isDarkMode={isDarkMode} />
+      <Header isDarkMode={isDarkMode} />
       <ScrollView>
         <View style={styles.subtela}>
           <View style={[styles.infoContainer, {
@@ -136,24 +136,25 @@ export default function Home() {
             </View>
           </View>
         
-          <View style={{
+          <View style={[styles.contTurmas, { 
             backgroundColor: isDarkMode ? '#000' : '#FFF',
-            width: '100%',
-            borderRadius: 20,
-            marginTop: 20,
-            paddingBottom: 20,
             marginBottom: 50
-          }}>
-            <Text style={{
+          }]}>
+            <Text style={[styles.title, { 
+              color: isDarkMode ? '#FFF' : '#000',
               fontSize: 24,
               fontWeight: 'bold',
               padding: 15,
-              color: isDarkMode ? '#FFF' : '#000'
-            }}>
+            }]}>
               Avisos
             </Text>
 
-            <View style={{ paddingHorizontal: 10 }}>
+            <ScrollView
+              style={styles.avisosScrollView}
+              contentContainerStyle={styles.avisosScrollContent}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
               {avisos.length > 0 ? (
                 avisos.map((aviso) => (
                   <Avisos
@@ -180,7 +181,7 @@ export default function Home() {
                   Nenhum aviso disponível.
                 </Text>
               )}
-            </View>
+            </ScrollView>
           </View>
         </View>
       </ScrollView>
@@ -330,5 +331,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
     alignItems: 'center'
-  }
+  },
+  contTurmas: {
+    width: '100%',
+    borderRadius: 20,
+    marginTop: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  avisosScrollView: {
+    maxHeight: Dimensions.get('window').height * 0.4,
+    paddingHorizontal: 10,
+  },
+  avisosScrollContent: {
+    paddingBottom: 20,
+  },
 });

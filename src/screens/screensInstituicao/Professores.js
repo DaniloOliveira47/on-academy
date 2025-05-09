@@ -28,7 +28,7 @@ export default function ProfessoresFeedback() {
         
         try {
             if (isActive) setLoading(true);
-            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher');
+            const response = await axios.get('http://192.168.2.11:3000/api/teacher');
             if (isActive) {
                 const professoresOrdenados = response.data.sort((a, b) => b.id - a.id);
                 setProfessores(professoresOrdenados);
@@ -96,7 +96,7 @@ export default function ProfessoresFeedback() {
         try {
             setIsCreating(true);
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher', dadosProfessor, {
+            const response = await axios.post('http://192.168.2.11:3000/api/teacher', dadosProfessor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

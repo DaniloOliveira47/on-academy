@@ -37,7 +37,7 @@ export default function CardNota({ nota: initialNota, notaId, alunoId, disciplin
         }
  
         try {
-            await axios.put(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note/${notaId}`, {
+            await axios.put(`http://192.168.2.11:3000/api/note/${notaId}`, {
                 nota: novaNota,
                 bimestre: bimestre,
                 disciplineId: disciplinaId,

@@ -31,7 +31,7 @@ export default function Ocorrencia() {
 
     // Busca os professores ao carregar o componente
     useEffect(() => {
-        axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher')
+        axios.get('http://192.168.2.11:3000/api/teacher')
             .then(response => {
                 setProfessores(response.data);
             })
@@ -63,7 +63,7 @@ export default function Ocorrencia() {
 
     const fetchFeedbacks = async () => {
         try {
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${userId}`);
+            const response = await axios.get(`http://192.168.2.11:3000/api/student/feedback/${userId}`);
             setFeedbacks(response.data);
             atualizarDadosGrafico(response.data);
         } catch (error) {
@@ -71,8 +71,36 @@ export default function Ocorrencia() {
         }
     };
 
+    const handleSelecionarProfessor = (professor) => {
+        setProfessorSelecionado(professor);
+        setModalProfessorVisible(false);
+    };
+
+    const handleLimparFiltroProfessor = () => {
+        setProfessorSelecionado(null);
+    };
+
     const atualizarDadosGrafico = (feedbacksData) => {
-        const feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
+        let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
+
+        if (professorSelecionado) {
+            feedbacksFiltrados = feedbacksFiltrados.filter(
+                feedback => feedback.createdByDTO && feedback.createdByDTO.id === professorSelecionado.id
+            );
+
+            if (feedbacksFiltrados.length > 0) {
+                const feedback = feedbacksFiltrados[0];
+                setDadosGrafico([
+                    feedback.resposta1,
+                    feedback.resposta2,
+                    feedback.resposta3,
+                    feedback.resposta4,
+                    feedback.resposta5
+                ]);
+                setSemFeedbacks(false);
+                return;
+            }
+        }
 
         if (feedbacksFiltrados.length === 0) {
             setSemFeedbacks(true);
@@ -103,6 +131,12 @@ export default function Ocorrencia() {
         setDadosGrafico(novasMedias);
     };
 
+    useEffect(() => {
+        if (feedbacks.length > 0) {
+            atualizarDadosGrafico(feedbacks);
+        }
+    }, [bimestreSelecionado, professorSelecionado]);
+
     const selecionarProfessor = (professor) => {
         setProfessorSelecionado(professor);
     };
@@ -127,12 +161,13 @@ export default function Ocorrencia() {
                 recipientTeacher: { id: professorSelecionado.id }
             };
 
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackStudent', feedback);
+            const response = await axios.post('http://192.168.2.11:3000/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
                 Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
                 setConteudo('');
                 setProfessorSelecionado(null);
+                fetchFeedbacks(); // Atualiza a lista de feedbacks
             } else {
                 Alert.alert('Erro', 'Não foi possível enviar o feedback.');
             }
@@ -156,13 +191,13 @@ export default function Ocorrencia() {
                 <GraficoFeedback
                     dadosGrafico={dadosGrafico}
                     bimestreSelecionado={bimestreSelecionado}
-                    professorSelecionado={null}
+                    professorSelecionado={professorSelecionado}
                     semFeedbacks={semFeedbacks}
-                    professores={[]}
                     onSelecionarBimestre={() => setModalBimestreVisible(true)}
                     onSelecionarProfessor={() => setModalProfessorVisible(true)}
-                    onLimparFiltroProfessor={() => {}}
+                    onLimparFiltroProfessor={handleLimparFiltroProfessor}
                     onBarraClick={handleBarraClick}
+                    isDarkMode={isDarkMode}
                 />
 
                 {/* Modal para seleção de bimestre */}
@@ -184,6 +219,39 @@ export default function Ocorrencia() {
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Modal para seleção de professor */}
+                <Modal visible={modalProfessorVisible} transparent animationType="slide">
+                    <View style={styles.modalBackdrop}>
+                        <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
+                            <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+                            <TouchableOpacity
+                                style={styles.modalItem}
+                                onPress={() => handleSelecionarProfessor(null)}
+                            >
+                                <Text style={[styles.modalText, { color: textColor }]}>
+                                    Todos Professores
+                                </Text>
+                            </TouchableOpacity>
+                            {feedbacks
+                                .filter((feedback, index, self) =>
+                                    feedback.createdByDTO &&
+                                    self.findIndex(f => f.createdByDTO.id === feedback.createdByDTO.id) === index
+                                )
+                                .map((feedback) => (
+                                    <TouchableOpacity
+                                        key={feedback.createdByDTO.id}
+                                        style={styles.modalItem}
+                                        onPress={() => handleSelecionarProfessor(feedback.createdByDTO)}
+                                    >
+                                        <Text style={[styles.modalText, { color: textColor }]}>
+                                            {feedback.createdByDTO.nomeDocente}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
                         </View>
                     </View>
                 </Modal>

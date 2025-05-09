@@ -31,7 +31,7 @@ export default function HeaderIns() {
   const fetchData = useCallback(async () => {
     try {
       // Busca os eventos
-      const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
+      const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
       const events = eventsResponse.data;
 
       // Gerar cores aleatórias para cada evento
@@ -45,7 +45,7 @@ export default function HeaderIns() {
 
       // Busca os dados da instituição
       const institutionId = await AsyncStorage.getItem('@user_id');
-      const institutionResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/${institutionId}`);
+      const institutionResponse = await axios.get(`http://192.168.2.11:3000/api/institution/${institutionId}`);
       setInstitution(institutionResponse.data);
     } catch (error) {
 
@@ -140,27 +140,27 @@ export default function HeaderIns() {
           <View style={styles.menuItem}>
             <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
               <View style={{ flexDirection: 'row', gap: 20 }}>
-                <Image 
-                  style={styles.imgPerfil} 
-                  source={institution?.fotoPerfil 
-                    ? { uri: institution.fotoPerfil } 
-                    : require('../../assets/image/ins.png')} 
+                <Image
+                  style={styles.imgPerfil}
+                  source={institution?.fotoPerfil
+                    ? { uri: institution.fotoPerfil }
+                    : require('../../assets/image/ins.png')}
                 />
                 <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
                   {institution?.nome || 'Instituição'}
                 </Text>
               </View>
-              <Image 
-                source={isDarkMode 
-                  ? require('../../assets/image/OptionWhite.png') 
-                  : require('../../assets/image/Option.png')} 
-                style={styles.options} 
+              <Image
+                source={isDarkMode
+                  ? require('../../assets/image/OptionWhite.png')
+                  : require('../../assets/image/Option.png')}
+                style={styles.options}
               />
             </View>
           </View>
 
           <View style={[styles.menuItem, { height: 'auto', borderRadius: 20 }]}>
-          <CustomCalendar events={events} />
+            <CustomCalendar events={events} />
           </View>
 
           <View style={styles.menuItem}>

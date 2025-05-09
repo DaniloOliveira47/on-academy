@@ -29,7 +29,7 @@ export default function Header() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
+        const eventsResponse = await axios.get('http://192.168.2.11:3000/api/event');
         const events = eventsResponse.data;
 
         const colors = {};
@@ -41,7 +41,7 @@ export default function Header() {
         setEventColors(colors);
 
         const alunoId = await AsyncStorage.getItem('@user_id');
-        const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
+        const alunoResponse = await axios.get(`http://192.168.2.11:3000/api/student/${alunoId}`);
         setAluno(alunoResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
