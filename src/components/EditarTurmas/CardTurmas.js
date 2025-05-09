@@ -219,7 +219,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const fetchProfessores = async () => {
         try {
-            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net//teacher');
+            const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher');
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
