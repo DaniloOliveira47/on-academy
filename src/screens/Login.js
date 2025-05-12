@@ -19,13 +19,15 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
+import { useTheme } from '../path/ThemeContext';
 
 export default function Login() {
   const navigation = useNavigation();
   const [password, setPassword] = useState('');
   const [matricula, setMatricula] = useState('');
   const [secureText, setSecureText] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+ const { isDarkMode, setIsDarkMode } = useTheme();
+
   const [activeInput, setActiveInput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 

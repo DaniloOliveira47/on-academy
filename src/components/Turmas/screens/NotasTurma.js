@@ -202,7 +202,8 @@ export default function NotasTurma() {
                     <View style={styles.tableHeader}>
                         <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
                         <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
-                        <Text style={[styles.headerText, { flex: 1 }]}>Média(%)</Text>
+                        <Text style={[styles.headerText, { flex: 1, textAlign: 'center', }]}>Média
+                            (%)</Text>
                         <Text style={[styles.headerText, { flex: 1 }]}>Notas</Text>
                     </View>
  

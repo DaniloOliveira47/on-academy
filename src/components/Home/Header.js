@@ -7,6 +7,7 @@ import ProximosEventos from '../Eventos/proximosEventos';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LogoutButton from '../Gerais/logOut';
 
 export default function Header() {
   const { isDarkMode, setIsDarkMode } = useTheme();
@@ -123,7 +124,7 @@ export default function Header() {
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
         </TouchableOpacity>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -140,9 +141,9 @@ export default function Header() {
                     {aluno ? aluno.nome.split(' ')[0] : 'Carregando...'}
                   </Text>
                 </View>
-                <Image 
-                  source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} 
-                  style={styles.options} 
+                <Image
+                  source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')}
+                  style={styles.options}
                 />
               </View>
             </TouchableOpacity>
@@ -175,6 +176,14 @@ export default function Header() {
                 )}
               </View>
             </View>
+          </View>
+          <View style={styles.menuItem}>
+            <LogoutButton
+              iconColor="#e74c3c"
+              textColor="#e74c3c"
+              onLogoutSuccess={() => console.log('Logout realizado com sucesso')}
+              onLogoutError={(error) => console.error('Erro no logout:', error)}
+            />
           </View>
         </ScrollView>
       </Animated.View>
