@@ -7,7 +7,6 @@ import ProximosEventos from '../Eventos/proximosEventos';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LogoutButton from '../Gerais/logOut';
 
 export default function HeaderIns() {
   const { isDarkMode, setIsDarkMode } = useTheme();
@@ -187,14 +186,6 @@ export default function HeaderIns() {
                 )}
               </View>
             </View>
-          </View>
-          <View style={styles.menuItem}>
-            <LogoutButton
-              iconColor="#e74c3c"
-              textColor="#e74c3c"
-              onLogoutSuccess={() => console.log('Logout realizado com sucesso')}
-              onLogoutError={(error) => console.error('Erro no logout:', error)}
-            />
           </View>
         </ScrollView>
       </Animated.View>

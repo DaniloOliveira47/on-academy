@@ -194,9 +194,10 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 emailAluno: emailAluno.trim().toLowerCase(),
                 telefoneAluno: phoneDigits,
                 turmaId,
-                imageUrl: imageBase64 // Agora enviando a imagem corretamente
+                imageUrl: null
             };
 
+            // Se você estiver usando a função onCreate passada como prop
             await onCreate(alunoData, token);
 
             // Reset form after successful creation
@@ -241,12 +242,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             >
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
                     <Image
-                        style={{ 
-                            width: '100%', 
-                            borderTopRightRadius: 10, 
-                            borderTopLeftRadius: 10,
-                            height: 100 
-                        }}
+                        style={{ width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
                         source={require('../../assets/image/barraAzul.png')}
                     />
                     <View style={{width: '100%', padding: 20}}>

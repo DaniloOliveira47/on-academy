@@ -224,7 +224,7 @@ export default function AlunoPerfil({ route }) {
             <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
                 <Perguntas numero={(index + 1).toString()} text={pergunta} />
                 <View style={styles.avaliacaoContainer}>
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(10)].map((_, i) => (
                         <Avaliacao
                             key={i}
                             numero={(i + 1).toString()}

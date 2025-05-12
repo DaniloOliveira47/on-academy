@@ -51,7 +51,7 @@ export default function Perfil() {
       <HeaderSimples titulo="PERFIL" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
-          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo(a), {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
+          <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo, {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>
         </View>
         <View>
           <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />

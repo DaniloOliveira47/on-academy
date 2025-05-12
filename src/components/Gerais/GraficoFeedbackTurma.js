@@ -24,7 +24,7 @@ const GraficoFeedbackTurma = ({
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
 
     // Configurações do gráfico
-    const maxValue = 5;
+    const maxValue = 10;
     const maxBarHeight = 150;
     const labels = ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'];
 

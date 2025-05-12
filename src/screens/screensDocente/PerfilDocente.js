@@ -52,7 +52,7 @@ export default function PerfilDocente() {
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
           <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>
-            Bem-Vindo(a), Prof. {dadosDocente ? dadosDocente.nomeDocente : 'Carregando...'}
+            Bem-Vindo, Prof. {dadosDocente ? dadosDocente.nomeDocente : 'Carregando...'}
           </Text>
         </View>
         <View>
