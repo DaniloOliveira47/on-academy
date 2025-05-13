@@ -44,9 +44,16 @@ export default function EventosInstitution() {
   const [localEvento, setLocalEvento] = useState('');
   const [descricaoEvento, setDescricaoEvento] = useState('');
 
-  const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
+  // Cores baseadas no tema
+  const backgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
-  const container = isDarkMode ? '#000' : '#FFF';
+  const containerColor = isDarkMode ? '#1E1E1E' : '#FFF';
+  const modalBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFF';
+  const modalTextColor = isDarkMode ? '#FFF' : '#000';
+  const inputBackgroundColor = isDarkMode ? '#333' : '#FFF';
+  const inputTextColor = isDarkMode ? '#FFF' : '#000';
+  const placeholderColor = isDarkMode ? '#AAA' : '#666';
+  const borderColor = isDarkMode ? '#444' : '#CCC';
 
   // Função para buscar eventos
   const fetchEvents = async () => {
@@ -309,9 +316,9 @@ export default function EventosInstitution() {
   };
 
   return (
-    <ScrollView>
+    <ScrollView style={{ backgroundColor: backgroundColor }}>
       <HeaderSimples titulo="EVENTOS" />
-      <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 70 }]}>
+      <View style={[styles.tela, { backgroundColor: backgroundColor, paddingBottom: 70 }]}>
         <View style={{ marginTop: 0 }}>
           <Image style={styles.barraAzul} source={require('../../assets/image/barraAzul.png')} />
           <CustomCalendar events={events} onDayPress={handleDayPress} />
@@ -319,7 +326,7 @@ export default function EventosInstitution() {
         <Text style={{ fontSize: 30, fontWeight: 'bold', marginTop: 20, marginLeft: 20, color: textColor }}>
           Sobre o Evento
         </Text>
-        <View style={[styles.container, { backgroundColor: container }]}>
+        <View style={[styles.container, { backgroundColor: containerColor }]}>
           <Text style={{ fontSize: 20, color: textColor }}>
             {selectedEvent ? selectedEvent.descricaoEvento : 'Selecione um evento no calendário para ver mais detalhes.'}
           </Text>
@@ -359,7 +366,7 @@ export default function EventosInstitution() {
         </View>
 
         {/* Seção de Próximos Eventos */}
-        <View style={[styles.container, { backgroundColor: container }]}>
+        <View style={[styles.container, { backgroundColor: containerColor }]}>
           <Text style={{ fontWeight: 'bold', fontSize: 24, color: textColor }}>
             Próximos Eventos
           </Text>
@@ -408,22 +415,33 @@ export default function EventosInstitution() {
         }}
       >
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: '#FFF' }]}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => {
-              setModalVisible(false);
-              resetForm();
-            }}>
+          <View style={[styles.modalContent, { backgroundColor: modalBackgroundColor }]}>
+            <TouchableOpacity 
+              style={[styles.closeButton, { backgroundColor: '#D9534F' }]} 
+              onPress={() => {
+                setModalVisible(false);
+                resetForm();
+              }}
+            >
               <Text style={styles.closeButtonText}>✖</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalTitle, { color: '#000' }]}>
+            <Text style={[styles.modalTitle, { color: modalTextColor }]}>
               {isEditMode ? 'Editar Evento' : 'Adicionar Evento'}
             </Text>
 
             <TextInput
-              style={[styles.input, errors.tituloEvento && styles.inputError]}
+              style={[
+                styles.input, 
+                errors.tituloEvento && styles.inputError,
+                { 
+                  backgroundColor: inputBackgroundColor,
+                  color: inputTextColor,
+                  borderColor: borderColor
+                }
+              ]}
               placeholder="Nome do evento"
-              placeholderTextColor="#666"
+              placeholderTextColor={placeholderColor}
               value={tituloEvento}
               onChangeText={(text) => {
                 setTituloEvento(text);
@@ -432,12 +450,21 @@ export default function EventosInstitution() {
                 }
               }}
             />
-            {errors.tituloEvento ? <Text style={styles.errorText}>{errors.tituloEvento}</Text> : null}
+            {errors.tituloEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.tituloEvento}</Text> : null}
 
             <TextInput
-              style={[styles.input, styles.description, errors.descricaoEvento && styles.inputError]}
+              style={[
+                styles.input, 
+                styles.description, 
+                errors.descricaoEvento && styles.inputError,
+                { 
+                  backgroundColor: inputBackgroundColor,
+                  color: inputTextColor,
+                  borderColor: borderColor
+                }
+              ]}
               placeholder="Descrição do evento"
-              placeholderTextColor="#666"
+              placeholderTextColor={placeholderColor}
               multiline
               value={descricaoEvento}
               onChangeText={(text) => {
@@ -447,14 +474,23 @@ export default function EventosInstitution() {
                 }
               }}
             />
-            {errors.descricaoEvento ? <Text style={styles.errorText}>{errors.descricaoEvento}</Text> : null}
+            {errors.descricaoEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.descricaoEvento}</Text> : null}
 
-            <Text style={styles.label}>Data do Evento</Text>
+            <Text style={[styles.label, {color: modalTextColor}]}>Data do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
-                style={[styles.input, styles.dateInput, errors.dataEvento && styles.inputError]}
+                style={[
+                  styles.input, 
+                  styles.dateInput, 
+                  errors.dataEvento && styles.inputError,
+                  { 
+                    backgroundColor: inputBackgroundColor,
+                    color: inputTextColor,
+                    borderColor: borderColor
+                  }
+                ]}
                 placeholder="Selecione a data"
-                placeholderTextColor="#666"
+                placeholderTextColor={placeholderColor}
                 value={selectedDate ? selectedDate.toLocaleDateString('pt-BR') : ''}
                 editable={false}
               />
@@ -462,24 +498,34 @@ export default function EventosInstitution() {
                 <MaterialIcons name="calendar-today" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
-            {errors.dataEvento ? <Text style={styles.errorText}>{errors.dataEvento}</Text> : null}
+            {errors.dataEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.dataEvento}</Text> : null}
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
                 mode="date"
-                display="default"
+                display={isDarkMode ? 'spinner' : 'default'}
                 onChange={handleDateChange}
                 minimumDate={new Date()}
                 maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
+                themeVariant={isDarkMode ? 'dark' : 'light'}
               />
             )}
 
-            <Text style={styles.label}>Horário do Evento</Text>
+            <Text style={[styles.label, {color: modalTextColor}]}>Horário do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
-                style={[styles.input, styles.dateInput, errors.horarioEvento && styles.inputError]}
+                style={[
+                  styles.input, 
+                  styles.dateInput, 
+                  errors.horarioEvento && styles.inputError,
+                  { 
+                    backgroundColor: inputBackgroundColor,
+                    color: inputTextColor,
+                    borderColor: borderColor
+                  }
+                ]}
                 placeholder="Selecione o horário"
-                placeholderTextColor="#666"
+                placeholderTextColor={placeholderColor}
                 value={selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 editable={false}
               />
@@ -487,20 +533,29 @@ export default function EventosInstitution() {
                 <MaterialIcons name="access-time" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
-            {errors.horarioEvento ? <Text style={styles.errorText}>{errors.horarioEvento}</Text> : null}
+            {errors.horarioEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.horarioEvento}</Text> : null}
             {showTimePicker && (
               <DateTimePicker
                 value={selectedTime}
                 mode="time"
-                display="default"
+                display={isDarkMode ? 'spinner' : 'default'}
                 onChange={handleTimeChange}
+                themeVariant={isDarkMode ? 'dark' : 'light'}
               />
             )}
 
             <TextInput
-              style={[styles.input, errors.localEvento && styles.inputError]}
+              style={[
+                styles.input, 
+                errors.localEvento && styles.inputError,
+                { 
+                  backgroundColor: inputBackgroundColor,
+                  color: inputTextColor,
+                  borderColor: borderColor
+                }
+              ]}
               placeholder="Local"
-              placeholderTextColor="#666"
+              placeholderTextColor={placeholderColor}
               value={localEvento}
               onChangeText={(text) => {
                 setLocalEvento(text);
@@ -509,7 +564,7 @@ export default function EventosInstitution() {
                 }
               }}
             />
-            {errors.localEvento ? <Text style={styles.errorText}>{errors.localEvento}</Text> : null}
+            {errors.localEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.localEvento}</Text> : null}
 
             <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
               <Text style={styles.addButtonText}>
@@ -537,7 +592,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
   },
   container: {
-    backgroundColor: '#FFF',
     padding: 15,
     borderRadius: 15,
     marginTop: 10,
@@ -560,29 +614,23 @@ const styles = StyleSheet.create({
     width: '90%',
     padding: 20,
     borderRadius: 15,
-    backgroundColor: '#FFF',
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#000',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#CCC',
     borderRadius: 10,
     padding: 12,
     marginBottom: 5,
-    color: '#000',
-    backgroundColor: '#FFF',
   },
   inputError: {
     borderColor: '#FF3B30',
   },
   errorText: {
-    color: '#FF3B30',
     fontSize: 12,
     marginBottom: 10,
     alignSelf: 'flex-start',
@@ -595,7 +643,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: 10,
-    backgroundColor: '#D9534F',
     borderRadius: 15,
     width: 30,
     height: 30,
@@ -611,7 +658,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 10,
-    color: '#000',
     marginBottom: 5,
   },
   dateContainer: {

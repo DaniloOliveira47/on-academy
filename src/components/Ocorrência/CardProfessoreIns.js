@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         backgroundColor: 'white',
-        padding: 5,
+   
         width: 80,
         height: 80,
         position: 'absolute',

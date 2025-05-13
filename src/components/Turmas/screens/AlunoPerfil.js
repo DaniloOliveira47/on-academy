@@ -224,7 +224,7 @@ export default function AlunoPerfil({ route }) {
             <View key={index} style={[styles.containerPerguntas, { backgroundColor: perfilBackgroundColor }]}>
                 <Perguntas numero={(index + 1).toString()} text={pergunta} />
                 <View style={styles.avaliacaoContainer}>
-                    {[...Array(10)].map((_, i) => (
+                    {[...Array(5)].map((_, i) => (
                         <Avaliacao
                             key={i}
                             numero={(i + 1).toString()}
@@ -287,10 +287,14 @@ export default function AlunoPerfil({ route }) {
                         elevation: 3,
                     }]}>
                         <View style={styles.linhaUser}>
+                            <View style={{backgroundColor: 'white', borderRadius: 40}}>
+
+                            
                             <Image
                                 source={aluno.imageUrl ? { uri: aluno.imageUrl } : require('../../../assets/image/Professor.png')}
                                 style={styles.profileImage}
                             />
+                            </View>
                             <View style={styles.name}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={[styles.nome, { color: textColor }]}>{aluno.nome}</Text>

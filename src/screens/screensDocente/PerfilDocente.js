@@ -21,7 +21,7 @@ export default function PerfilDocente() {
           const data = await response.json();
           console.log('Dados do docente:', data);
           setDadosDocente(data);
-          
+
           // Verifica se há uma URL de imagem no perfil
           if (data.imageUrl) { // Alterado para fotoDocente (ajuste conforme seu backend)
             setFotoPerfil({ uri: data.imageUrl });
@@ -45,20 +45,20 @@ export default function PerfilDocente() {
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
   const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
-  
+
   return (
     <View>
       <HeaderSimples titulo="PERFIL DOCENTE" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
           <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>
-            Bem-Vindo, Prof. {dadosDocente ? dadosDocente.nomeDocente : 'Carregando...'}
+            Bem-Vindo(a), Prof. {dadosDocente ? dadosDocente.nomeDocente : 'Carregando...'}
           </Text>
         </View>
         <View>
           <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
           <View style={[styles.form, {
-            backgroundColor: formBackgroundColor, 
+            backgroundColor: formBackgroundColor,
             shadowColor: isDarkMode ? '#FFF' : '#000',
             shadowOpacity: 0.1,
             shadowRadius: 4,
@@ -67,12 +67,16 @@ export default function PerfilDocente() {
             {dadosDocente && (
               <>
                 <View style={styles.linhaUser}>
-                  <Image 
-                    source={fotoPerfil} 
-                    style={styles.fotoPerfil}
-                    onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
-                    defaultSource={require('../../assets/image/Professor.png')}
-                  />
+                  <View style={{backgroundColor: 'white', borderRadius: 50}}>
+
+
+                    <Image
+                      source={fotoPerfil}
+                      style={styles.fotoPerfil}
+                      onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
+                      defaultSource={require('../../assets/image/Professor.png')}
+                    />
+                  </View>
                   <View style={styles.name}>
                     <Text style={[styles.nome, { color: textColor }]}>{dadosDocente.nomeDocente}</Text>
                     <Text style={[styles.email, { color: textColor }]}>{dadosDocente.emailDocente}</Text>

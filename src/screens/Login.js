@@ -19,13 +19,15 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
+import { useTheme } from '../path/ThemeContext';
 
 export default function Login() {
   const navigation = useNavigation();
   const [password, setPassword] = useState('');
   const [matricula, setMatricula] = useState('');
   const [secureText, setSecureText] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+ const { isDarkMode, setIsDarkMode } = useTheme();
+
   const [activeInput, setActiveInput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -235,14 +237,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    flexGrow: 1,
+          flexGrow: 1,
   },
   themeSwitch: {
     position: 'absolute',
     top: 40,
     right: 10,
     zIndex: 10,
-  },
+  }, 
   imageContainer: {
     width: '100%',
     height: 260,
@@ -252,8 +254,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     marginLeft: 9
-  },
-  subTela: {
+   },
+  subTela: {      
     flex: 1,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,

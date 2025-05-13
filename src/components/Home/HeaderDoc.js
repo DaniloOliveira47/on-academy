@@ -7,6 +7,7 @@ import ProximosEventos from '../Eventos/proximosEventos';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LogoutButton from '../Gerais/logOut';
 
 export default function HeaderDoc() {
   const { isDarkMode, setIsDarkMode } = useTheme();
@@ -44,7 +45,7 @@ export default function HeaderDoc() {
         const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${alunoId}`);
         setAluno(alunoResponse.data);
       } catch (error) {
-    
+
       }
     };
 
@@ -110,7 +111,7 @@ export default function HeaderDoc() {
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
               <Icon name={isDarkMode ? 'moon' : 'sun'} size={20} color="#FFF" />
             </TouchableOpacity>
-          
+
           </View>
         </View>
       </View>
@@ -128,12 +129,18 @@ export default function HeaderDoc() {
           <View style={styles.menuItem}>
             <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-                <View style={{ flexDirection: 'row', gap: 20 }}>
-                source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
+                  <View style={{backgroundColor: 'white', borderRadius: 16}}>
+                    <Image
+                      style={styles.imgPerfil}
+                      source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                    />
+                  </View>
                   <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
                     {aluno ? aluno.nomeDocente.split(' ').slice(0, 2).join(' ') : 'Carregando...'}
                   </Text>
                 </View>
+
                 <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
               </View>
             </TouchableOpacity>
@@ -166,6 +173,14 @@ export default function HeaderDoc() {
                 )}
               </View>
             </View>
+            <View style={styles.menuItem}>
+              <LogoutButton
+                iconColor="#e74c3c"
+                textColor="#e74c3c"
+                onLogoutSuccess={() => console.log('Logout realizado com sucesso')}
+                onLogoutError={(error) => console.error('Erro no logout:', error)}
+              />
+            </View>
           </View>
         </ScrollView>
       </Animated.View>
@@ -186,6 +201,23 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
   },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  logoutIcon: {
+    marginRight: 10,
+  },
+  logoutText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
   menuContainer: {
     width: 30,
     height: 30,
