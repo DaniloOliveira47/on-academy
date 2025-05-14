@@ -160,9 +160,12 @@ export default function HeaderIns() {
             </View>
           </View>
 
-          <View style={[styles.menuItem, { height: 'auto', borderRadius: 20 }]}>
-            <CustomCalendar events={events} />
+          <View style={styles.menuItem}>
+            <View style={styles.calendarWrapper}>
+              <CustomCalendar events={events} />
+            </View>
           </View>
+
 
           <View style={styles.menuItem}>
             <View style={[styles.contEventos, { backgroundColor: container }]}>
@@ -209,6 +212,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
   },
+  calendarWrapper: {
+    borderRadius: 20,
+    padding: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff', // ou a cor de fundo que preferir
+  },
+
   contEventos: {
     width: '100%',
     height: 'auto',

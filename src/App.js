@@ -1,28 +1,42 @@
 import React from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+
 import LoginScreen from './screens/Login';
 import Navigation from './Navigation';
-import { ThemeProvider } from './path/ThemeContext';
-import Perfil from './screens/screensAluno/Perfil';
 import NavigationDocente from './NavigationDocente';
+import NavigationInstituicao from './NavigationInstituicao';
+
+import Perfil from './screens/screensAluno/Perfil';
 import NotasTurma from './components/Turmas/screens/NotasTurma';
 import AlunosFeedback from './components/Turmas/screens/AlunosFeedback';
 import AlunoPerfil from './components/Turmas/screens/AlunoPerfil';
 import ProfessorPerfil from './screens/screensAluno/PerfilProfessor';
 import TurmasInstituicao from './screens/screensInstituicao/Turmas';
-import NavigationInstituicao from './NavigationInstituicao'
 import PerfilDocente from './screens/screensDocente/PerfilDocente';
 import PerfilProfessor from './components/EditarTurmas/screens/PerfilProfessor';
 import PerfilInstitution from './screens/screensInstituicao/PerfilInstitution';
 
+import { ThemeProvider, useTheme } from './path/ThemeContext';
+
 const Stack = createStackNavigator();
 
-export default function App() {
+function AppNavigation() {
+  const { isDarkMode } = useTheme();
+
   return (
-    <ThemeProvider>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }}>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: isDarkMode ? '#121212' : '#F0F7FF',
+            },
+          }}
+        >
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Main" component={Navigation} />
           <Stack.Screen name="MainIns" component={NavigationInstituicao} />
@@ -38,6 +52,14 @@ export default function App() {
           <Stack.Screen name="PerfilInstitution" component={PerfilInstitution} />
         </Stack.Navigator>
       </NavigationContainer>
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppNavigation />
     </ThemeProvider>
   );
 }

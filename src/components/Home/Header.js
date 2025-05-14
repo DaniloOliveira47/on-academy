@@ -133,14 +133,14 @@ export default function Header() {
             <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
                 <View style={{ flexDirection: 'row', gap: 20 }}>
-                  <View style={{backgroundColor: 'white', borderRadius: 16}}>
+                  <View style={{ backgroundColor: 'white', borderRadius: 16 }}>
 
-                 
-                  <Image
-                    style={styles.imgPerfil}
-                    source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
-                  />
-                   </View>
+
+                    <Image
+                      style={styles.imgPerfil}
+                      source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                    />
+                  </View>
                   <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
                     {aluno ? aluno.nome.split(' ')[0] : 'Carregando...'}
                   </Text>
@@ -153,9 +153,12 @@ export default function Header() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.menuItem, { height: 'auto' }]}>
-            <CustomCalendar events={events} isHeader={true} />
+          <View style={styles.menuItem}>
+            <View style={styles.calendarWrapper}>
+              <CustomCalendar events={events} />
+            </View>
           </View>
+
 
           <View style={styles.menuItem}>
             <View style={[styles.contEventos, { backgroundColor: container }]}>
@@ -202,6 +205,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
   },
+  calendarWrapper: {
+  borderRadius: 20,
+  padding: 10,
+  overflow: 'hidden',
+  backgroundColor: '#fff', // ou a cor de fundo que preferir
+},
+
   contEventos: {
     width: '100%',
     height: 'auto',

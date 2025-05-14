@@ -130,7 +130,7 @@ export default function HeaderDoc() {
             <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
-                  <View style={{backgroundColor: 'white', borderRadius: 16}}>
+                  <View style={{ backgroundColor: 'white', borderRadius: 16 }}>
                     <Image
                       style={styles.imgPerfil}
                       source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
@@ -146,9 +146,12 @@ export default function HeaderDoc() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.menuItem, { height: 'auto' }]}>
-            <CustomCalendar events={events} />
+          <View style={styles.menuItem}>
+            <View style={styles.calendarWrapper}>
+              <CustomCalendar events={events} />
+            </View>
           </View>
+
 
           <View style={styles.menuItem}>
             <View style={[styles.contEventos, { backgroundColor: container }]}>
@@ -259,6 +262,12 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     resizeMode: 'contain',
+  },
+  calendarWrapper: {
+    borderRadius: 20,
+    padding: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff', // ou a cor de fundo que preferir
   },
   header: {
     overflow: 'hidden',

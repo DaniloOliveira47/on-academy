@@ -108,7 +108,7 @@ export default function Alunos() {
             ]);
             setTotalFeedbacks(totalFeedbacks);
         } catch (error) {
-       
+
             setHasFeedbacks(false);
             setDadosGrafico([0, 0, 0, 0, 0]);
             setTotalFeedbacks(0);
@@ -191,58 +191,59 @@ export default function Alunos() {
     }
 
     return (
-        <ScrollView style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderSimples
-                titulo="ALUNOS"
-            />
-            <View style={{ padding: 10 }}>
-                <View style={styles.linha}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
-                        {nomeTurma} - {periodoTurma}
-                    </Text>
-                </View>
-
-                <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
-                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
-                        <TextInput
-                            style={[styles.input, { color: isDarkMode ? 'white' : 'black' }]}
-                            placeholder="Digite o nome ou código da turma"
-                            placeholderTextColor={isDarkMode ? '#AAA' : '#756262'}
-                            value={filtro}
-                            onChangeText={filtrarAlunos}
-                        />
-                        <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
+        <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }}>
+            <ScrollView style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+                <HeaderSimples
+                    titulo="ALUNOS"
+                />
+                <View style={{ padding: 10 }}>
+                    <View style={styles.linha}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
+                            {nomeTurma} - {periodoTurma}
+                        </Text>
                     </View>
 
-                    <View style={styles.tableHeader}>
-                        <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
-                        <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
-                        <Text style={[styles.headerText, { flex: 1 }]}>Média (%)</Text>
-                        <Text style={[styles.headerText, { flex: 1 }]}>Perfil</Text>
-                    </View>
+                    <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+                        <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+                            <TextInput
+                                style={[styles.input, { color: isDarkMode ? 'white' : 'black' }]}
+                                placeholder="Digite o nome ou código da turma"
+                                placeholderTextColor={isDarkMode ? '#AAA' : '#756262'}
+                                value={filtro}
+                                onChangeText={filtrarAlunos}
+                            />
+                            <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
+                        </View>
 
-                    <ScrollView>
-                        {alunos.length > 0 ? (
-                            alunos.map((aluno) => (
-                                <View key={aluno.id} style={styles.tableRow}>
-                                    <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>{aluno.nomeAluno}</Text>
-                                    <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.identifierCode}</Text>
-                                    <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.mediaNota}</Text>
-                                    <TouchableOpacity
-                                        style={styles.notasButton}
-                                        onPress={() => navigation.navigate('PerfilAluno', { alunoId: aluno.id })}
-                                    >
-                                        <Text style={styles.notasText}>Visualizar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            ))
-                        ) : (
-                            <Text style={{ color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>
-                                Nenhum aluno disponível.
-                            </Text>
-                        )}
-                    </ScrollView>
-                    <View style={styles.graficoContainer}>
+                        <View style={styles.tableHeader}>
+                            <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
+                            <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
+                            <Text style={[styles.headerText, { flex: 1 }]}>Média (%)</Text>
+                            <Text style={[styles.headerText, { flex: 1 }]}>Perfil</Text>
+                        </View>
+
+                        <ScrollView>
+                            {alunos.length > 0 ? (
+                                alunos.map((aluno) => (
+                                    <View key={aluno.id} style={styles.tableRow}>
+                                        <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>{aluno.nomeAluno}</Text>
+                                        <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.identifierCode}</Text>
+                                        <Text style={[styles.rowText, { flex: 1, color: isDarkMode ? 'white' : 'black' }]}>{aluno.mediaNota}</Text>
+                                        <TouchableOpacity
+                                            style={styles.notasButton}
+                                            onPress={() => navigation.navigate('PerfilAluno', { alunoId: aluno.id })}
+                                        >
+                                            <Text style={styles.notasText}>Visualizar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>
+                                    Nenhum aluno disponível.
+                                </Text>
+                            )}
+                        </ScrollView>
+                        <View style={styles.graficoContainer}>
                             {hasFeedbacks ? (
                                 <GraficoFeedbackTurma
                                     dadosGrafico={dadosGrafico}
@@ -259,48 +260,49 @@ export default function Alunos() {
                             )}
                         </View>
 
-                    <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
-                        <TouchableOpacity
-                            style={styles.botaoCriar}
-                            onPress={() => setModalCriarVisible(true)}
-                            disabled={isCreating}
-                        >
-                            {isCreating ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <Icon name="plus" size={24} color="white" />
-                            )}
-                        </TouchableOpacity>
-                        
-                 
-                        
-                        <CadastroAlunoModal
-                            visible={modalCriarVisible}
-                            onClose={() => setModalCriarVisible(false)}
-                            turmaId={turmaId}
-                            isCreating={isCreating}
-                            onCreate={handleCreateAluno}
-                        />
+                        <View style={{ flex: 1, width: '100%', alignItems: 'flex-end', marginTop: 10 }}>
+                            <TouchableOpacity
+                                style={styles.botaoCriar}
+                                onPress={() => setModalCriarVisible(true)}
+                                disabled={isCreating}
+                            >
+                                {isCreating ? (
+                                    <ActivityIndicator size="small" color="white" />
+                                ) : (
+                                    <Icon name="plus" size={24} color="white" />
+                                )}
+                            </TouchableOpacity>
+
+
+
+                            <CadastroAlunoModal
+                                visible={modalCriarVisible}
+                                onClose={() => setModalCriarVisible(false)}
+                                turmaId={turmaId}
+                                isCreating={isCreating}
+                                onCreate={handleCreateAluno}
+                            />
+                        </View>
                     </View>
                 </View>
-            </View>
-            <Modal visible={modalBarraVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
-                        <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
-                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
-                            {barraSelecionada.value.toFixed(1)}
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
-                            onPress={() => setModalBarraVisible(false)}
-                        >
-                            <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
-                        </TouchableOpacity>
+                <Modal visible={modalBarraVisible} transparent animationType="slide">
+                    <View style={styles.modalBackdrop}>
+                        <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
+                            <Text style={[styles.modalTitle, { color: 'white' }]}>{barraSelecionada.label}</Text>
+                            <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                                {barraSelecionada.value.toFixed(1)}
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
+                                onPress={() => setModalBarraVisible(false)}
+                            >
+                                <Text style={[styles.buttonText, { color: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>Fechar</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </Modal>
-        </ScrollView>
+                </Modal>
+            </ScrollView>
+        </View>
     );
 }
 
