@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     },
     contentWrapper: {
         flex: 1,
-        marginBottom: 70,
+        paddingBottom: 70,
     },
     scrollContent: {
         paddingBottom: 20,

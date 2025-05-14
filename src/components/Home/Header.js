@@ -206,11 +206,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   calendarWrapper: {
-  borderRadius: 20,
-  padding: 10,
-  overflow: 'hidden',
-  backgroundColor: '#fff', // ou a cor de fundo que preferir
-},
+    borderRadius: 20,
+    padding: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff', // ou a cor de fundo que preferir
+  },
 
   contEventos: {
     width: '100%',

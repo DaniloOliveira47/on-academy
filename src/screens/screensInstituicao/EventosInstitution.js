@@ -47,7 +47,7 @@ export default function EventosInstitution() {
   // Cores baseadas no tema
   const backgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
-  const containerColor = isDarkMode ? '#1E1E1E' : '#FFF';
+  const containerColor = isDarkMode ? '#000' : '#fff';
   const modalBackgroundColor = isDarkMode ? '#1E1E1E' : '#FFF';
   const modalTextColor = isDarkMode ? '#FFF' : '#000';
   const inputBackgroundColor = isDarkMode ? '#333' : '#FFF';
