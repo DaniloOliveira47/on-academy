@@ -91,6 +91,16 @@ export default function Header() {
   const formatDate = (dateTime) => {
     return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
   };
+  const eventosFuturos = events
+    .filter((event) => {
+      const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+      return eventDateTime > new Date();
+    })
+    .sort((a, b) => {
+      const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
+      const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
+      return dateA - dateB; // ordem crescente: mais próximo primeiro
+    });
 
   return (
     <>
@@ -163,9 +173,14 @@ export default function Header() {
           <View style={styles.menuItem}>
             <View style={[styles.contEventos, { backgroundColor: container }]}>
               <Text style={{ fontWeight: 'bold', color: textColor }}>Próximos Eventos</Text>
-              <View>
-                {events.length > 0 ? (
-                  events.map((event, index) => {
+              <ScrollView
+                style={{ maxHeight: 300 }}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+
+                {eventosFuturos.length > 0 ? (
+                  eventosFuturos.map((event, index) => {
                     const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
                     return (
                       <ProximosEventos
@@ -179,9 +194,9 @@ export default function Header() {
                     );
                   })
                 ) : (
-                  <Text style={{ color: textColor }}>Nenhum evento disponível.</Text>
+                  <Text style={{ color: textColor }}>Nenhum evento futuro disponível.</Text>
                 )}
-              </View>
+              </ScrollView>
             </View>
           </View>
           <View style={styles.menuItem}>

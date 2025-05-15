@@ -101,7 +101,7 @@ export default function EventosInstitution() {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
-      setErrors(prev => ({...prev, dataEvento: ''}));
+      setErrors(prev => ({ ...prev, dataEvento: '' }));
     }
   };
 
@@ -109,7 +109,7 @@ export default function EventosInstitution() {
     setShowTimePicker(false);
     if (time) {
       setSelectedTime(time);
-      setErrors(prev => ({...prev, horarioEvento: ''}));
+      setErrors(prev => ({ ...prev, horarioEvento: '' }));
     }
   };
 
@@ -134,17 +134,17 @@ export default function EventosInstitution() {
     setTituloEvento(event.tituloEvento);
     setLocalEvento(event.localEvento);
     setDescricaoEvento(event.descricaoEvento);
-    
+
     // Formata a data do evento
     const [year, month, day] = event.dataEvento.split('-');
     setSelectedDate(new Date(year, month - 1, day));
-    
+
     // Formata o horário do evento
     const [hours, minutes] = event.horarioEvento.split(':');
     const timeDate = new Date();
     timeDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     setSelectedTime(timeDate);
-    
+
     setIsEditMode(true);
     setSelectedEventId(event.id);
     setModalVisible(true);
@@ -153,22 +153,22 @@ export default function EventosInstitution() {
   const validateEventDate = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Verifica se a data é anterior à data atual
     if (date < today) {
-      setErrors(prev => ({...prev, dataEvento: 'Não é possível agendar eventos para datas passadas'}));
+      setErrors(prev => ({ ...prev, dataEvento: 'Não é possível agendar eventos para datas passadas' }));
       return false;
     }
-    
+
     // Verifica se a data é mais de 2 anos no futuro
     const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() + 2);
-    
+
     if (date > maxDate) {
-      setErrors(prev => ({...prev, dataEvento: 'Não é possível agendar eventos com mais de 2 anos de antecedência'}));
+      setErrors(prev => ({ ...prev, dataEvento: 'Não é possível agendar eventos com mais de 2 anos de antecedência' }));
       return false;
     }
-    
+
     return true;
   };
 
@@ -223,7 +223,7 @@ export default function EventosInstitution() {
 
       // Formata a data como YYYY-MM-DD
       const formattedDate = selectedDate.toISOString().split('T')[0];
-      
+
       // Formata o horário como HH:MM:SS
       const hours = selectedTime.getHours().toString().padStart(2, '0');
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
@@ -237,10 +237,10 @@ export default function EventosInstitution() {
         descricaoEvento: descricaoEvento.trim(),
       };
 
-      const url = isEditMode 
+      const url = isEditMode
         ? `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event/${selectedEventId}`
         : 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event';
-      
+
       const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -270,7 +270,7 @@ export default function EventosInstitution() {
   const handleDeleteEvent = async () => {
     try {
       if (!selectedEventId) return;
-      
+
       const token = await AsyncStorage.getItem('@user_token');
       if (!token) {
         Alert.alert('Erro', 'Token não encontrado. Faça login novamente.');
@@ -344,17 +344,17 @@ export default function EventosInstitution() {
               <Text style={{ fontSize: 20, color: textColor }}>
                 {selectedEvent.localEvento}
               </Text>
-              
+
               {/* Botões de Editar e Excluir */}
               <View style={styles.buttonContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#0077FF' }]}
                   onPress={() => prepareEditForm(selectedEvent)}
                 >
                   <Text style={styles.buttonText}>Editar</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#D9534F' }]}
                   onPress={handleDeleteEvent}
                 >
@@ -371,26 +371,37 @@ export default function EventosInstitution() {
             Próximos Eventos
           </Text>
           <View>
-            {events.map((event, index) => {
-              const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-              return (
-                <TouchableOpacity 
-                  key={index} 
-                  onPress={() => handleDayPress(event.id)}
-                  onLongPress={() => prepareEditForm(event)}
-                >
-                  <ProximosEventos
-                    data={eventDateTime.getDate()}
-                    titulo={event.tituloEvento}
-                    subData={formatDate(eventDateTime)}
-                    periodo={formatTime(eventDateTime)}
-                    color={eventColors[event.id] || '#0077FF'}
-                  />
-                </TouchableOpacity>
-              );
-            })}
+            {events
+              .filter(event => {
+                const eventDateTime = new Date(`${event.dataEvento}T${event.horarioEvento}`);
+                return eventDateTime >= new Date();
+              })
+              .sort((a, b) => {
+                const dateA = new Date(`${a.dataEvento}T${a.horarioEvento}`);
+                const dateB = new Date(`${b.dataEvento}T${b.horarioEvento}`);
+                return dateA - dateB;
+              })
+              .map((event, index) => {
+                const eventDateTime = new Date(`${event.dataEvento}T${event.horarioEvento}`);
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleDayPress(event.id)}
+                    onLongPress={() => prepareEditForm(event)}
+                  >
+                    <ProximosEventos
+                      data={eventDateTime.getDate()}
+                      titulo={event.tituloEvento}
+                      subData={formatDate(eventDateTime)}
+                      periodo={formatTime(eventDateTime)}
+                      color={eventColors[event.id] || '#0077FF'}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
           </View>
         </View>
+
       </View>
 
       {/* Botão Flutuante para Adicionar Evento */}
@@ -416,8 +427,8 @@ export default function EventosInstitution() {
       >
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { backgroundColor: modalBackgroundColor }]}>
-            <TouchableOpacity 
-              style={[styles.closeButton, { backgroundColor: '#D9534F' }]} 
+            <TouchableOpacity
+              style={[styles.closeButton, { backgroundColor: '#D9534F' }]}
               onPress={() => {
                 setModalVisible(false);
                 resetForm();
@@ -432,9 +443,9 @@ export default function EventosInstitution() {
 
             <TextInput
               style={[
-                styles.input, 
+                styles.input,
                 errors.tituloEvento && styles.inputError,
-                { 
+                {
                   backgroundColor: inputBackgroundColor,
                   color: inputTextColor,
                   borderColor: borderColor
@@ -446,18 +457,18 @@ export default function EventosInstitution() {
               onChangeText={(text) => {
                 setTituloEvento(text);
                 if (text.trim()) {
-                  setErrors(prev => ({...prev, tituloEvento: ''}));
+                  setErrors(prev => ({ ...prev, tituloEvento: '' }));
                 }
               }}
             />
-            {errors.tituloEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.tituloEvento}</Text> : null}
+            {errors.tituloEvento ? <Text style={[styles.errorText, { color: '#FF3B30' }]}>{errors.tituloEvento}</Text> : null}
 
             <TextInput
               style={[
-                styles.input, 
-                styles.description, 
+                styles.input,
+                styles.description,
                 errors.descricaoEvento && styles.inputError,
-                { 
+                {
                   backgroundColor: inputBackgroundColor,
                   color: inputTextColor,
                   borderColor: borderColor
@@ -470,20 +481,20 @@ export default function EventosInstitution() {
               onChangeText={(text) => {
                 setDescricaoEvento(text);
                 if (text.trim()) {
-                  setErrors(prev => ({...prev, descricaoEvento: ''}));
+                  setErrors(prev => ({ ...prev, descricaoEvento: '' }));
                 }
               }}
             />
-            {errors.descricaoEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.descricaoEvento}</Text> : null}
+            {errors.descricaoEvento ? <Text style={[styles.errorText, { color: '#FF3B30' }]}>{errors.descricaoEvento}</Text> : null}
 
-            <Text style={[styles.label, {color: modalTextColor}]}>Data do Evento</Text>
+            <Text style={[styles.label, { color: modalTextColor }]}>Data do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
                 style={[
-                  styles.input, 
-                  styles.dateInput, 
+                  styles.input,
+                  styles.dateInput,
                   errors.dataEvento && styles.inputError,
-                  { 
+                  {
                     backgroundColor: inputBackgroundColor,
                     color: inputTextColor,
                     borderColor: borderColor
@@ -498,7 +509,7 @@ export default function EventosInstitution() {
                 <MaterialIcons name="calendar-today" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
-            {errors.dataEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.dataEvento}</Text> : null}
+            {errors.dataEvento ? <Text style={[styles.errorText, { color: '#FF3B30' }]}>{errors.dataEvento}</Text> : null}
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
@@ -511,14 +522,14 @@ export default function EventosInstitution() {
               />
             )}
 
-            <Text style={[styles.label, {color: modalTextColor}]}>Horário do Evento</Text>
+            <Text style={[styles.label, { color: modalTextColor }]}>Horário do Evento</Text>
             <View style={styles.dateContainer}>
               <TextInput
                 style={[
-                  styles.input, 
-                  styles.dateInput, 
+                  styles.input,
+                  styles.dateInput,
                   errors.horarioEvento && styles.inputError,
-                  { 
+                  {
                     backgroundColor: inputBackgroundColor,
                     color: inputTextColor,
                     borderColor: borderColor
@@ -533,7 +544,7 @@ export default function EventosInstitution() {
                 <MaterialIcons name="access-time" size={24} color="#0077FF" />
               </TouchableOpacity>
             </View>
-            {errors.horarioEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.horarioEvento}</Text> : null}
+            {errors.horarioEvento ? <Text style={[styles.errorText, { color: '#FF3B30' }]}>{errors.horarioEvento}</Text> : null}
             {showTimePicker && (
               <DateTimePicker
                 value={selectedTime}
@@ -546,9 +557,9 @@ export default function EventosInstitution() {
 
             <TextInput
               style={[
-                styles.input, 
+                styles.input,
                 errors.localEvento && styles.inputError,
-                { 
+                {
                   backgroundColor: inputBackgroundColor,
                   color: inputTextColor,
                   borderColor: borderColor
@@ -560,11 +571,11 @@ export default function EventosInstitution() {
               onChangeText={(text) => {
                 setLocalEvento(text);
                 if (text.trim()) {
-                  setErrors(prev => ({...prev, localEvento: ''}));
+                  setErrors(prev => ({ ...prev, localEvento: '' }));
                 }
               }}
             />
-            {errors.localEvento ? <Text style={[styles.errorText, {color: '#FF3B30'}]}>{errors.localEvento}</Text> : null}
+            {errors.localEvento ? <Text style={[styles.errorText, { color: '#FF3B30' }]}>{errors.localEvento}</Text> : null}
 
             <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
               <Text style={styles.addButtonText}>

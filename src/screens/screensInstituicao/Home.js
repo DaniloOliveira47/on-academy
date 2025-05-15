@@ -25,7 +25,7 @@ export default function HomeInstituicao() {
                     // Fetch das turmas
                     const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
                     console.log('Resposta da API (Turmas):', turmasResponse.data);
-                    
+
                     if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
                         setTurmas(turmasResponse.data);
                     } else {
@@ -64,40 +64,40 @@ export default function HomeInstituicao() {
                 Alert.alert('Aviso', 'Por favor, selecione uma turma.');
                 return;
             }
-    
+
             const instituicaoId = await AsyncStorage.getItem('@user_id');
             const token = await AsyncStorage.getItem('@user_token');
-            
+
             if (!instituicaoId || !token) {
                 Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
                 return;
             }
-    
+
             if (!conteudoAviso.trim()) {
                 Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
                 return;
             }
-    
+
             const avisoData = {
                 conteudo: conteudoAviso,
                 createdByInstitution: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
-    
+
             await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             // Recarrega os avisos após o envio
             const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
             const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
             );
             setAvisos(avisosOrdenados);
-    
+
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
         } catch (error) {
@@ -198,29 +198,36 @@ export default function HomeInstituicao() {
                             nestedScrollEnabled={true}
                         >
                             {avisos.length > 0 ? (
-                                avisos.map((aviso) => {
-                                    // Extrai os dois primeiros nomes do criador do aviso
-                                    const doisPrimeirosNomes = aviso.criadoPorNome ?
-                                        aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
-                                        'Instituição';
+                                avisos
+                                    .filter(aviso => {
+                                        const agora = new Date();
+                                        const dataAviso = new Date(aviso.horarioSistema);
+                                        const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
+                                        return diferencaEmDias <= 7;
+                                    })
+                                    .map((aviso) => {
+                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                            'Instituição';
 
-                                    return (
-                                        <Avisos
-                                            key={aviso.id}
-                                            abreviacao={aviso.initials}
-                                            nome={doisPrimeirosNomes}
-                                            horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                            texto={aviso.conteudo}
-                                            aleatorio={gerarCorAleatoria()}
-                                        />
-                                    );
-                                })
+                                        return (
+                                            <Avisos
+                                                key={aviso.id}
+                                                abreviacao={aviso.initials}
+                                                nome={doisPrimeirosNomes}
+                                                horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                                texto={aviso.conteudo}
+                                                aleatorio={gerarCorAleatoria()}
+                                            />
+                                        );
+                                    })
+
                             ) : (
                                 <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
                                     Nenhum aviso disponível.
