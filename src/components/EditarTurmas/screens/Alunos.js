@@ -196,7 +196,7 @@ export default function Alunos() {
                 <HeaderSimples
                     titulo="ALUNOS"
                 />
-                <View style={{ padding: 10 }}>
+                <View style={{ padding: 10, paddingBottom: 20 }}>
                     <View style={styles.linha}>
                         <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
                             {nomeTurma} - {periodoTurma}
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     },
     graficoContainer: {
         marginBottom: 20,
-        padding: 10,
+        padding: 0,
         width: '100%',
     },
     noFeedbackContainer: {

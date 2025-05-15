@@ -251,165 +251,162 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
 
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
                     <Image
-                        style={{ width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10, height
-                            
-                            
-                            
-                            
-                            
-                             : 100 }}
+                        style={{
+                            width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10, height
+                                : 100
+                        }}
                         source={require('../../assets/image/barraAzul.png')}
                     />
-                    <View style={{width: '100%', padding: 20}}>
+                    <View style={{ width: '100%', padding: 20 }}>
 
-                    
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={onClose}
-                        disabled={isCreating}
-                    >
-                        <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
-                    </TouchableOpacity>
 
-                    {/* Profile Image Picker */}
-                    <View style={styles.imagePickerContainer}>
-                        <TouchableOpacity onPress={pickImage} disabled={isCreating}>
-                            <Image
-                                source={profileImage ?
-                                    { uri: profileImage } :
-                                    require('../../assets/image/icon_add_user.png')}
-                                style={styles.profileImage}
-                            />
-                        </TouchableOpacity>
-                        <Text style={[styles.imagePickerText, isDarkMode && styles.darkText]}>
-                            {profileImage ? 'Alterar Foto' : 'Adicionar Foto'}
-                        </Text>
-                    </View>
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.nomeDocente && styles.inputError]}
-                        placeholder="Nome Completo"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        value={nomeDocente}
-                        onChangeText={(text) => {
-                            setNomeDocente(text);
-                            if (text.trim()) {
-                                setErrors(prev => ({ ...prev, nomeDocente: '' }));
-                            }
-                        }}
-                        editable={!isCreating}
-                    />
-                    {errors.nomeDocente ? <Text style={styles.errorText}>{errors.nomeDocente}</Text> : null}
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.emailDocente && styles.inputError]}
-                        placeholder="Email"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        value={emailDocente}
-                        onChangeText={(text) => {
-                            setEmailDocente(text);
-                            if (text.trim()) {
-                                setErrors(prev => ({ ...prev, emailDocente: '' }));
-                            }
-                        }}
-                        editable={!isCreating}
-                    />
-                    {errors.emailDocente ? <Text style={styles.errorText}>{errors.emailDocente}</Text> : null}
-
-                    <TextInput
-                        style={[styles.input,
-                        isDarkMode && styles.darkInput,
-                        errors.telefoneDocente && styles.inputError]}
-                        placeholder="Telefone (DDD) + número"
-                        placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
-                        keyboardType="phone-pad"
-                        value={telefoneDocente}
-                        onChangeText={handlePhoneChange}
-                        editable={!isCreating}
-                        maxLength={15}
-                    />
-                    {errors.telefoneDocente ? <Text style={styles.errorText}>{errors.telefoneDocente}</Text> : null}
-
-                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
-                    <View style={styles.dateContainer}>
-                        <TextInput
-                            style={[styles.input,
-                            styles.dateInput,
-                            isDarkMode && styles.darkInput,
-                            errors.dataNascimento && styles.inputError]}
-                            placeholder="Selecione a data de nascimento"
-                            placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                            value={dataNascimento}
-                            editable={false}
-                        />
                         <TouchableOpacity
-                            style={styles.dateIconButton}
-                            onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                            style={styles.closeButton}
+                            onPress={onClose}
                             disabled={isCreating}
                         >
-                            <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
+                            <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                         </TouchableOpacity>
-                    </View>
-                    {errors.dataNascimento ? <Text style={styles.errorText}>{errors.dataNascimento}</Text> : null}
-                    {showBirthDatePicker && (
-                        <DateTimePicker
-                            value={selectedBirthDate}
-                            mode="date"
-                            onChange={handleBirthDateChange}
-                            maximumDate={new Date()}
-                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                            textColor={isDarkMode ? '#FFF' : '#000'}
+
+                        {/* Profile Image Picker */}
+                        <View style={styles.imagePickerContainer}>
+                            <TouchableOpacity onPress={pickImage} disabled={isCreating}>
+                                <Image
+                                    source={profileImage ?
+                                        { uri: profileImage } :
+                                        require('../../assets/image/icon_add_user.png')}
+                                    style={styles.profileImage}
+                                />
+                            </TouchableOpacity>
+                            <Text style={[styles.imagePickerText, isDarkMode && styles.darkText]}>
+                                {profileImage ? 'Alterar Foto' : 'Adicionar Foto'}
+                            </Text>
+                        </View>
+
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.nomeDocente && styles.inputError]}
+                            placeholder="Nome Completo"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            value={nomeDocente}
+                            onChangeText={(text) => {
+                                setNomeDocente(text);
+                                if (text.trim()) {
+                                    setErrors(prev => ({ ...prev, nomeDocente: '' }));
+                                }
+                            }}
+                            editable={!isCreating}
                         />
-                    )}
+                        {errors.nomeDocente ? <Text style={styles.errorText}>{errors.nomeDocente}</Text> : null}
 
-                    <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Disciplinas</Text>
-                    {errors.disciplines ? <Text style={[styles.errorText, isDarkMode && styles.darkErrorText]}>{errors.disciplines}</Text> : null}
-                    {loadingDisciplines ? (
-                        <ActivityIndicator size="small" color={isDarkMode ? '#1A85FF' : '#1A85FF'} />
-                    ) : (
-                        <ScrollView style={[styles.disciplinesContainer, isDarkMode && styles.darkDisciplinesContainer]} contentContainerStyle={styles.disciplinesContent}>
-                            {disciplines.map(discipline => (
-                                <TouchableOpacity
-                                    key={discipline.id}
-                                    style={[
-                                        styles.disciplineItem,
-                                        isDarkMode && styles.darkDisciplineItem,
-                                        selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
-                                        isDarkMode && selectedDisciplines.includes(discipline.id) && styles.darkDisciplineItemSelected,
-                                        isCreating && styles.disabledItem
-                                    ]}
-                                    onPress={() => toggleDiscipline(discipline.id)}
-                                    disabled={isCreating}
-                                >
-                                    <Text style={[styles.disciplineText, isDarkMode && styles.darkDisciplineText]}>{discipline.nomeDisciplina}</Text>
-                                    {selectedDisciplines.includes(discipline.id) && (
-                                        <Icon name="check" size={18} color="#1A85FF" />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    )}
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.emailDocente && styles.inputError]}
+                            placeholder="Email"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={emailDocente}
+                            onChangeText={(text) => {
+                                setEmailDocente(text);
+                                if (text.trim()) {
+                                    setErrors(prev => ({ ...prev, emailDocente: '' }));
+                                }
+                            }}
+                            editable={!isCreating}
+                        />
+                        {errors.emailDocente ? <Text style={styles.errorText}>{errors.emailDocente}</Text> : null}
 
-                    <TouchableOpacity
-                        style={[
-                            styles.saveButton,
-                            isCreating && styles.saveButtonDisabled
-                        ]}
-                        onPress={handleSubmit}
-                        disabled={isCreating}
-                    >
-                        {isCreating ? (
-                            <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Salvar Professor</Text>
+                        <TextInput
+                            style={[styles.input,
+                            isDarkMode && styles.darkInput,
+                            errors.telefoneDocente && styles.inputError]}
+                            placeholder="Telefone (DDD) + número"
+                            placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
+                            keyboardType="phone-pad"
+                            value={telefoneDocente}
+                            onChangeText={handlePhoneChange}
+                            editable={!isCreating}
+                            maxLength={15}
+                        />
+                        {errors.telefoneDocente ? <Text style={styles.errorText}>{errors.telefoneDocente}</Text> : null}
+
+                        <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
+                        <View style={styles.dateContainer}>
+                            <TextInput
+                                style={[styles.input,
+                                styles.dateInput,
+                                isDarkMode && styles.darkInput,
+                                errors.dataNascimento && styles.inputError]}
+                                placeholder="Selecione a data de nascimento"
+                                placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                                value={dataNascimento}
+                                editable={false}
+                            />
+                            <TouchableOpacity
+                                style={styles.dateIconButton}
+                                onPress={() => !isCreating && setShowBirthDatePicker(true)}
+                                disabled={isCreating}
+                            >
+                                <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
+                            </TouchableOpacity>
+                        </View>
+                        {errors.dataNascimento ? <Text style={styles.errorText}>{errors.dataNascimento}</Text> : null}
+                        {showBirthDatePicker && (
+                            <DateTimePicker
+                                value={selectedBirthDate}
+                                mode="date"
+                                onChange={handleBirthDateChange}
+                                maximumDate={new Date()}
+                                themeVariant={isDarkMode ? 'dark' : 'light'}
+                                textColor={isDarkMode ? '#FFF' : '#000'}
+                            />
                         )}
-                    </TouchableOpacity>
+
+                        <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Disciplinas</Text>
+                        {errors.disciplines ? <Text style={[styles.errorText, isDarkMode && styles.darkErrorText]}>{errors.disciplines}</Text> : null}
+                        {loadingDisciplines ? (
+                            <ActivityIndicator size="small" color={isDarkMode ? '#1A85FF' : '#1A85FF'} />
+                        ) : (
+                            <ScrollView style={[styles.disciplinesContainer, isDarkMode && styles.darkDisciplinesContainer]} contentContainerStyle={styles.disciplinesContent}>
+                                {disciplines.map(discipline => (
+                                    <TouchableOpacity
+                                        key={discipline.id}
+                                        style={[
+                                            styles.disciplineItem,
+                                            isDarkMode && styles.darkDisciplineItem,
+                                            selectedDisciplines.includes(discipline.id) && styles.disciplineItemSelected,
+                                            isDarkMode && selectedDisciplines.includes(discipline.id) && styles.darkDisciplineItemSelected,
+                                            isCreating && styles.disabledItem
+                                        ]}
+                                        onPress={() => toggleDiscipline(discipline.id)}
+                                        disabled={isCreating}
+                                    >
+                                        <Text style={[styles.disciplineText, isDarkMode && styles.darkDisciplineText]}>{discipline.nomeDisciplina}</Text>
+                                        {selectedDisciplines.includes(discipline.id) && (
+                                            <Icon name="check" size={18} color="#1A85FF" />
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        )}
+
+                        <TouchableOpacity
+                            style={[
+                                styles.saveButton,
+                                isCreating && styles.saveButtonDisabled
+                            ]}
+                            onPress={handleSubmit}
+                            disabled={isCreating}
+                        >
+                            {isCreating ? (
+                                <ActivityIndicator size="small" color="#FFF" />
+                            ) : (
+                                <Text style={styles.saveButtonText}>Salvar Professor</Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -425,13 +422,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '90%',
+        width: '92%',
         backgroundColor: '#FFF',
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10,
         borderRadius: 20,
         alignItems: 'center',
-        
+
     },
     closeButton: {
         position: 'absolute',

@@ -25,7 +25,7 @@ export default function ProfessoresFeedback() {
 
     const fetchProfessores = useCallback(async () => {
         let isActive = true;
-        
+
         try {
             if (isActive) setLoading(true);
             const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher');
@@ -117,7 +117,7 @@ export default function ProfessoresFeedback() {
     const renderProfessores = () => {
         const professoresPagina = getProfessoresPagina();
         const rows = [];
-        
+
         for (let i = 0; i < professoresPagina.length; i += 2) {
             const rowProfessores = professoresPagina.slice(i, i + 2);
             rows.push(
@@ -135,7 +135,7 @@ export default function ProfessoresFeedback() {
                 </View>
             );
         }
-        
+
         while (rows.length < 3) {
             rows.push(
                 <View key={`empty-${rows.length}`} style={styles.row}>
@@ -144,25 +144,14 @@ export default function ProfessoresFeedback() {
                 </View>
             );
         }
-        
+
         return rows;
     };
 
     const renderPaginacao = () => {
         const paginas = [];
         const maxPaginas = 5;
-        
-        if (totalPaginas > 1) {
-            paginas.push(
-                <CardSelecao
-                    key="prev"
-                    numero="<"
-                    selecionado={false}
-                    onPress={() => handlePaginaChange('<')}
-                    disabled={paginaSelecionada <= 1}
-                />
-            );
-        }
+
 
         if (totalPaginas <= maxPaginas) {
             for (let i = 1; i <= totalPaginas; i++) {
@@ -244,14 +233,14 @@ export default function ProfessoresFeedback() {
                 />
             );
         }
-        
+
         return paginas;
     };
 
     return (
         <View style={styles.mainContainer}>
             <HeaderSimples titulo="PROFESSORES" />
-            
+
             <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
@@ -273,7 +262,7 @@ export default function ProfessoresFeedback() {
                                 {searchTerm ? 'Nenhum professor encontrado' : 'Nenhum professor cadastrado'}
                             </Text>
                         ) : (
-                            <ScrollView 
+                            <ScrollView
                                 contentContainerStyle={styles.scrollContent}
                                 showsVerticalScrollIndicator={false}
                             >
@@ -283,8 +272,8 @@ export default function ProfessoresFeedback() {
                     </View>
 
                     <View style={styles.footer}>
-                        <TouchableOpacity 
-                            style={[styles.botaoCriar, isDarkMode && styles.botaoCriarDark]} 
+                        <TouchableOpacity
+                            style={[styles.botaoCriar, isDarkMode && styles.botaoCriarDark]}
                             onPress={() => setModalCriarVisible(true)}
                             disabled={isCreating}
                         >
@@ -294,7 +283,7 @@ export default function ProfessoresFeedback() {
                                 <Icon name="plus" size={24} color="white" />
                             )}
                         </TouchableOpacity>
-                        
+
                         <View style={styles.paginacaoContainer}>
                             <View style={styles.paginacao}>
                                 {renderPaginacao()}
@@ -303,8 +292,8 @@ export default function ProfessoresFeedback() {
                     </View>
                 </View>
 
-                <CadastroProfessorModal 
-                    visible={modalCriarVisible} 
+                <CadastroProfessorModal
+                    visible={modalCriarVisible}
                     onClose={() => !isCreating && setModalCriarVisible(false)}
                     onCreate={handleCriarProfessor}
                     isCreating={isCreating}
@@ -331,6 +320,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 16,
         position: 'relative',
+        
     },
     inputContainer: {
         flexDirection: 'row',

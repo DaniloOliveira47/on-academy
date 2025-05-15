@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
         color: '#FFF',
     },
     modalContent: {
-        width: '90%',
+        width: '92%',
         backgroundColor: '#FFF',
         borderRadius: 20,
         alignItems: 'center',
