@@ -134,6 +134,7 @@ export default function Turmas() {
                     {/* Scrollable Content */}
                     <View style={styles.scrollContainer}>
                         <ScrollView
+                        
                             contentContainerStyle={styles.scrollContent}
                             refreshControl={
                                 <RefreshControl

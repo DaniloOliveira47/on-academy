@@ -136,7 +136,7 @@ export default function HeaderDoc() {
           <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
         </TouchableOpacity>
 
-        <ScrollView style={styles.menuScrollView} contentContainerStyle={styles.menuContent}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.menuScrollView} contentContainerStyle={styles.menuContent}>
           <View style={styles.menuItem}>
             <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
               <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>

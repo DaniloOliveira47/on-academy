@@ -10,21 +10,21 @@ export default function Emocional() {
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const cont = isDarkMode ? '#000' : '#FFF';
     const text = isDarkMode ? '#FFF' : '#000';
-    
+
     const handleOpenForm = () => {
         const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfG-Q-ecWsjrEOd_wz3b5fwT5vJdwFDHparoeiKLVtp3WxB3Q/viewform?usp=header';
         Linking.openURL(formUrl).catch(err => console.error("Erro ao abrir o formulário:", err));
     };
 
     return (
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
             <HeaderSimples titulo="EMOCIONAL" />
-            <View style={[styles.tela, {backgroundColor: perfilBackgroundColor}]}>
-                <View style={[styles.subTela, {backgroundColor: cont}]}>
+            <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
+                <View style={[styles.subTela, { backgroundColor: cont }]}>
                     <Text style={styles.title}>
                         Seu bem-estar importa
                     </Text>
-                    <Text style={[styles.subTitle, {color: text, textAlign: 'justify'}]}>
+                    <Text style={[styles.subTitle, { color: text, textAlign: 'justify' }]}>
                         A rotina escolar envolve muitos desafios, e sabemos que cada aluno vivencia experiências únicas. Pensando nisso, criamos este espaço para que você possa expressar seus sentimentos, dificuldades e sugestões de forma segura e confidencial.
                         O objetivo deste formulário é entender melhor como você está se sentindo e identificar maneiras de tornar o ambiente escolar mais acolhedor e positivo para todos. Suas respostas são valiosas e podem contribuir para melhorias no dia a dia da instituição.
                     </Text>
@@ -55,7 +55,7 @@ export default function Emocional() {
                         texto="• Juntos, podemos construir um ambiente escolar mais saudável e acolhedor para todos."
                     />
                     <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.botao}
                             onPress={handleOpenForm}
                         >
@@ -71,7 +71,8 @@ export default function Emocional() {
 const styles = StyleSheet.create({
     tela: {
         padding: 15,
-        paddingTop: 0
+        paddingTop: 0,
+        paddingBottom: 30
     },
     botao: {
         alignItems: 'center',

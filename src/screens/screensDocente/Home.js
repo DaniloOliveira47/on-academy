@@ -31,7 +31,7 @@ export default function HomeDocente() {
     const fetchMessages = async () => {
         try {
             const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
-           
+
             // Ordenar por data mais recente primeiro
             data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
@@ -52,7 +52,7 @@ export default function HomeDocente() {
             }
 
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/classes/${professorId}`);
-            
+
             console.log('Resposta da API:', response.data);
 
             if (response.data && Array.isArray(response.data.classes)) {
@@ -209,22 +209,36 @@ export default function HomeDocente() {
                             nestedScrollEnabled={true}
                         >
                             {avisos.length > 0 ? (
-                                avisos.map((aviso) => (
-                                    <Avisos
-                                        key={aviso.id}
-                                        abreviacao={aviso.initials}
-                                        nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
-                                        horario={new Date(aviso.horarioSistema).toLocaleTimeString([], { 
-                                            day: '2-digit', 
-                                            month: '2-digit', 
-                                            year: 'numeric', 
-                                            hour: '2-digit', 
-                                            minute: '2-digit' 
-                                        })}
-                                        texto={aviso.conteudo}
-                                        aleatorio={gerarCorAleatoria()}
-                                    />
-                                ))
+                                avisos
+                                    .filter(aviso => {
+                                        const agora = new Date();
+                                        const dataAviso = new Date(aviso.horarioSistema);
+                                        const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
+                                        return diferencaEmDias <= 7;
+                                    })
+                                    .map((aviso) => {
+                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                            'Instituição';
+
+                                        return (
+                                            <Avisos
+                                                key={aviso.id}
+                                                abreviacao={aviso.initials}
+                                                nome={doisPrimeirosNomes}
+                                                horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                                texto={aviso.conteudo}
+                                                aleatorio={gerarCorAleatoria()}
+                                            />
+                                        );
+                                    })
+
                             ) : (
                                 <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
                                     Nenhum aviso disponível.

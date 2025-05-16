@@ -172,13 +172,13 @@ export default function Boletim() {
     }
 
     return (
-        <ScrollView>
+        <ScrollView  showsVerticalScrollIndicator={false}>
             
             <View>
                 
                 <HeaderSimples titulo="BOLETIM" />
                 
-                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 500 }]}>
+                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 60 }]}>
                     
                     <View style={{
                         backgroundColor: container, 

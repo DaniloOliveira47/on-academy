@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: 'center',
         paddingBottom: 10,
+        padding: 5
     },
     imageContainer: {
         backgroundColor: 'white',

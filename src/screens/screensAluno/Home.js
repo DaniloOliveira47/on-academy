@@ -27,7 +27,7 @@ export default function Home() {
 
         const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
         setAluno(response.data);
-        
+
         // After setting aluno, fetch avisos for the student's class
         if (response.data.turma?.idTurma) {
           fetchAvisos(response.data.turma.idTurma);
@@ -60,7 +60,9 @@ export default function Home() {
   return (
     <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
       <Header isDarkMode={isDarkMode} />
-      <ScrollView>
+      <ScrollView
+       showsVerticalScrollIndicator={false}>
+        
         <View style={styles.subtela}>
           <View style={[styles.infoContainer, {
             backgroundColor: '#1E6BE6',
@@ -110,6 +112,7 @@ export default function Home() {
                 contentContainerStyle={styles.scrollContentContainer}
                 indicatorStyle={isDarkMode ? 'white' : 'black'}
                 nestedScrollEnabled={true}
+                 showsVerticalScrollIndicator={false}
               >
                 {filtrarNotasPorBimestre().length > 0 ? (
                   filtrarNotasPorBimestre().map((nota, index) => (
@@ -135,12 +138,12 @@ export default function Home() {
               </ScrollView>
             </View>
           </View>
-        
-          <View style={[styles.contTurmas, { 
+
+          <View style={[styles.contTurmas, {
             backgroundColor: isDarkMode ? '#000' : '#FFF',
             marginBottom: 50
           }]}>
-            <Text style={[styles.title, { 
+            <Text style={[styles.title, {
               color: isDarkMode ? '#FFF' : '#000',
               fontSize: 24,
               fontWeight: 'bold',
@@ -156,28 +159,38 @@ export default function Home() {
               nestedScrollEnabled={true}
             >
               {avisos.length > 0 ? (
-                avisos.map((aviso) => (
-                  <Avisos
-                    key={aviso.id}
-                    abreviacao={aviso.initials}
-                    nome={aviso.criadoPorNome.split(' ').slice(0, 2).join(' ')}
-                    horario={new Date(aviso.horarioSistema).toLocaleTimeString([], {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                    texto={aviso.conteudo}
-                    aleatorio={gerarCorAleatoria()}
-                  />
-                ))
+                avisos
+                  .filter(aviso => {
+                    const agora = new Date();
+                    const dataAviso = new Date(aviso.horarioSistema);
+                    const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
+                    return diferencaEmDias <= 7;
+                  })
+                  .map((aviso) => {
+                    const doisPrimeirosNomes = aviso.criadoPorNome ?
+                      aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                      'Instituição';
+
+                    return (
+                      <Avisos
+                        key={aviso.id}
+                        abreviacao={aviso.initials}
+                        nome={doisPrimeirosNomes}
+                        horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                        texto={aviso.conteudo}
+                        aleatorio={gerarCorAleatoria()}
+                      />
+                    );
+                  })
+
               ) : (
-                <Text style={{
-                  color: isDarkMode ? '#AAA' : '#888',
-                  textAlign: 'center',
-                  paddingVertical: 20
-                }}>
+                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
                   Nenhum aviso disponível.
                 </Text>
               )}

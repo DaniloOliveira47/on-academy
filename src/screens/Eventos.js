@@ -25,12 +25,12 @@ export default function Eventos() {
 
                 // Gerar cores dinâmicas para os eventos
                 const colors = {};
-                data.forEach(event => {    
+                data.forEach(event => {
                     colors[event.id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // Cor aleatória
                 });
                 setEventColors(colors);
             } catch (error) {
-               
+
             }
         };
 
@@ -93,19 +93,30 @@ export default function Eventos() {
                         Próximos Eventos
                     </Text>
                     <View>
-                        {events.map((event, index) => {
-                            const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-                            return (
-                                <ProximosEventos
-                                    key={index}
-                                    data={eventDateTime.getDate()}
-                                    titulo={event.tituloEvento}
-                                    subData={formatDate(eventDateTime)}
-                                    periodo={formatTime(eventDateTime)}
-                                    color={'#0077FF'} // Usa a cor do evento ou uma cor padrão
-                                />
-                            );
-                        })}
+                        {events
+                            .filter((event) => {
+                                const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                                return eventDateTime > new Date(); // apenas eventos futuros
+                            })
+                            .sort((a, b) => {
+                                const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
+                                const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
+                                return dateA - dateB; // ordena do mais próximo para o mais distante
+                            })
+                            .map((event, index) => {
+                                const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+                                return (
+                                    <ProximosEventos
+                                        key={index}
+                                        data={eventDateTime.getDate()}
+                                        titulo={event.tituloEvento}
+                                        subData={formatDate(eventDateTime)}
+                                        periodo={formatTime(eventDateTime)}
+                                        color={'#0077FF'}
+                                    />
+                                );
+                            })}
+
                     </View>
                 </View>
             </View>

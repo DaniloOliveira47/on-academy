@@ -147,30 +147,6 @@ export default function Turmas() {
         setTurmasFiltradas(turmasFiltradas.filter(turma => turma.id !== turmaId));
     };
 
-    const abrirModalEditar = async (turma) => {
-        setCarregando(true);
-        try {
-            const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/teacher/disciplinas/${turma.id}`);
-            const turmaDetalhada = response.data;
-
-            setTurmaEditando(turmaDetalhada);
-            setNovaTurma(turmaDetalhada.nomeTurma);
-            setNovoAno(new Date(turmaDetalhada.anoLetivoTurma).getFullYear().toString());
-            setNovoPeriodo(turmaDetalhada.periodoTurma);
-            setNovaCapacidade(turmaDetalhada.capacidadeMaximaTurma.toString());
-            setNovaSala(turmaDetalhada.salaTurma.toString());
-
-            setSelectedProfessores(turmaDetalhada.teachers.map(prof => prof.id));
-            setSelectedDisciplinas(turmaDetalhada.disciplines.map(disc => disc.id));
-
-            setModalEditarVisible(true);
-        } catch (error) {
-            Alert.alert('Erro', 'Não foi possível carregar os detalhes da turma');
-        } finally {
-            setCarregando(false);
-        }
-    };
-
     const validarCampos = () => {
         const novosErros = {
             nomeTurma: !novaTurma.trim(),
@@ -360,6 +336,7 @@ export default function Turmas() {
 
                     <View style={{ flex: 1 }}>
                         <ScrollView
+                            showsVerticalScrollIndicator={false}
                             refreshControl={
                                 <RefreshControl
                                     refreshing={refreshing}
@@ -539,7 +516,7 @@ export default function Turmas() {
                                         />
                                         {erros.capacidade && (
                                             <Text style={styles.erroTexto}>
-                                                {parseInt(novaCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Valor inválido'}
+                                                {parseInt(novaCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Preencha este campo'}
                                             </Text>
                                         )}
                                     </View>
@@ -564,7 +541,7 @@ export default function Turmas() {
                                             placeholder="Ex: 101"
                                             placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                         />
-                                        {erros.sala && <Text style={styles.erroTexto}>Valor inválido</Text>}
+                                        {erros.sala && <Text style={styles.erroTexto}>Preencha este campo</Text>}
                                     </View>
                                 </View>
                             </View>
@@ -646,67 +623,67 @@ export default function Turmas() {
             </Modal>
 
             {/* Modal para criar nova disciplina */}
-           {/* Modal para criar nova disciplina */}
-<Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
-    <View style={styles.modalContainer}>
-        <View style={[styles.modalDisciplinaContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
-            <Text style={[styles.modalDisciplinaTitle, { color: isDarkMode ? 'white' : 'black' }]}>
-                Registrar Nova Disciplina
-            </Text>
-            
-            <Text style={{ 
-                color: isDarkMode ? 'white' : 'black', 
-                marginBottom: 5,
-                alignSelf: 'flex-start'
-            }}>
-                Nome da Disciplina *
-            </Text>
-            
-            <TextInput
-                style={[
-                    styles.modalDisciplinaInput,
-                    { 
-                        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
-                        color: isDarkMode ? 'white' : 'black'
-                    }
-                ]}
-                value={novaDisciplina}
-                onChangeText={setNovaDisciplina}
-                placeholder="Digite o nome da disciplina"
-                placeholderTextColor={isDarkMode ? '#888' : '#756262'}
-            />
-            
-            <View style={styles.modalDisciplinaButtons}>
-                <TouchableOpacity
-                    style={[
-                        styles.modalDisciplinaButton,
-                        styles.modalDisciplinaCancelButton
-                    ]}
-                    onPress={() => {
-                        setModalNovaDisciplinaVisible(false);
-                        setNovaDisciplina('');
-                    }}
-                >
-                    <Text style={styles.modalDisciplinaButtonText}>Cancelar</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                    style={[
-                        styles.modalDisciplinaButton,
-                        styles.modalDisciplinaConfirmButton,
-                        carregando && { opacity: 0.6 }
-                    ]}
-                    onPress={registrarNovaDisciplina}
-                    disabled={carregando}
-                >
-                    <Text style={styles.modalDisciplinaButtonText}>
-                        {carregando ? 'Registrando...' : 'Registrar'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    </View>
-</Modal>
+            {/* Modal para criar nova disciplina */}
+            <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalDisciplinaContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
+                        <Text style={[styles.modalDisciplinaTitle, { color: isDarkMode ? 'white' : 'black' }]}>
+                            Registrar Nova Disciplina
+                        </Text>
+
+                        <Text style={{
+                            color: isDarkMode ? 'white' : 'black',
+                            marginBottom: 5,
+                            alignSelf: 'flex-start'
+                        }}>
+                            Nome da Disciplina *
+                        </Text>
+
+                        <TextInput
+                            style={[
+                                styles.modalDisciplinaInput,
+                                {
+                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                    color: isDarkMode ? 'white' : 'black'
+                                }
+                            ]}
+                            value={novaDisciplina}
+                            onChangeText={setNovaDisciplina}
+                            placeholder="Digite o nome da disciplina"
+                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                        />
+
+                        <View style={styles.modalDisciplinaButtons}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalDisciplinaButton,
+                                    styles.modalDisciplinaCancelButton
+                                ]}
+                                onPress={() => {
+                                    setModalNovaDisciplinaVisible(false);
+                                    setNovaDisciplina('');
+                                }}
+                            >
+                                <Text style={styles.modalDisciplinaButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalDisciplinaButton,
+                                    styles.modalDisciplinaConfirmButton,
+                                    carregando && { opacity: 0.6 }
+                                ]}
+                                onPress={registrarNovaDisciplina}
+                                disabled={carregando}
+                            >
+                                <Text style={styles.modalDisciplinaButtonText}>
+                                    {carregando ? 'Registrando...' : 'Registrar'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -795,7 +772,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 0,
     },
     sectionTitle: {
         fontSize: 18,
@@ -874,9 +851,10 @@ const styles = StyleSheet.create({
     erroTexto: {
         color: 'red',
         fontSize: 12,
-        marginTop: -10,
+        marginTop: 10,
         marginBottom: 10,
-        marginLeft: 5
+        marginLeft: 5,
+        fontWeight: 'bold'
     },
     carregandoContainer: {
         flex: 1,
@@ -891,50 +869,50 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingBottom: 50,
     },
-        modalDisciplinaContent: {
-            width: '100%',
-            borderTopRightRadius: 15,
-            borderTopLeftRadius: 15,
-            padding: 25,
-            alignItems: 'center',
-        },
-        modalDisciplinaTitle: {
-            fontSize: 20,
-            fontWeight: 'bold',
-            marginBottom: 20,
-         
-        },
-        modalDisciplinaInput: {
-            width: '100%',
-        
-            borderRadius: 10,
-            padding: 14,
-            marginBottom: 20,
-            borderWidth: 1,
-            
-        },
-        modalDisciplinaButtons: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            width: '100%',
-        },
-        modalDisciplinaButton: {
-            flex: 1,
-            padding: 14,
-            borderRadius: 10,
-            alignItems: 'center',
-            marginHorizontal: 5,
-        },
-        modalDisciplinaCancelButton: {
-            backgroundColor: '#FF3B30',
-        },
-        modalDisciplinaConfirmButton: {
-            backgroundColor: '#007AFF',
-        },
-        modalDisciplinaButtonText: {
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: 16,
-        },
- 
+    modalDisciplinaContent: {
+        width: '100%',
+        borderTopRightRadius: 15,
+        borderTopLeftRadius: 15,
+        padding: 25,
+        alignItems: 'center',
+    },
+    modalDisciplinaTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+
+    },
+    modalDisciplinaInput: {
+        width: '100%',
+
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 20,
+        borderWidth: 1,
+
+    },
+    modalDisciplinaButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalDisciplinaButton: {
+        flex: 1,
+        padding: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginHorizontal: 5,
+    },
+    modalDisciplinaCancelButton: {
+        backgroundColor: '#FF3B30',
+    },
+    modalDisciplinaConfirmButton: {
+        backgroundColor: '#007AFF',
+    },
+    modalDisciplinaButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+
 });
