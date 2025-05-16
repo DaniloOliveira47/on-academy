@@ -82,11 +82,11 @@ export default function Login() {
         }
       }
     } catch (error) {
-      if (error.response) {
+      if (error.response) { 
         if (error.response.status === 401) {
           Alert.alert('Matrícula ou senha inválida, verifique os campos');
         } else {
-          Alert.alert('Falha no login, tente novamente mais tarde');
+          Alert.alert('Matrícula ou senha inválida, verifique os campos');
         }
       } else {
         Alert.alert('Erro de conexão. Verifique sua internet.');

@@ -95,7 +95,7 @@ const formatarTelefone = (input) => {
     }
     return '';
 };
-// Função para formatar o telefone para exibição (mesmo quando não está em edição)
+
 const formatarTelefoneExibicao = (telefone) => {
     if (!telefone) return 'Não informado';
 
@@ -128,7 +128,6 @@ export default function PerfilProfessor() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
-    const [hasProfileImage, setHasProfileImage] = useState(false);
     const [perfil, setPerfil] = useState({
         nome: '',
         email: '',
@@ -138,10 +137,10 @@ export default function PerfilProfessor() {
         disciplinas: [],
         turmas: [],
         feedbacks: [],
+        foto: null,
     });
     const [perfilEdit, setPerfilEdit] = useState(perfil);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
-    const [imageError, setImageError] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [allTurmas, setAllTurmas] = useState([]);
     const [allDisciplinas, setAllDisciplinas] = useState([]);
@@ -156,6 +155,7 @@ export default function PerfilProfessor() {
         telefone: '',
         nascimento: ''
     });
+    const [newImageBase64, setNewImageBase64] = useState(null);
 
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
@@ -228,9 +228,6 @@ export default function PerfilProfessor() {
                     const birthDate = new Date(professorData.dataNascimentoDocente);
                     setSelectedDate(birthDate);
                 }
-
-                setHasProfileImage(!!professorData.imageUrl);
-                setImageError(!professorData.imageUrl);
             } else {
                 setError('Professor não encontrado.');
             }
@@ -339,9 +336,6 @@ export default function PerfilProfessor() {
 
     const pickImage = async () => {
         try {
-            setError(null);
-            setImageError(false);
-
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -354,22 +348,24 @@ export default function PerfilProfessor() {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({ ...prev, foto: imageData }));
-                    await uploadImage(selectedAsset.base64);
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
-                    await processImage(selectedAsset.uri);
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    const imageData = `data:image/jpeg;base64,${base64Image}`;
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(base64Image);
                 }
             }
         } catch (error) {
-            setImageError(true);
             Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
         }
     };
 
     const takePhoto = async () => {
         try {
-            setError(null);
-
             let result = await ImagePicker.launchCameraAsync({
                 allowsEditing: true,
                 aspect: [1, 1],
@@ -381,57 +377,19 @@ export default function PerfilProfessor() {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({ ...prev, foto: imageData }));
-                    await uploadImage(selectedAsset.base64);
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
-                    await processImage(selectedAsset.uri);
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    const imageData = `data:image/jpeg;base64,${base64Image}`;
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(base64Image);
                 }
             }
         } catch (error) {
-            setError('Erro ao tirar foto: ' + error.message);
-        }
-    };
-
-    const processImage = async (uri) => {
-        try {
-            const fileInfo = await FileSystem.getInfoAsync(uri);
-            if (!fileInfo.exists) {
-                throw new Error('Arquivo de imagem não encontrado');
-            }
-
-            const base64Image = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
-
-            const imageData = `data:image/jpeg;base64,${base64Image}`;
-            setPerfil(prev => ({ ...prev, foto: imageData }));
-            await uploadImage(base64Image);
-        } catch (error) {
-            setError('Erro ao processar imagem: ' + error.message);
-        }
-    };
-
-    const uploadImage = async (base64Image) => {
-        try {
-            const token = await getAuthToken();
-
-            const response = await axios.post(
-                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/upload-image/${professorId}`,
-                { image: base64Image },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            setHasProfileImage(true);
-            setImageError(false);
-            fetchProfessor();
-        } catch (error) {
-            setImageError(true);
-            Alert.alert('Erro', 'Não foi possível enviar a imagem. Tente novamente mais tarde.');
+            Alert.alert('Erro', 'Não foi possível tirar a foto.');
         }
     };
 
@@ -481,14 +439,12 @@ export default function PerfilProfessor() {
                 nomeDocente: perfilEdit.nome,
                 dataNascimentoDocente: formattedDate,
                 emailDocente: perfilEdit.email,
-                telefoneDocente: telefoneNumerico, // Enviar apenas números
+                telefoneDocente: telefoneNumerico,
                 identifierCode: perfilEdit.codigoIdentificador,
-                // Se o backend espera arrays de IDs
-                disciplineIds: selectedDisciplinas,
-                classIds: selectedTurmas
+                disciplineId: selectedDisciplinas,
+                classId: selectedTurmas,
+                imageUrl: newImageBase64 // Inclui a imagem base64 no corpo da requisição
             };
-    
-            console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
     
             const response = await axios.put(
                 `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`,
@@ -505,6 +461,7 @@ export default function PerfilProfessor() {
                 Alert.alert('Sucesso', 'Dados do professor atualizados com sucesso!');
                 await fetchProfessor();
                 setIsEditing(false);
+                setNewImageBase64(null); // Limpa a imagem após o sucesso
             }
         } catch (error) {
             console.error('Erro ao atualizar professor:', error);
@@ -541,7 +498,7 @@ export default function PerfilProfessor() {
                 Alert.alert('Sucesso', 'Professor excluído com sucesso!', [
                     {
                         text: 'OK',
-                        onPress: () => navigation.goBack() // Volta para a tela anterior após o alerta
+                        onPress: () => navigation.goBack()
                     }
                 ]);
             }
@@ -561,19 +518,12 @@ export default function PerfilProfessor() {
             await fetchAllTurmasAndDisciplinas();
             setSelectedTurmas(perfil.turmas.map(t => t.id));
             setSelectedDisciplinas(perfil.disciplinas.map(d => d.id));
+            setPerfilEdit(perfil); // Reseta as edições ao entrar no modo de edição
         } else {
-            setPerfilEdit(perfil);
-            setValidationErrors({
-                nome: '',
-                email: '',
-                telefone: '',
-                nascimento: ''
-            });
+            setNewImageBase64(null); // Limpa a imagem se cancelar a edição
         }
         setIsEditing(!isEditing);
     };
-
-
 
     const FeedbackSection = ({ feedbacks }) => {
         const [modalVisible, setModalVisible] = useState(false);
@@ -702,6 +652,8 @@ export default function PerfilProfessor() {
                 <View style={[styles.form, { backgroundColor: formBackgroundColor }]}>
                     <View style={styles.linhaUser}>
                         <TouchableOpacity onPress={() => {
+                            if (!isEditing) return;
+                            
                             Alert.alert(
                                 "Alterar Foto",
                                 "Escolha uma opção",
@@ -722,12 +674,18 @@ export default function PerfilProfessor() {
                             );
                         }}>
                             <Image
-                                source={perfil.foto && !imageError ?
-                                    { uri: perfil.foto } :
+                                source={isEditing && perfilEdit.foto ? 
+                                    { uri: perfilEdit.foto } : 
+                                    perfil.foto ? 
+                                    { uri: perfil.foto } : 
                                     require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
-                                onError={() => setImageError(true)}
                             />
+                            {isEditing && (
+                                <View style={styles.editPhotoIndicator}>
+                                    <Icon name="camera" size={16} color="white" />
+                                </View>
+                            )}
                         </TouchableOpacity>
                         <View style={styles.name}>
                             {isEditing ? (
@@ -789,7 +747,7 @@ export default function PerfilProfessor() {
                                                 borderWidth: validationErrors.telefone ? 1 : 0
                                             }
                                         ]}
-                                        value={formatarTelefone(perfilEdit.telefone)} // Sempre formatado
+                                        value={formatarTelefone(perfilEdit.telefone)}
                                         onChangeText={handleTelefoneChange}
                                         placeholder="(00) 00000-0000"
                                         placeholderTextColor={isDarkMode ? '#AAA' : '#888'}
@@ -821,7 +779,6 @@ export default function PerfilProfessor() {
                                                 justifyContent: 'center',
                                                 borderColor: validationErrors.nascimento ? 'red' : 'transparent',
                                                 borderWidth: validationErrors.nascimento ? 1 : 0,
-
                                             }
                                         ]}
                                         onPress={showDatepicker}
@@ -854,8 +811,6 @@ export default function PerfilProfessor() {
                         </View>
                     </View>
 
-
-
                     <>
                         <View style={styles.sectionContainer}>
                             <Text style={[styles.sectionTitle, { color: textColor }]}>Disciplinas</Text>
@@ -868,7 +823,6 @@ export default function PerfilProfessor() {
                                                 styles.itemPill,
                                                 {
                                                     backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
-
                                                 }
                                             ]}>
                                             <Text style={[styles.itemText, { color: textColor }]}>{disciplina.nomeDisciplina}</Text>
@@ -891,7 +845,6 @@ export default function PerfilProfessor() {
                                                 styles.itemPill,
                                                 {
                                                     backgroundColor: isDarkMode ? '#141414' : '#F0F7FF',
-
                                                 }
                                             ]}>
                                             <Text style={[styles.itemText, { color: textColor }]}>{turma.nomeTurma || `Turma ${turma.id}`}</Text>
@@ -1069,6 +1022,14 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
+    },
+    editPhotoIndicator: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#1E6BE6',
+        borderRadius: 12,
+        padding: 4,
     },
     editButtonsContainer: {
         flexDirection: 'row',

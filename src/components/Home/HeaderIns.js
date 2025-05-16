@@ -173,7 +173,7 @@ export default function HeaderIns() {
           </View>
 
           <View style={styles.menuItem}>
-            <View style={styles.calendarWrapper}>
+            <View style={[styles.calendarWrapper ]}>
               <CustomCalendar events={events} />
             </View>
           </View>

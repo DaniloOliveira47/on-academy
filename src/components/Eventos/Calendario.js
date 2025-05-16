@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { View, StyleSheet, Alert } from 'react-native';
 
 const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
@@ -7,6 +7,49 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
   const [eventColors, setEventColors] = useState({});
   const [minDate, setMinDate] = useState('');
   const [maxDate, setMaxDate] = useState('');
+
+  LocaleConfig.locales.fr = {
+  monthNames: [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro"
+  ],
+  monthNamesShort: [
+    "Jan.",
+    "Fev.",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul.",
+    "Ago",
+    "Set.",
+    "Out.",
+    "Nov.",
+    "Dez."
+  ],
+  dayNames: [
+    "Domingo",
+    "Segunda",
+    "Terça",
+    "Quarta",
+    "Quinta",
+    "Sexta",
+    "Sábado"
+  ],
+  dayNamesShort: ["Dom.", "Seg.", "Ter.", "Qua.", "Qui.", "Sex.", "Sáb."]
+};
+
+LocaleConfig.defaultLocale = "fr"
 
   // Configura as datas mínima (1º dia do ano) e máxima (último dia do ano)
   useEffect(() => {

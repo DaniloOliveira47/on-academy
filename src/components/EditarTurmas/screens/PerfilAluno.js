@@ -146,7 +146,7 @@ export default function PerfilAluno() {
         telefone: '',
         nascimento: ''
     });
-
+    const [newImageBase64, setNewImageBase64] = useState(null);
     const [bimestreSelecionado, setBimestreSelecionado] = useState(1);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
     const [modalBimestreVisible, setModalBimestreVisible] = useState(false);
@@ -406,12 +406,8 @@ export default function PerfilAluno() {
         setProfessorSelecionado(null);
     };
 
-    // Funções de manipulação de imagem
     const pickImage = async () => {
         try {
-            setError(null);
-            setImageError(false);
-
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -424,22 +420,24 @@ export default function PerfilAluno() {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({ ...prev, foto: imageData }));
-                    await uploadImage(selectedAsset.base64);
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
-                    await processImage(selectedAsset.uri);
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    const imageData = `data:image/jpeg;base64,${base64Image}`;
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(base64Image);
                 }
             }
         } catch (error) {
-            setImageError(true);
             Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
         }
     };
 
     const takePhoto = async () => {
         try {
-            setError(null);
-
             let result = await ImagePicker.launchCameraAsync({
                 allowsEditing: true,
                 aspect: [1, 1],
@@ -451,59 +449,22 @@ export default function PerfilAluno() {
                 const selectedAsset = result.assets[0];
                 if (selectedAsset.base64) {
                     const imageData = `data:image/jpeg;base64,${selectedAsset.base64}`;
-                    setPerfil(prev => ({ ...prev, foto: imageData }));
-                    await uploadImage(selectedAsset.base64);
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(selectedAsset.base64);
                 } else if (selectedAsset.uri) {
-                    await processImage(selectedAsset.uri);
+                    const base64Image = await FileSystem.readAsStringAsync(selectedAsset.uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    const imageData = `data:image/jpeg;base64,${base64Image}`;
+                    setPerfilEdit(prev => ({ ...prev, foto: imageData }));
+                    setNewImageBase64(base64Image);
                 }
             }
         } catch (error) {
-            setError('Erro ao tirar foto: ' + error.message);
+            Alert.alert('Erro', 'Não foi possível tirar a foto.');
         }
     };
 
-    const processImage = async (uri) => {
-        try {
-            const fileInfo = await FileSystem.getInfoAsync(uri);
-            if (!fileInfo.exists) {
-                throw new Error('Arquivo de imagem não encontrado');
-            }
-
-            const base64Image = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
-
-            const imageData = `data:image/jpeg;base64,${base64Image}`;
-            setPerfil(prev => ({ ...prev, foto: imageData }));
-            await uploadImage(base64Image);
-        } catch (error) {
-            setError('Erro ao processar imagem: ' + error.message);
-        }
-    };
-
-    const uploadImage = async (base64Image) => {
-        try {
-            const token = await getAuthToken();
-
-            const response = await axios.post(
-                `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/upload-image/${alunoId}`,
-                { image: base64Image },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            setHasProfileImage(true);
-            setImageError(false);
-            fetchAluno();
-        } catch (error) {
-            setImageError(true);
-            Alert.alert('Erro', 'Não foi possível enviar a imagem. Tente novamente mais tarde.');
-        }
-    };
 
     // Funções de edição
     const toggleEdit = () => {
@@ -582,7 +543,7 @@ export default function PerfilAluno() {
                 emailAluno: perfilEdit.email,
                 telefoneAluno: telefoneNumerico, // Enviar apenas números
                 turmaId: perfilEdit.turma?.id || null,
-                imageUrl: perfil.foto
+                imageUrl: newImageBase64
             };
 
             console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
@@ -602,6 +563,7 @@ export default function PerfilAluno() {
                 Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
                 await fetchAluno();
                 setIsEditing(false);
+                setNewImageBase64(null);
             }
         } catch (error) {
             console.error('Erro ao atualizar aluno:', error);
@@ -792,6 +754,8 @@ export default function PerfilAluno() {
                 <View style={[styles.form, { backgroundColor: formBackgroundColor }]}>
                     <View style={styles.linhaUser}>
                         <TouchableOpacity onPress={() => {
+                            if (!isEditing) return;
+
                             Alert.alert(
                                 "Alterar Foto",
                                 "Escolha uma opção",
@@ -812,12 +776,18 @@ export default function PerfilAluno() {
                             );
                         }}>
                             <Image
-                                source={perfil.foto && !imageError ?
-                                    { uri: perfil.foto } :
-                                    require('../../../assets/image/icon_add_user.png')}
+                                source={isEditing && perfilEdit.foto ?
+                                    { uri: perfilEdit.foto } :
+                                    perfil.foto ?
+                                        { uri: perfil.foto } :
+                                        require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
-                                onError={() => setImageError(true)}
                             />
+                            {isEditing && (
+                                <View style={styles.editPhotoIndicator}>
+                                    <Icon name="camera" size={16} color="white" />
+                                </View>
+                            )}
                         </TouchableOpacity>
                         <View style={styles.name}>
                             {isEditing ? (

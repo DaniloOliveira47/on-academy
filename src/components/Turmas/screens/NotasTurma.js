@@ -8,10 +8,10 @@ import { useTheme } from '../../../path/ThemeContext';
 import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
- 
+
 export default function NotasTurma() {
     const route = useRoute();
- 
+
     const { turmaId } = route.params || {};
     const [modalVisible, setModalVisible] = useState(false);
     const [alunoSelecionado, setAlunoSelecionado] = useState(null);
@@ -26,17 +26,17 @@ export default function NotasTurma() {
     const [disciplinaSelecionada, setDisciplinaSelecionada] = useState(null);
     const [notasAluno, setNotasAluno] = useState([]);
     const [mostrarCamposNota, setMostrarCamposNota] = useState(false);
- 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const alunosResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
- 
+
                 setTurmaInfo({
                     nomeTurma: alunosResponse.data.nomeTurma,
                     periodoTurma: alunosResponse.data.periodoTurma,
                 });
- 
+
                 const alunosComNotas = alunosResponse.data.students.map(aluno => {
                     if (aluno.nota && aluno.nota.length > 0) {
                         const totalNotas = aluno.nota.reduce((acc, curr) => acc + curr.valorNota, 0);
@@ -45,12 +45,12 @@ export default function NotasTurma() {
                     }
                     return { ...aluno, mediaNota: '-' };
                 });
- 
+
                 setAlunos(alunosComNotas);
- 
+
                 const disciplinasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/discipline');
                 const turma = disciplinasResponse.data.find(t => t.nomeTurma === alunosResponse.data.nomeTurma);
- 
+
                 if (turma && Array.isArray(turma.disciplinas)) {
                     setDisciplinas(turma.disciplinas);
                     setDisciplinaSelecionada(turma.disciplinas[0]?.id);
@@ -63,10 +63,10 @@ export default function NotasTurma() {
                 setLoading(false);
             }
         };
- 
+
         if (turmaId) fetchData();
     }, [turmaId]);
- 
+
     const abrirModal = async (aluno) => {
         setAlunoSelecionado(aluno);
         setModalVisible(true);
@@ -75,18 +75,18 @@ export default function NotasTurma() {
             await buscarNotasAluno(aluno.id);
         }
     };
- 
+
     const buscarNotasAluno = async (alunoId) => {
         try {
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
             const notas = response.data.notas || [];
             setNotasAluno(notas);
-   
+
             // Recalcula a média
             if (notas.length > 0) {
                 const totalNotas = notas.reduce((sum, nota) => sum + nota.nota, 0); // Use `nota.nota` se for o nome correto
                 const media = (totalNotas / notas.length).toFixed(2);
-   
+
                 setAlunos((prevAlunos) =>
                     prevAlunos.map((aluno) =>
                         aluno.id === alunoId
@@ -95,7 +95,7 @@ export default function NotasTurma() {
                     )
                 );
             }
-   
+
             // Forçar reavaliação para garantir que o primeiro bimestre carregue
             setBimestreFiltro(0);
             setTimeout(() => setBimestreFiltro(1), 50);
@@ -104,28 +104,28 @@ export default function NotasTurma() {
             setNotasAluno([]);
         }
     };
-   
- 
- 
+
+
+
     const adicionarNota = async () => {
         if (!notaInput || !alunoSelecionado || !disciplinaSelecionada) {
             Alert.alert('Erro', 'Preencha todos os campos e selecione uma disciplina.');
             return;
         }
-   
+
         const notaDuplicada = notasAluno.some(nota =>
             nota.disciplineId === disciplinaSelecionada &&
             nota.bimestre === bimestreFiltro
         );
-   
+
         if (notaDuplicada) {
             Alert.alert('Nota já existente', 'Já existe uma nota para essa disciplina e bimestre.');
             return;
         }
-   
+
         try {
             const disciplina = disciplinas.find(d => d.id === disciplinaSelecionada);
-       
+
             const novaNota = {
                 studentId: alunoSelecionado.id,
                 nota: parseFloat(notaInput),
@@ -134,18 +134,18 @@ export default function NotasTurma() {
                 disciplineId: disciplinaSelecionada,
                 nomeDisciplina: disciplina?.nomeDisciplina || 'Desconhecida'
             };
-       
+
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note', novaNota);
-           
+
             console.log('Resposta da API:', response.data); // Verifique isso no console
-           
+
             await buscarNotasAluno(alunoSelecionado.id);
             setNotaInput('');
             Alert.alert('Sucesso', 'Nota adicionada com sucesso!');
             setMostrarCamposNota(false);
         } catch (error) {
             const mensagemServidor = error.response?.data?.message || error.message;
-           
+
             if (mensagemServidor.includes('duplicada') || error.response?.status === 409) {
                 Alert.alert('Nota já existente', 'Já existe uma nota para essa disciplina e bimestre.');
             } else {
@@ -153,15 +153,15 @@ export default function NotasTurma() {
             }
             console.log('Erro ao adicionar nota:', mensagemServidor);
         }
-       
-       
+
+
     };
-   
- 
+
+
     const notasPorBimestreEDisciplina = () => {
         return notasAluno.filter(nota => nota.bimestre === bimestreFiltro);
     };
- 
+
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -169,7 +169,7 @@ export default function NotasTurma() {
             </View>
         );
     }
- 
+
     if (error) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -177,7 +177,7 @@ export default function NotasTurma() {
             </View>
         );
     }
- 
+
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
             <HeaderSimples />
@@ -186,9 +186,9 @@ export default function NotasTurma() {
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
                         {turmaInfo.nomeTurma} - {turmaInfo.periodoTurma}
                     </Text>
-                 
+
                 </View>
- 
+
                 <View style={[styles.containerBranco, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
@@ -198,7 +198,7 @@ export default function NotasTurma() {
                         />
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
- 
+
                     <View style={styles.tableHeader}>
                         <Text style={[styles.headerText, { flex: 2 }]}>Nome do aluno</Text>
                         <Text style={[styles.headerText, { flex: 1 }]}>Matrícula</Text>
@@ -206,14 +206,14 @@ export default function NotasTurma() {
                             (%)</Text>
                         <Text style={[styles.headerText, { flex: 1 }]}>Notas</Text>
                     </View>
- 
+
                     <FlatList
                         data={alunos}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({ item }) => {
                             const nomeCompleto = item.nomeAluno.split(' ');
                             const doisPrimeirosNomes = nomeCompleto.slice(0, 2).join(' ');
- 
+
                             return (
                                 <View style={styles.tableRow}>
                                     <Text style={[styles.rowText, { flex: 2, color: isDarkMode ? 'white' : 'black' }]}>
@@ -234,7 +234,7 @@ export default function NotasTurma() {
                     />
                 </View>
             </View>
- 
+
             <Modal visible={modalVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, {
@@ -249,7 +249,7 @@ export default function NotasTurma() {
                                 <Icon name="x" size={24} color={isDarkMode ? 'white' : '#1A85FF'} />
                             </TouchableOpacity>
                         </View>
- 
+
                         <View style={styles.filtroContainer}>
                             <Text style={[styles.filtroLabel, { color: isDarkMode ? 'white' : 'black' }]}>
                                 Bimestre:
@@ -276,7 +276,7 @@ export default function NotasTurma() {
                                 ))}
                             </View>
                         </View>
- 
+
                         <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent}>
                             <View style={styles.contBoletim}>
                                 <View style={styles.columnMateria}>
@@ -291,7 +291,7 @@ export default function NotasTurma() {
                                     {disciplinas.map((disciplina) => {
                                         const notaDisciplina = notasPorBimestreEDisciplina()
                                             .find(nota => nota.nomeDisciplina === disciplina.nomeDisciplina);
- 
+
                                         return (
                                             <CardNota
                                                 key={`${disciplina.id}-${bimestreFiltro}`}
@@ -307,27 +307,27 @@ export default function NotasTurma() {
                                                             : nota
                                                     );
                                                     setNotasAluno(notasAtualizadas);
- 
+
                                                     const notasFiltradas = notasAtualizadas.filter(nota =>
                                                         nota.nomeDisciplina === disciplina.nomeDisciplina && nota.bimestre === bimestreFiltro
                                                     );
                                                     const totalNotasAluno = notasAtualizadas.reduce((sum, nota) => sum + nota.nota, 0);
                                                     const mediaGeral = (totalNotasAluno / notasAtualizadas.length).toFixed(2);
- 
+
                                                     setAlunos(alunos.map(aluno =>
                                                         aluno.id === alunoSelecionado.id
                                                             ? { ...aluno, mediaNota: mediaGeral }
                                                             : aluno
                                                     ));
- 
+
                                                 }}
- 
+
                                             />
                                         );
                                     })}
                                 </View>
                             </View>
- 
+
                             {mostrarCamposNota ? (
                                 <>
                                     <View style={styles.notaInputContainer}>
@@ -350,7 +350,7 @@ export default function NotasTurma() {
                                                 ))}
                                             </Picker>
                                         </View>
- 
+
                                         <TextInput
                                             style={[styles.inputNota, {
                                                 borderColor: isDarkMode ? '#444' : '#1A85FF',
@@ -363,7 +363,7 @@ export default function NotasTurma() {
                                             keyboardType="numeric"
                                         />
                                     </View>
- 
+
                                     <View style={styles.actionButtonsContainer}>
                                         <TouchableOpacity
                                             style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
@@ -388,7 +388,7 @@ export default function NotasTurma() {
                                 </TouchableOpacity>
                             )}
                         </ScrollView>
- 
+
                         <TouchableOpacity
                             style={[styles.fecharButton, { backgroundColor: isDarkMode ? '#333' : '#E0E0E0' }]}
                             onPress={() => setModalVisible(false)}
@@ -401,7 +401,7 @@ export default function NotasTurma() {
         </View>
     );
 }
- 
+
 const styles = StyleSheet.create({
     tela: {
         flex: 1,
