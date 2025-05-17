@@ -57,7 +57,7 @@ export default function Eventos() {
     };
 
     return (
-        <ScrollView>
+        <ScrollView style={{ backgroundColor: BackgroundColor }}>
             <HeaderSimples titulo="EVENTOS" />
             <View style={[styles.tela, { backgroundColor: BackgroundColor }]}>
                 <View style={{ marginTop: 0 }}>

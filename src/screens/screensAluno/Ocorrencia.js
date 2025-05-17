@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
-import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View, Alert, Modal } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View, Alert, Modal, Image } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import GraficoFeedback from '../../components/Gerais/GraficoFeedback';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
     const [professores, setProfessores] = useState([]);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
@@ -35,8 +39,10 @@ export default function Ocorrencia() {
             .then(response => {
                 setProfessores(response.data);
             })
-            .catch(error => {
-                console.error("Error fetching teachers:", error);
+            .catch(() => {
+                setAlertTitle('Erro');
+                setAlertMessage('Erro ao buscar professores.');
+                setAlertVisible(true);
             });
     }, []);
 
@@ -46,8 +52,10 @@ export default function Ocorrencia() {
             try {
                 const id = await AsyncStorage.getItem('@user_id');
                 setUserId(id);
-            } catch (error) {
-                console.error("Error fetching user ID:", error);
+            } catch {
+                setAlertTitle('Erro');
+                setAlertMessage('Erro ao recuperar o ID do usuário.');
+                setAlertVisible(true);
             }
         };
 
@@ -66,8 +74,10 @@ export default function Ocorrencia() {
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${userId}`);
             setFeedbacks(response.data);
             atualizarDadosGrafico(response.data);
-        } catch (error) {
-            console.error("Error fetching feedbacks:", error);
+        } catch {
+            setAlertTitle('Erro');
+            setAlertMessage('Você não possui feedbacks');
+            setAlertVisible(true);
         }
     };
 
@@ -143,7 +153,9 @@ export default function Ocorrencia() {
 
     const enviarFeedback = async () => {
         if (!professorSelecionado || !conteudo) {
-            Alert.alert('Erro', 'Preencha todos os campos antes de enviar.');
+            setAlertTitle('Erro');
+            setAlertMessage('Escreva o seu feedback para o professor antes de enviar');
+            setAlertVisible(true);
             return;
         }
 
@@ -151,7 +163,9 @@ export default function Ocorrencia() {
             const user_id = await AsyncStorage.getItem('@user_id');
 
             if (!user_id) {
-                Alert.alert('Erro', 'Usuário não autenticado.');
+                setAlertTitle('Erro');
+                setAlertMessage('Usuário não autenticado.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -164,16 +178,22 @@ export default function Ocorrencia() {
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackStudent', feedback);
 
             if (response.status === 200 || response.status === 201) {
-                Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
+                setAlertTitle('Sucesso');
+                setAlertMessage('Feedback enviado com sucesso!');
+                setAlertVisible(true);
+
                 setConteudo('');
                 setProfessorSelecionado(null);
-                fetchFeedbacks(); // Atualiza a lista de feedbacks
+                fetchFeedbacks();
             } else {
-                Alert.alert('Erro', 'Não foi possível enviar o feedback.');
+                setAlertTitle('Erro');
+                setAlertMessage('Não foi possível enviar o seu feedback.');
+                setAlertVisible(true);
             }
-        } catch (error) {
-            console.error("Error sending feedback:", error);
-            Alert.alert('Erro', 'Ocorreu um erro ao enviar o feedback.');
+        } catch {
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível enviar o seu feedback no momento');
+            setAlertVisible(true);
         }
     };
 
@@ -183,8 +203,9 @@ export default function Ocorrencia() {
         setModalBarraVisible(true);
     };
 
+
     return (
-        <ScrollView style={{backgroundColor: perfilBackgroundColor}}>
+        <ScrollView style={{ backgroundColor: perfilBackgroundColor }}>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 {/* Componente de Gráfico */}
@@ -201,41 +222,83 @@ export default function Ocorrencia() {
                 />
 
                 {/* Modal para seleção de bimestre */}
-                <Modal visible={modalBimestreVisible} transparent animationType="slide">
-                    <View style={styles.modalBackdrop}>
-                        <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                            <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+                {/* Modal para seleção de bimestre */}
+                <Modal visible={modalBimestreVisible} transparent animationType="fade">
+                    <TouchableOpacity
+                        style={styles.modalOverlay}
+                        onPress={() => setModalBimestreVisible(false)}
+                        activeOpacity={1}
+                    >
+                        <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                            {/* Cabeçalho com logo */}
+                            <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                                <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                    <Image
+                                        source={require('../../assets/image/logo.png')}
+                                        style={styles.logo}
+                                        resizeMode="contain"
+                                    />
+                                </View>
+
+                            </View>
+
+                            <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                                Selecione o Bimestre
+                            </Text>
+
                             {[1, 2, 3, 4].map((bimestre) => (
                                 <TouchableOpacity
                                     key={bimestre}
-                                    style={styles.modalItem}
+                                    style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                     onPress={() => {
                                         setBimestreSelecionado(bimestre);
                                         setModalBimestreVisible(false);
                                     }}
                                 >
-                                    <Text style={[styles.modalText, { color: textColor }]}>
+                                    <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                         {bimestre}º Bimestre
                                     </Text>
+
                                 </TouchableOpacity>
                             ))}
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 </Modal>
 
                 {/* Modal para seleção de professor */}
-                <Modal visible={modalProfessorVisible} transparent animationType="slide">
-                    <View style={styles.modalBackdrop}>
-                        <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                            <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+                <Modal visible={modalProfessorVisible} transparent animationType="fade">
+                    <TouchableOpacity
+                        style={styles.modalOverlay}
+                        onPress={() => setModalProfessorVisible(false)}
+                        activeOpacity={1}
+                    >
+                        <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                            {/* Cabeçalho com logo */}
+                            <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                                <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                    <Image
+                                        source={require('../../assets/image/logo.png')}
+                                        style={styles.logo}
+                                        resizeMode="contain"
+                                    />
+                                </View>
+
+                            </View>
+
+                            <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                                Selecione o Professor
+                            </Text>
+
                             <TouchableOpacity
-                                style={styles.modalItem}
+                                style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                 onPress={() => handleSelecionarProfessor(null)}
                             >
-                                <Text style={[styles.modalText, { color: textColor }]}>
+                                <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                     Todos Professores
                                 </Text>
+
                             </TouchableOpacity>
+
                             {feedbacks
                                 .filter((feedback, index, self) =>
                                     feedback.createdByDTO &&
@@ -244,24 +307,25 @@ export default function Ocorrencia() {
                                 .map((feedback) => (
                                     <TouchableOpacity
                                         key={feedback.createdByDTO.id}
-                                        style={styles.modalItem}
+                                        style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                         onPress={() => handleSelecionarProfessor(feedback.createdByDTO)}
                                     >
-                                        <Text style={[styles.modalText, { color: textColor }]}>
+                                        <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                             {feedback.createdByDTO.nomeDocente}
                                         </Text>
+
                                     </TouchableOpacity>
                                 ))}
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 </Modal>
 
                 {/* Modal para valor da barra */}
                 <Modal visible={modalBarraVisible} transparent animationType="slide">
-                    <View style={styles.modalBackdrop}>
-                        <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
-                            <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
-                            <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                    <View style={styles.modalBackdrop2}>
+                        <View style={[styles.modalContainer2, { backgroundColor: '#1E6BE6' }]}>
+                            <Text style={[styles.modalTitle2, { color: 'white' }]}>Valor</Text>
+                            <Text style={[styles.modalText2, { color: 'white', fontSize: 24 }]}>
                                 {barraSelecionada.value.toFixed(1)}
                             </Text>
                             <TouchableOpacity
@@ -326,9 +390,9 @@ export default function Ocorrencia() {
                     {professorSelecionado && (
                         <>
                             <TextInput
-                                style={[styles.input, { 
-                                    backgroundColor: perfilBackgroundColor, 
-                                    color: textColor, 
+                                style={[styles.input, {
+                                    backgroundColor: perfilBackgroundColor,
+                                    color: textColor,
                                     height: 100,
                                     borderColor: textColor,
                                     borderWidth: 1
@@ -352,6 +416,12 @@ export default function Ocorrencia() {
                     )}
                 </View>
             </View>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </ScrollView>
     );
 }
@@ -379,13 +449,76 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
     },
-    modalBackdrop: {
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+    },
+    modalContainer: {
+        width: '85%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingBottom: 25,
+    },
+    logoSquare: {
+        width: 70,
+        height: 70,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    logo: {
+        width: 50,
+        height: 50,
+    },
+    logoText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginVertical: 15,
+        textAlign: 'center',
+        paddingHorizontal: 15,
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+    },
+    modalText: {
+        fontSize: 16,
+    },
+    modalBackdrop2: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    modalContainer: {
+    modalContainer2: {
         backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
@@ -397,19 +530,19 @@ const styles = StyleSheet.create({
         elevation: 10,
         alignItems: 'center'
     },
-    modalTitle: {
+    modalTitle2: {
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 15,
         textAlign: 'center',
     },
-    modalItem: {
+    modalItem2: {
         padding: 15,
         width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
-    modalText: {
+    modalText2: {
         fontSize: 16,
         textAlign: 'center'
     },

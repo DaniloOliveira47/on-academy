@@ -33,7 +33,7 @@ export default function Home() {
           fetchAvisos(response.data.turma.idTurma);
         }
       } catch (error) {
-        console.error('Erro ao buscar aluno:', error);
+
       }
     };
 
@@ -43,7 +43,7 @@ export default function Home() {
         const avisosOrdenados = response.data.sort((a, b) => b.id - a.id);
         setAvisos(avisosOrdenados);
       } catch (error) {
-        console.error('Erro ao buscar avisos:', error);
+
       }
     };
 
@@ -61,8 +61,8 @@ export default function Home() {
     <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
       <Header isDarkMode={isDarkMode} />
       <ScrollView
-       showsVerticalScrollIndicator={false}>
-        
+        showsVerticalScrollIndicator={false}>
+
         <View style={styles.subtela}>
           <View style={[styles.infoContainer, {
             backgroundColor: '#1E6BE6',
@@ -112,7 +112,7 @@ export default function Home() {
                 contentContainerStyle={styles.scrollContentContainer}
                 indicatorStyle={isDarkMode ? 'white' : 'black'}
                 nestedScrollEnabled={true}
-                 showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
               >
                 {filtrarNotasPorBimestre().length > 0 ? (
                   filtrarNotasPorBimestre().map((nota, index) => (
@@ -200,36 +200,59 @@ export default function Home() {
       </ScrollView>
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, {
-            backgroundColor: isDarkMode ? '#333' : '#FFF'
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, {
+            backgroundColor: isDarkMode ? '#141414' : '#FFF'
           }]}>
-            <Text style={[styles.modalTitle, {
-              color: isDarkMode ? '#FFF' : '#000'
+            {/* Cabeçalho com logo */}
+            <View style={[styles.modalHeader, {
+              backgroundColor: isDarkMode ? '#0077FF' : '#0077FF'
             }]}>
-              Selecione o Bimestre
-            </Text>
-            <FlatList
-              data={['Todas as Notas', 1, 2, 3, 4]}
-              keyExtractor={(item) => item.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setBimestreSelecionado(item === 'Todas as Notas' ? null : item);
-                    setModalVisible(false);
-                  }}
-                  style={styles.modalItem}
-                >
-                  <Text style={{
-                    color: isDarkMode ? '#FFF' : '#000',
-                    padding: 12,
-                    fontSize: 16
-                  }}>
-                    {item === 'Todas as Notas' ? item : `${item}º Bimestre`}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
+              <View style={[styles.logoSquare, {
+                backgroundColor: isDarkMode ? '#333' : '#FFF'
+              }]}>
+                <Image
+                  source={require('../../assets/image/logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+            
+            </View>
+
+            {/* Conteúdo do modal */}
+            <View style={styles.modalContent}>
+              <Text style={[styles.modalTitle, {
+                color: isDarkMode ? '#FFF' : '#000'
+              }]}>
+                Selecione o Bimestre
+              </Text>
+
+              <FlatList
+                data={['Todas as Notas', 1, 2, 3, 4]}
+                keyExtractor={(item) => item.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setBimestreSelecionado(item === 'Todas as Notas' ? null : item);
+                      setModalVisible(false);
+                    }}
+                    style={[styles.modalItem, {
+                      borderBottomColor: isDarkMode ? '#444' : '#EEE'
+                    }]}
+                  >
+                    <Text style={{
+                      color: isDarkMode ? '#FFF' : '#000',
+                      padding: 12,
+                      fontSize: 16
+                    }}>
+                      {item === 'Todas as Notas' ? item : `${item}º Bimestre`}
+                    </Text>
+                    
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -321,29 +344,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
   },
-  modalContainer: {
+   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: '85%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  modalHeader: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingBottom: 25,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  logoSquare: {
+    width: 70,
+    height: 70,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    elevation: 3,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   modalContent: {
-    width: '80%',
-    padding: 20,
-    borderRadius: 10,
-    maxHeight: '60%'
+    paddingHorizontal: 15,
+    paddingBottom: 15,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center'
+    fontSize: 18,
+    fontWeight: '600',
+    marginVertical: 15,
+    textAlign: 'center',
   },
   modalItem: {
-    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-    alignItems: 'center'
   },
   contTurmas: {
     width: '100%',

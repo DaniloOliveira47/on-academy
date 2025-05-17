@@ -20,14 +20,17 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { useTheme } from '../path/ThemeContext';
+import CustomAlert from '../components/Gerais/CustomAlert';
 
 export default function Login() {
   const navigation = useNavigation();
   const [password, setPassword] = useState('');
   const [matricula, setMatricula] = useState('');
   const [secureText, setSecureText] = useState(true);
- const { isDarkMode, setIsDarkMode } = useTheme();
-
+  const { isDarkMode, setIsDarkMode } = useTheme();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
   const [activeInput, setActiveInput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,22 +39,32 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    if (!matricula || !password) {
-      Alert.alert('Por favor, preencha todos os campos.');
+    const matriculaTrimmed = matricula.trim();
+    const passwordTrimmed = password.trim();
+
+
+
+    // Verifica se matrícula tem apenas letras e números
+    const matriculaRegex = /^[a-zA-Z0-9]+$/;
+    if (!matriculaRegex.test(matriculaTrimmed)) {
+      setAlertTitle('Matrícula Inválida');
+      setAlertMessage('A matrícula deve conter apenas letras e números, sem espaços ou símbolos.');
+      setAlertVisible(true);
       return;
     }
 
     setIsLoading(true);
 
     const usuario = {
-      identifierCode: matricula,
-      password: password,
+      identifierCode: matriculaTrimmed,
+      password: passwordTrimmed,
     };
 
+    const firstChar = matriculaTrimmed[0]?.toLowerCase();
     let url = '';
-    if (matricula.charAt(0).toLowerCase() === 'a') {
+    if (firstChar === 'a') {
       url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/login';
-    } else if (matricula.charAt(0).toLowerCase() === 'p') {
+    } else if (firstChar === 'p') {
       url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/login';
     } else {
       url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/login';
@@ -70,26 +83,24 @@ export default function Login() {
         const userId = decodedToken.sub;
 
         await AsyncStorage.setItem('@user_id', userId.toString());
-        console.log('Token armazenado com sucesso!', token);
-        console.log('ID do usuário:', userId);
 
-        if (matricula.charAt(0).toLowerCase() === 'a') {
+        if (firstChar === 'a') {
           navigation.navigate('Main');
-        } else if (matricula.charAt(0).toLowerCase() === 'p') {
+        } else if (firstChar === 'p') {
           navigation.navigate('MainDoc');
         } else {
           navigation.navigate('MainIns');
         }
       }
     } catch (error) {
-      if (error.response) { 
-        if (error.response.status === 401) {
-          Alert.alert('Matrícula ou senha inválida, verifique os campos');
-        } else {
-          Alert.alert('Matrícula ou senha inválida, verifique os campos');
-        }
+      if (error.response && error.response.status === 401) {
+        setAlertTitle('Erro de Login');
+        setAlertMessage('Matrícula ou senha inválida, verifique os campos.');
+        setAlertVisible(true);
       } else {
-        Alert.alert('Erro de conexão. Verifique sua internet.');
+        setAlertTitle('Erro de Conexão');
+        setAlertMessage('Erro de conexão. Verifique sua internet.');
+        setAlertVisible(true);
       }
     } finally {
       setIsLoading(false);
@@ -101,129 +112,134 @@ export default function Login() {
       colors={isDarkMode ? ['#000', '#000'] : ['#FFF', '#FFF']}
       style={[styles.tela, { backgroundColor: isDarkMode ? '#1A1A2E' : '#F5F5F5' }]}
     >
-      
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-          bounces={false}
-        >
-          <View style={styles.themeSwitch}>
-            <TouchableOpacity onPress={toggleTheme}>
-              <Ionicons
-                name={isDarkMode ? 'sunny' : 'moon'}
-                size={30}
-                color={isDarkMode ? '#FFF' : '#000'}
-              />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.imageContainer}>
-            <Image style={styles.image} source={require('../assets/image/imageContainer.png')} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={styles.themeSwitch}>
+          <TouchableOpacity onPress={toggleTheme}>
+            <Ionicons
+              name={isDarkMode ? 'sunny' : 'moon'}
+              size={30}
+              color={isDarkMode ? '#FFF' : '#000'}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.imageContainer}>
+          <Image style={styles.image} source={require('../assets/image/imageContainer.png')} />
+        </View>
+
+        <LinearGradient
+          colors={isDarkMode ? ['#1A1A2E', '#16213E'] : ['#E0DFEE', '#D1D0E0']}
+          style={styles.subTela}
+        >
+          <View style={styles.contStyle}>
+            <ImageBackground
+              source={require('../assets/image/Objects.png')}
+              style={styles.imageBackground}
+            >
+              <View style={styles.contText}>
+                <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>
+                  Bem-vindo à (On-Academy)
+                </Text>
+                <Text style={[styles.text, { color: isDarkMode ? '#A4A4A4' : '#555' }]}>
+                  Acompanhe seu desempenho, receba notificações e explore recursos personalizados
+                  para começar
+                </Text>
+              </View>
+            </ImageBackground>
           </View>
 
           <LinearGradient
-            colors={isDarkMode ? ['#1A1A2E', '#16213E'] : ['#E0DFEE', '#D1D0E0']}
-            style={styles.subTela}
+            colors={isDarkMode ? ['#16213E', '#0F3460'] : ['#D1D0E0', '#C1C0D0']}
+            style={styles.formContainer}
           >
-            <View style={styles.contStyle}>
-              <ImageBackground
-                source={require('../assets/image/Objects.png')}
-                style={styles.imageBackground}
+            <View style={styles.form}>
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)',
+                    borderColor: activeInput === 'matricula' ? '#0077FF' : 'transparent',
+                    borderWidth: 2,
+                  },
+                ]}
               >
-                <View style={styles.contText}>
-                  <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>
-                    Bem-vindo à (On-Academy)
-                  </Text>
-                  <Text style={[styles.text, { color: isDarkMode ? '#A4A4A4' : '#555' }]}>
-                    Acompanhe seu desempenho, receba notificações e explore recursos personalizados
-                    para começar
-                  </Text>
-                </View>
-              </ImageBackground>
-            </View>
+                <TextInput
+                  style={[styles.input, { color: isDarkMode ? 'black' : 'black' }]}
+                  placeholder="Nº Matrícula"
+                  placeholderTextColor="#756262"
+                  value={matricula}
+                  onChangeText={setMatricula}
+                  onFocus={() => setActiveInput('matricula')}
+                  onBlur={() => setActiveInput(null)}
+                />
+              </View>
 
-            <LinearGradient
-              colors={isDarkMode ? ['#16213E', '#0F3460'] : ['#D1D0E0', '#C1C0D0']}
-              style={styles.formContainer}
-            >
-              <View style={styles.form}>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)',
-                      borderColor: activeInput === 'matricula' ? '#0077FF' : 'transparent',
-                      borderWidth: 2,
-                    },
-                  ]}
-                >
-                  <TextInput
-                    style={[styles.input, { color: isDarkMode ? 'black' : 'black' }]}
-                    placeholder="Nº Matrícula"
-                    placeholderTextColor="#756262"
-                    value={matricula}
-                    onChangeText={setMatricula}
-                    onFocus={() => setActiveInput('matricula')}
-                    onBlur={() => setActiveInput(null)}
-                  />
-                </View>
-
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      marginTop: 40,
-                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)',
-                      borderColor: activeInput === 'password' ? '#0077FF' : 'transparent',
-                      borderWidth: 2,
-                    },
-                  ]}
-                >
-                  <TextInput
-                    style={[styles.input, { color: isDarkMode ? 'black' : 'black' }]}
-                    placeholder="Sua Senha"
-                    placeholderTextColor="#756262"
-                    secureTextEntry={secureText}
-                    value={password}
-                    onChangeText={setPassword}
-                    onFocus={() => setActiveInput('password')}
-                    onBlur={() => setActiveInput(null)}
-                  />
-
-                  <TouchableOpacity
-                    style={styles.eyeIcon}
-                    onPress={() => setSecureText(!secureText)}
-                  >
-                    <Ionicons
-                      name={secureText ? 'eye-off-outline' : 'eye-outline'}
-                      size={24}
-                      color="#756262"
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity>
-                  <Text style={[styles.forgotPassword, { color: isDarkMode ? '#A4A4A4' : '#0077FF' }]}>
-                    Esqueceu sua Senha?
-                  </Text>
-                </TouchableOpacity>
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    marginTop: 40,
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)',
+                    borderColor: activeInput === 'password' ? '#0077FF' : 'transparent',
+                    borderWidth: 2,
+                  },
+                ]}
+              >
+                <TextInput
+                  style={[styles.input, { color: isDarkMode ? 'black' : 'black' }]}
+                  placeholder="Sua Senha"
+                  placeholderTextColor="#756262"
+                  secureTextEntry={secureText}
+                  value={password}
+                  onChangeText={setPassword}
+                  onFocus={() => setActiveInput('password')}
+                  onBlur={() => setActiveInput(null)}
+                />
 
                 <TouchableOpacity
-                  style={[styles.button, { backgroundColor: '#0077FF' }]}
-                  onPress={handleLogin}
-                  disabled={isLoading}
+                  style={styles.eyeIcon}
+                  onPress={() => setSecureText(!secureText)}
                 >
-                  {isLoading ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text style={styles.buttonText}>Sign In</Text>
-                  )}
+                  <Ionicons
+                    name={secureText ? 'eye-off-outline' : 'eye-outline'}
+                    size={24}
+                    color="#756262"
+                  />
                 </TouchableOpacity>
               </View>
-            </LinearGradient>
+
+              <TouchableOpacity>
+                <Text style={[styles.forgotPassword, { color: isDarkMode ? '#A4A4A4' : '#0077FF' }]}>
+                  Esqueceu sua Senha?
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#0077FF' }]}
+                onPress={handleLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </LinearGradient>
-        </ScrollView>
-     
+        </LinearGradient>
+      </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onDismiss={() => setAlertVisible(false)}
+      />
     </LinearGradient>
   );
 }
@@ -237,14 +253,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-          flexGrow: 1,
+    flexGrow: 1,
   },
   themeSwitch: {
     position: 'absolute',
     top: 40,
     right: 10,
     zIndex: 10,
-  }, 
+  },
   imageContainer: {
     width: '100%',
     height: 260,
@@ -254,8 +270,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     marginLeft: 9
-   },
-  subTela: {      
+  },
+  subTela: {
     flex: 1,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,

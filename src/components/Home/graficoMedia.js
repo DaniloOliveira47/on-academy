@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, FlatList, Animated, Easing, Image } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
@@ -33,7 +33,7 @@ export default function GraficoMedia({ isDarkMode }) {
           animateIn();
         }
       } catch (error) {
-        console.error('Erro ao buscar notas:', error);
+     
       }
     };
 
@@ -132,8 +132,8 @@ export default function GraficoMedia({ isDarkMode }) {
           </G>
         </Svg>
         <Text style={[styles.valorAtual, { color: isDarkMode ? '#AAA' : '#666' }]}>Média</Text>
-        <Animated.Text 
-          style={[styles.valor, { 
+        <Animated.Text
+          style={[styles.valor, {
             color: isDarkMode ? '#FFF' : '#333',
             opacity: fadeAnim,
             transform: [{
@@ -149,20 +149,58 @@ export default function GraficoMedia({ isDarkMode }) {
       </View>
 
       <Modal visible={modalVisible} transparent animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          onPress={() => setModalVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={[styles.modalContainer, {
+            backgroundColor: isDarkMode ? '#141414' : '#FFF'
+          }]}>
+            {/* Cabeçalho com logo */}
+            <View style={[styles.modalHeader, {
+              backgroundColor: isDarkMode ? '#0077FF' : '#0077FF'
+            }]}>
+              <View style={[styles.logoSquare, {
+                backgroundColor: isDarkMode ? '#333' : '#FFF'
+              }]}>
+                <Image
+                  source={require('../../assets/image/logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+       
+            </View>
+
+            {/* Título do modal */}
+            <Text style={[styles.modalTitle, {
+              color: isDarkMode ? '#FFF' : '#000'
+            }]}>
+              Selecione a Matéria
+            </Text>
+
+            {/* Lista de matérias */}
             <FlatList
               data={materias}
               keyExtractor={(item) => item}
+              style={styles.modalList}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.modalItem}
+                  style={[styles.modalItem, {
+                    borderBottomColor: isDarkMode ? '#444' : '#EEE'
+                  }]}
                   onPress={() => {
                     setMateriaSelecionada(item);
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
+                  <Text style={[styles.modalText, {
+                    color: isDarkMode ? '#FFF' : '#333'
+                  }]}>
+                    {item}
+                  </Text>
+                  
                 </TouchableOpacity>
               )}
             />
@@ -217,24 +255,68 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   modalContainer: {
-    width: '80%',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
+    width: '85%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    maxHeight: '70%',
   },
-  modalItem: {
-    paddingVertical: 15,
+  modalHeader: {
     width: '100%',
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingBottom: 25,
+  },
+  logoSquare: {
+    width: 70,
+    height: 70,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginVertical: 15,
+    textAlign: 'center',
+    paddingHorizontal: 15,
+  },
+  modalList: {
+    width: '100%',
+  },
+  modalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   modalText: {
-    fontSize: 18,
+    fontSize: 16,
   },
 });

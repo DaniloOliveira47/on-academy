@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Image, 
-  StyleSheet, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  Modal, 
-  FlatList, 
-  Alert,
-  ActivityIndicator,
-  ScrollView
+import {
+    Image,
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    Modal,
+    FlatList,
+    Alert,
+    ActivityIndicator,
+    ScrollView
 } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CardMateria from '../../components/Boletim/CardMateria';
@@ -45,14 +45,14 @@ export default function Boletim() {
                 setLoading(true);
                 const alunoId = await AsyncStorage.getItem('@user_id');
                 const alunoResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
-                
+
                 setAluno(alunoResponse.data);
-                
+
                 const disciplinasDoAluno = alunoResponse.data.turma.disciplinaTurmas.map(d => ({
                     id: d.id,
                     nomeDisciplina: d.nomeDisciplina.trim()
                 }));
-                
+
                 setDisciplinas(disciplinasDoAluno);
                 setNotas(alunoResponse.data.notas || []);
             } catch (error) {
@@ -71,7 +71,7 @@ export default function Boletim() {
         const notasDoBimestre = notas.filter(nota => nota.bimestre === bimestreNumero);
 
         return disciplinas.map(disciplina => {
-            const notaDaDisciplina = notasDoBimestre.find(nota => 
+            const notaDaDisciplina = notasDoBimestre.find(nota =>
                 nota.nomeDisciplina.trim() === disciplina.nomeDisciplina
             );
             return {
@@ -88,28 +88,28 @@ export default function Boletim() {
             setDownloading(true);
             const alunoId = await AsyncStorage.getItem('@user_id');
             const url = `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/boletim/${alunoId}`;
-            const fileName = `boletim_${alunoId}_${new Date().toISOString().slice(0,10)}.pdf`;
-            
+            const fileName = `boletim_${alunoId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
             const downloadUri = FileSystem.cacheDirectory + fileName;
             const { uri } = await FileSystem.downloadAsync(url, downloadUri);
-            
+
             const fileInfo = await FileSystem.getInfoAsync(uri);
             if (!fileInfo.exists || fileInfo.size === 0) {
                 throw new Error('O arquivo PDF está vazio');
             }
-        
+
             if (Platform.OS === 'android') {
                 try {
                     const { status } = await MediaLibrary.requestPermissionsAsync();
                     if (status !== 'granted') {
                         throw new Error('Permissão para acessar arquivos foi negada');
                     }
-            
+
                     const asset = await MediaLibrary.createAssetAsync(uri);
                     await MediaLibrary.createAlbumAsync('Downloads', asset, false);
-                    
+
                     Alert.alert(
-                        'Sucesso', 
+                        'Sucesso',
                         'Boletim salvo na pasta Downloads',
                         [
                             {
@@ -124,24 +124,24 @@ export default function Boletim() {
                     console.warn('Erro ao salvar com MediaLibrary:', mediaError);
                 }
             }
-        
+
             await shareAsync(uri, {
                 mimeType: 'application/pdf',
                 dialogTitle: 'Salvar Boletim',
                 UTI: 'com.adobe.pdf'
             });
-        
+
         } catch (error) {
             console.error('Erro completo:', error);
             Alert.alert(
-                'Erro', 
+                'Erro',
                 error.message || 'Não foi possível salvar o boletim'
             );
         } finally {
             setDownloading(false);
         }
     };
-    
+
     const openPDF = async (uri) => {
         try {
             if (Platform.OS === 'android') {
@@ -172,27 +172,27 @@ export default function Boletim() {
     }
 
     return (
-        <ScrollView  showsVerticalScrollIndicator={false}>
-            
+        <ScrollView showsVerticalScrollIndicator={false}>
+
             <View>
-                
+
                 <HeaderSimples titulo="BOLETIM" />
-                
+
                 <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 60 }]}>
-                    
+
                     <View style={{
-                        backgroundColor: container, 
-                        marginTop: 10, 
-                        padding: 20, 
-                        borderRadius: 20, 
-                        paddingTop: 30, 
+                        backgroundColor: container,
+                        marginTop: 10,
+                        padding: 20,
+                        borderRadius: 20,
+                        paddingTop: 30,
                         shadowColor: '#000',
                         shadowOpacity: 0.1,
                         shadowRadius: 4,
                         elevation: 5,
                     }}>
                         <View style={{ alignItems: 'center' }}>
-                           
+
                             <View style={styles.botao}>
                                 <Text style={styles.textoBotao}>Selecione o Bimestre</Text>
                                 <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -209,7 +209,7 @@ export default function Boletim() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        
+
                         <View style={styles.boletim}>
                             <View style={styles.titulos}>
                                 <View style={styles.containers}>
@@ -258,24 +258,58 @@ export default function Boletim() {
                         </View>
 
                         <Modal visible={modalVisible} transparent animationType="fade">
-                            <TouchableOpacity 
-                                style={styles.modalOverlay} 
+                            <TouchableOpacity
+                                style={styles.modalOverlay}
                                 onPress={() => setModalVisible(false)}
                                 activeOpacity={1}
                             >
-                                <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#222' : '#FFF' }]}>
+                                <View style={[styles.modalContainer, {
+                                    backgroundColor: isDarkMode ? '#141414' : '#FFF'
+                                }]}>
+                                    {/* Cabeçalho com logo */}
+                                    <View style={[styles.modalHeader, {
+                                        backgroundColor: isDarkMode ? '#0077FF' : '#0077FF'
+                                    }]}>
+                                        <View style={[styles.logoSquare, {
+                                            backgroundColor: isDarkMode ? '#333' : '#FFF'
+                                        }]}>
+                                            <Image
+                                                source={require('../../assets/image/logo.png')}
+                                                style={styles.logo}
+                                                resizeMode="contain"
+                                            />
+                                        </View>
+
+                                    </View>
+
+                                    {/* Título do modal */}
+                                    <Text style={[styles.modalTitle, {
+                                        color: isDarkMode ? '#FFF' : '#000'
+                                    }]}>
+                                        Selecione o Bimestre
+                                    </Text>
+
+                                    {/* Lista de bimestres */}
                                     <FlatList
                                         data={bimestres}
                                         keyExtractor={(item) => item}
+                                        style={styles.modalList}
                                         renderItem={({ item }) => (
                                             <TouchableOpacity
-                                                style={styles.modalItem}
+                                                style={[styles.modalItem, {
+                                                    borderBottomColor: isDarkMode ? '#444' : '#EEE'
+                                                }]}
                                                 onPress={() => {
                                                     setBimestreSelecionado(item);
                                                     setModalVisible(false);
                                                 }}
                                             >
-                                                <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>{item}</Text>
+                                                <Text style={[styles.modalText, {
+                                                    color: isDarkMode ? '#FFF' : '#333'
+                                                }]}>
+                                                    {item === 'Todas as Notas' ? item : `${item}º Bimestre`}
+                                                </Text>
+
                                             </TouchableOpacity>
                                         )}
                                     />
@@ -352,24 +386,68 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
     },
     modalContainer: {
-        width: '80%',
-        borderRadius: 10,
-        padding: 15,
-        alignItems: 'center',
+        width: '85%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        maxHeight: '70%',
     },
-    modalItem: {
-        paddingVertical: 15,
+    modalHeader: {
         width: '100%',
         alignItems: 'center',
+        paddingVertical: 20,
+        paddingBottom: 25,
+    },
+    logoSquare: {
+        width: 70,
+        height: 70,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    logo: {
+        width: 50,
+        height: 50,
+    },
+    logoText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginVertical: 15,
+        textAlign: 'center',
+        paddingHorizontal: 15,
+    },
+    modalList: {
+        width: '100%',
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
     },
     modalText: {
-        fontSize: 18,
+        fontSize: 16,
     },
 });

@@ -20,6 +20,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function Turmas() {
     const { isDarkMode } = useTheme();
@@ -33,6 +34,9 @@ export default function Turmas() {
     const [novaSala, setNovaSala] = useState('');
     const [novaDisciplina, setNovaDisciplina] = useState('');
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     const [turmas, setTurmas] = useState([]);
     const [filtro, setFiltro] = useState('');
     const [turmasFiltradas, setTurmasFiltradas] = useState([]);
@@ -61,7 +65,6 @@ export default function Turmas() {
         borderWidth: 1,
         borderColor: isDarkMode ? '#555' : '#D1D1D1',
     };
-
     useFocusEffect(
         useCallback(() => {
             const loadData = async () => {
@@ -69,7 +72,9 @@ export default function Turmas() {
                 try {
                     await Promise.all([fetchTurmas(), fetchProfessores(), fetchDisciplinas()]);
                 } catch (error) {
-                    Alert.alert('Erro', 'Não foi possível carregar os dados');
+                    setAlertTitle('Erro');
+                    setAlertMessage('Não foi possível carregar os dados');
+                    setAlertVisible(true);
                 } finally {
                     setRefreshing(false);
                 }
@@ -90,7 +95,9 @@ export default function Turmas() {
                     setCarregando(true);
                     await Promise.all([fetchProfessores(), fetchDisciplinas()]);
                 } catch (error) {
-                    Alert.alert('Erro', 'Não foi possível carregar os dados necessários');
+                    setAlertTitle('Erro');
+                    setAlertMessage('Não foi possível carregar os dados necessários');
+                    setAlertVisible(true);
                 } finally {
                     setCarregando(false);
                 }
@@ -107,7 +114,9 @@ export default function Turmas() {
             setTurmas(response.data || []);
             setTurmasFiltradas(response.data || []);
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível carregar as turmas. Verifique sua conexão.');
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível carregar as turmas. Verifique sua conexão.');
+            setAlertVisible(true);
             setTurmas([]);
             setTurmasFiltradas([]);
         } finally {
@@ -121,7 +130,9 @@ export default function Turmas() {
             setProfessores(response.data || []);
             return true;
         } catch (error) {
-            Alert.alert('Aviso', 'Não foi possível carregar a lista de professores');
+            setAlertTitle('Aviso');
+            setAlertMessage('Não foi possível carregar a lista de professores');
+            setAlertVisible(true);
             return false;
         }
     };
@@ -132,7 +143,9 @@ export default function Turmas() {
             setDisciplinas(response.data || []);
             return true;
         } catch (error) {
-            Alert.alert('Aviso', 'Não foi possível carregar a lista de disciplinas');
+            setAlertTitle('Aviso');
+            setAlertMessage('Não foi possível carregar a lista de disciplinas');
+            setAlertVisible(true);
             return false;
         }
     };
@@ -148,41 +161,56 @@ export default function Turmas() {
     };
 
     const validarCampos = () => {
+        const nomeTrimado = novaTurma.trim();
+        const capacidadeValida = !isNaN(novaCapacidade) && parseInt(novaCapacidade) >= 20;
+        const salaValida = !isNaN(novaSala) && parseInt(novaSala) > 0;
+
         const novosErros = {
-            nomeTurma: !novaTurma.trim(),
-            capacidade: !novaCapacidade.trim() ||
-                isNaN(novaCapacidade) ||
-                parseInt(novaCapacidade) < 20 ||
-                parseInt(novaCapacidade) <= 0,
-            sala: !novaSala.trim() ||
-                isNaN(novaSala) ||
-                parseInt(novaSala) <= 0,
+            nomeTurma: nomeTrimado === '',
+            capacidade: !capacidadeValida,
+            sala: !salaValida,
             professores: selectedProfessores.length === 0,
-            disciplinas: selectedDisciplinas.length === 0
+            disciplinas: selectedDisciplinas.length === 0,
         };
 
         setErros(novosErros);
 
-        if (novosErros.capacidade && novaCapacidade.trim() && !isNaN(novaCapacidade)) {
-            if (parseInt(novaCapacidade) < 20) {
-                Alert.alert('Atenção', 'A capacidade mínima da turma é 20 alunos.');
-            } else {
-                Alert.alert('Atenção', 'Capacidade inválida. Digite um número válido.');
-            }
+        if (nomeTrimado === '') {
+            setAlertTitle('Atenção');
+            setAlertMessage('O nome da turma é obrigatório.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (!capacidadeValida) {
+            setAlertTitle('Atenção');
+            setAlertMessage('A capacidade mínima é 20 alunos e deve ser um número válido.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (!salaValida) {
+            setAlertTitle('Atenção');
+            setAlertMessage('Digite um número de sala válido.');
+            setAlertVisible(true);
             return false;
         }
 
         if (novosErros.professores) {
-            Alert.alert('Atenção', 'Selecione pelo menos um professor.');
+            setAlertTitle('Atenção');
+            setAlertMessage('Selecione pelo menos um professor.');
+            setAlertVisible(true);
             return false;
         }
 
         if (novosErros.disciplinas) {
-            Alert.alert('Atenção', 'Selecione pelo menos uma disciplina.');
+            setAlertTitle('Atenção');
+            setAlertMessage('Selecione pelo menos uma disciplina.');
+            setAlertVisible(true);
             return false;
         }
 
-        return !Object.values(novosErros).some(erro => erro);
+        return true;
     };
 
     const criarTurma = async () => {
@@ -192,7 +220,9 @@ export default function Turmas() {
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -214,13 +244,18 @@ export default function Turmas() {
                 }
             );
 
+            setAlertTitle('Sucesso');
+            setAlertMessage('Turma criada com sucesso!');
+            setAlertVisible(true);
+
             setModalCriarVisible(false);
             limparCampos();
             await fetchTurmas();
-            Alert.alert('Sucesso', 'Turma criada com sucesso!');
         } catch (error) {
             const mensagem = error.response?.data?.message || 'Falha ao criar turma';
-            Alert.alert('Erro', mensagem);
+            setAlertTitle('Erro');
+            setAlertMessage(mensagem);
+            setAlertVisible(true);
         } finally {
             setCarregando(false);
         }
@@ -228,7 +263,9 @@ export default function Turmas() {
 
     const registrarNovaDisciplina = async () => {
         if (!novaDisciplina.trim()) {
-            Alert.alert('Erro', 'Por favor, insira um nome para a disciplina');
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, insira um nome para a disciplina');
+            setAlertVisible(true);
             return;
         }
 
@@ -236,7 +273,9 @@ export default function Turmas() {
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -250,13 +289,18 @@ export default function Turmas() {
                 }
             );
 
-            Alert.alert('Sucesso', 'Disciplina registrada com sucesso!');
+            setAlertTitle('Sucesso');
+            setAlertMessage('Disciplina registrada com sucesso!');
+            setAlertVisible(true);
+
             setModalNovaDisciplinaVisible(false);
             setNovaDisciplina('');
             fetchDisciplinas();
         } catch (error) {
             const mensagem = error.response?.data?.message || 'Não foi possível registrar a disciplina';
-            Alert.alert('Erro', mensagem);
+            setAlertTitle('Erro');
+            setAlertMessage(mensagem);
+            setAlertVisible(true);
         } finally {
             setCarregando(false);
         }
@@ -311,6 +355,7 @@ export default function Turmas() {
         setSelectedDisciplinas(novasDisciplinas);
         setErros({ ...erros, disciplinas: novasDisciplinas.length === 0 });
     };
+
 
     const indiceInicial = (paginaSelecionada - 1) * CARDS_POR_PAGINA;
     const indiceFinal = indiceInicial + CARDS_POR_PAGINA;
@@ -684,6 +729,12 @@ export default function Turmas() {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

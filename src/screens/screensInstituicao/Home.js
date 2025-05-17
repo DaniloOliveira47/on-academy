@@ -8,6 +8,7 @@ import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
 import HeaderIns from '../../components/Home/HeaderIns';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function HomeInstituicao() {
     const { isDarkMode } = useTheme();
@@ -16,16 +17,15 @@ export default function HomeInstituicao() {
     const [conteudoAviso, setConteudoAviso] = useState('');
     const [avisos, setAvisos] = useState([]);
     const [turmaSelecionada, setTurmaSelecionada] = useState(null);
-
-    // Carrega os dados sempre que a tela recebe foco
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
                 try {
                     // Fetch das turmas
                     const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
-                    console.log('Resposta da API (Turmas):', turmasResponse.data);
-
                     if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
                         setTurmas(turmasResponse.data);
                     } else {
@@ -38,8 +38,8 @@ export default function HomeInstituicao() {
                         new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
                     );
                     setAvisos(avisosOrdenados);
-                } catch (error) {
-                    console.error('Erro ao carregar dados:', error);
+                } catch {
+                 
                     setTurmas([]);
                     setAvisos([]);
                 }
@@ -51,7 +51,6 @@ export default function HomeInstituicao() {
 
     const handleSelecionarTurma = (id) => {
         setTurmaSelecionada(id);
-        console.log('Turma selecionada:', id);
     };
 
     const gerarCorAleatoria = () => {
@@ -61,7 +60,9 @@ export default function HomeInstituicao() {
     const enviarAviso = async () => {
         try {
             if (!turmaSelecionada) {
-                Alert.alert('Aviso', 'Por favor, selecione uma turma.');
+                setAlertTitle('Aviso');
+                setAlertMessage('Por favor, selecione uma turma para postar o aviso');
+                setAlertVisible(true);
                 return;
             }
 
@@ -69,12 +70,16 @@ export default function HomeInstituicao() {
             const token = await AsyncStorage.getItem('@user_token');
 
             if (!instituicaoId || !token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
             if (!conteudoAviso.trim()) {
-                Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
+                setAlertTitle('Aviso');
+                setAlertMessage('Por favor, digite um aviso ou lembrete para a turma antes de enviar.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -98,13 +103,17 @@ export default function HomeInstituicao() {
             );
             setAvisos(avisosOrdenados);
 
-            Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
+            setAlertTitle('Sucesso');
+            setAlertMessage('Aviso enviado com sucesso!');
+            setAlertVisible(true);
             setConteudoAviso('');
         } catch (error) {
-            console.error('Erro ao enviar aviso:', error);
-            Alert.alert('Erro', error.response?.data?.message || 'Erro ao enviar aviso. Tente novamente.');
+            setAlertTitle('Erro');
+            setAlertMessage(error.response?.data?.message || 'Falha ao enviar o aviso.');
+            setAlertVisible(true);
         }
     };
+
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -237,6 +246,12 @@ export default function HomeInstituicao() {
                     </View>
                 </View>
             </ScrollView>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

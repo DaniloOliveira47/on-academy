@@ -17,7 +17,7 @@ export default function Emocional() {
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} style={{backgroundColor: perfilBackgroundColor}}>
             <HeaderSimples titulo="EMOCIONAL" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <View style={[styles.subTela, { backgroundColor: cont }]}>
