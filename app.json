@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OnAcademy",
-    "slug": "OnAcademy", 
+    "slug": "OnAcademy",
     "version": "1.0.0",
     "cli": {
       "appVersionSource": "remote"
@@ -13,7 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "package": "com.danilo_47.onacademy", 
+      "package": "com.danilo_47.onacademy",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/ona.png",
@@ -26,9 +26,10 @@
       ]
     },
     "plugins": [
-      "expo-build-properties" 
+      "expo-build-properties"
     ],
     "extra": {
+      "groqApiKey": "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",
       "eas": {
         "projectId": "508b3bed-d030-4f53-8ac6-9977190151d5"
       }

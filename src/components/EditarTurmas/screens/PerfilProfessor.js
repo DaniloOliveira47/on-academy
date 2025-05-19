@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    Image,
-    TouchableOpacity,
-    Modal,
-    TextInput,
-    ScrollView,
-    ActivityIndicator,
-    Alert,
-    Platform,
-    Dimensions
-} from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, TextInput, ScrollView, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import Campo from '../../Perfil/Campo';
@@ -28,7 +15,7 @@ import CustomAlert from '../../Gerais/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
-// Função para formatar a data no formato dd/mm/aaaa
+
 const formatarData = (dataString) => {
     if (!dataString) return '';
 
@@ -49,7 +36,7 @@ const formatarData = (dataString) => {
     }
 };
 
-// Funções de validação
+
 const validarDataNascimento = (date) => {
     const hoje = new Date();
     const idade = hoje.getFullYear() - date.getFullYear();
@@ -62,22 +49,22 @@ const validarDataNascimento = (date) => {
 };
 
 const validarTelefone = (telefone) => {
-    // Remove formatação para validação
+
     const numeros = telefone.replace(/\D/g, '');
-    // Verifica se tem 10 ou 11 dígitos (com ou sem 9 adicional)
+
     return numeros.length === 10 || numeros.length === 11;
 };
 
 const formatarTelefone = (input) => {
     if (!input) return '';
 
-    // Remove toda formatação existente (parênteses, espaços, hífens)
+
     const numeros = input.replace(/\D/g, '');
 
-    // Limita a 11 caracteres (DD + 9 dígitos)
+
     const limite = numeros.substring(0, 11);
 
-    // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
+
     if (limite.length > 10) {
         return limite.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     }
@@ -95,10 +82,10 @@ const formatarTelefone = (input) => {
 const formatarTelefoneExibicao = (telefone) => {
     if (!telefone) return 'Não informado';
 
-    // Remove tudo que não é dígito
+
     const numeros = telefone.replace(/\D/g, '');
 
-    // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
+
     if (numeros.length > 10) {
         return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     }
@@ -402,7 +389,7 @@ export default function PerfilProfessor() {
 
     const handleEditSave = async () => {
         try {
-            // Verificar se há erros de validação
+
             const hasErrors = Object.values(validationErrors).some(error => error !== '');
             if (hasErrors) {
                 setAlertTitle('Atenção');
@@ -411,7 +398,7 @@ export default function PerfilProfessor() {
                 return;
             }
 
-            // Validações adicionais
+
             if (!perfilEdit.nome) {
                 setAlertTitle('Atenção');
                 setAlertMessage('Nome é obrigatório');
@@ -450,14 +437,14 @@ export default function PerfilProfessor() {
             setUpdating(true);
             const token = await getAuthToken();
 
-            // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
+
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
             const formattedDate = `${ano}-${mes}-${dia}`;
 
-            // Remover formatação do telefone (deixar apenas números)
+
             const telefoneNumerico = perfilEdit.telefone ? perfilEdit.telefone.replace(/\D/g, '') : null;
 
-            // Preparar os dados no formato esperado pelo backend
+
             const dadosParaEnviar = {
                 nomeDocente: perfilEdit.nome,
                 dataNascimentoDocente: formattedDate,
@@ -466,7 +453,7 @@ export default function PerfilProfessor() {
                 identifierCode: perfilEdit.codigoIdentificador,
                 disciplineId: selectedDisciplinas,
                 classId: selectedTurmas,
-                imageUrl: newImageBase64 // Inclui a imagem base64 no corpo da requisição
+                imageUrl: newImageBase64
             };
 
             const response = await axios.put(
@@ -486,7 +473,7 @@ export default function PerfilProfessor() {
                 setAlertVisible(true);
                 await fetchProfessor();
                 setIsEditing(false);
-                setNewImageBase64(null); // Limpa a imagem após o sucesso
+                setNewImageBase64(null);
             }
         } catch (error) {
             console.error('Erro ao atualizar professor:', error);
@@ -541,7 +528,7 @@ export default function PerfilProfessor() {
             );
         } finally {
             setLoading(false);
-            // Você pode testar comentando o fechamento do modal se suspeitar que interfere
+
             setModalDeleteVisible(false);
         }
     };
@@ -552,9 +539,9 @@ export default function PerfilProfessor() {
             await fetchAllTurmasAndDisciplinas();
             setSelectedTurmas(perfil.turmas.map(t => t.id));
             setSelectedDisciplinas(perfil.disciplinas.map(d => d.id));
-            setPerfilEdit(perfil); // Reseta as edições ao entrar no modo de edição
+            setPerfilEdit(perfil);
         } else {
-            setNewImageBase64(null); // Limpa a imagem se cancelar a edição
+            setNewImageBase64(null);
         }
         setIsEditing(!isEditing);
     };
@@ -766,7 +753,7 @@ export default function PerfilProfessor() {
                     />
 
                     <View style={styles.inlineFieldsContainer}>
-                        {/* Telefone */}
+
                         <View style={[styles.inline, { width: width * 0.45 }]}>
                             <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Telefone</Text>
                             {isEditing ? (
@@ -800,7 +787,7 @@ export default function PerfilProfessor() {
                             )}
                         </View>
 
-                        {/* Data de Nascimento */}
+
                         <View style={[styles.inline, { width: width * 0.45 }]}>
                             <Text style={[styles.label, { color: isDarkMode ? '#FFF' : '#000' }]}>Data de Nascimento</Text>
                             {isEditing ? (
@@ -935,7 +922,7 @@ export default function PerfilProfessor() {
                     activeOpacity={1}
                 >
                     <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-                        {/* Header with logo */}
+
                         <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
                             <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
                                 <Image

@@ -19,7 +19,6 @@ export default function FeedbackStack() {
                     },
                 }}
             >
-
                 <Stack.Screen
                     name="Turmas"
                     component={Turmas}

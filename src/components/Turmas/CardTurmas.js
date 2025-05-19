@@ -8,8 +8,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     const { isDarkMode } = useTheme();
 
     const handleNavigate = () => {
-        // Navegar apenas com os parâmetros
-        navigation.navigate(navegacao, { turmaId }); // Agora a tela de destino é definida onde o componente é chamado
+
+        navigation.navigate(navegacao, { turmaId });
     };
 
     return (

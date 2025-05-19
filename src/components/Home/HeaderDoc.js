@@ -92,15 +92,15 @@ export default function HeaderDoc() {
     return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
   };
   const eventosFuturos = events
-  .filter((event) => {
-    const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-    return eventDateTime > new Date();
-  })
-  .sort((a, b) => {
-    const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
-    const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
-    return dateA - dateB; // ordem crescente: mais próximo primeiro
-  });
+    .filter((event) => {
+      const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+      return eventDateTime > new Date();
+    })
+    .sort((a, b) => {
+      const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
+      const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
+      return dateA - dateB;
+    });
 
 
   return (

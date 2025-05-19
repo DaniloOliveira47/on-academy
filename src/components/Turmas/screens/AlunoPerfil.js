@@ -1,26 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    Image,
-    TouchableOpacity,
-    ActivityIndicator,
-    ScrollView,
-    Alert,
-    TextInput,
-    Modal
-} from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, Alert, TextInput, Modal } from 'react-native';
 import Campo from '../../Perfil/Campo';
 import { useTheme } from '../../../path/ThemeContext';
 import HeaderSimples from '../../Gerais/HeaderSimples';
 import Perguntas from '../../Feedback/Perguntas';
 import Avaliacao from '../../Feedback/Avaliacao';
-import GraficoFeedback from '../../Gerais/GraficoFeedback'; // Importe o novo componente
+import GraficoFeedback from '../../Gerais/GraficoFeedback';
 import axios from 'axios';
 import Swiper from 'react-native-swiper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
@@ -287,13 +275,13 @@ export default function AlunoPerfil({ route }) {
                         elevation: 3,
                     }]}>
                         <View style={styles.linhaUser}>
-                            <View style={{backgroundColor: 'white', borderRadius: 40}}>
+                            <View style={{ backgroundColor: 'white', borderRadius: 40 }}>
 
-                            
-                            <Image
-                                source={aluno.imageUrl ? { uri: aluno.imageUrl } : require('../../../assets/image/Professor.png')}
-                                style={styles.profileImage}
-                            />
+
+                                <Image
+                                    source={aluno.imageUrl ? { uri: aluno.imageUrl } : require('../../../assets/image/Professor.png')}
+                                    style={styles.profileImage}
+                                />
                             </View>
                             <View style={styles.name}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>

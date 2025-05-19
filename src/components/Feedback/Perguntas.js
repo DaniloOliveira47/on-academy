@@ -10,8 +10,8 @@ export default function Perguntas({ numero, text }) {
       <Text style={styles.numero}>
         {numero}-
       </Text>
-      <Text style={[styles.pergunta, {color: textColor}]}>
-       {text}
+      <Text style={[styles.pergunta, { color: textColor }]}>
+        {text}
       </Text>
     </View>
   )

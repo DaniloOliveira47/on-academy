@@ -8,6 +8,7 @@ import EmocionalScreen from './screens/screensAluno/Emocional';
 import BoletimScreen from './screens/screensAluno/Boletim';
 import EventosScreen from './screens/Eventos';
 import OcorrenciaScreen from './screens/screensAluno/Ocorrencia';
+import ChatScreen from './screens/screensAluno/ChatBox';
 import { useTheme } from './path/ThemeContext';
 
 
@@ -37,6 +38,8 @@ export default function Navigation() {
             case 'Ocorrencia':
               iconName = 'alert-circle';
               break;
+            case 'ChatBox':
+              iconName = 'message-square'
             default:
               iconName = 'help-circle';
           }
@@ -77,6 +80,11 @@ export default function Navigation() {
       <Tab.Screen
         name="Ocorrencia"
         component={OcorrenciaScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Chat-Box"
+        component={ChatScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>

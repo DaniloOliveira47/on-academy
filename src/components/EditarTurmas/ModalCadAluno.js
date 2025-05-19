@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    TextInput,
-    TouchableOpacity,
-    Modal,
-    Image,
-    Alert,
-    ActivityIndicator,
-    Platform
-} from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -37,7 +26,6 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const [alertMessage, setAlertMessage] = useState('');
 
 
-    // Request permissions when component mounts
     useEffect(() => {
         (async () => {
             if (Platform.OS !== 'web') {
@@ -49,7 +37,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         })();
     }, []);
 
-    // Reset form when modal opens
+
     useEffect(() => {
         if (visible) {
             setNomeAluno('');
@@ -67,7 +55,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     useEffect(() => {
         const validationErrors = {};
 
-        // Nome
+
         if (touched.nomeAluno) {
             if (!nomeAluno.trim()) {
                 validationErrors.nomeAluno = 'Nome é obrigatório';
@@ -76,7 +64,6 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             }
         }
 
-        // Email
         if (touched.emailAluno) {
             if (!emailAluno.trim()) {
                 validationErrors.emailAluno = 'Email é obrigatório';
@@ -85,7 +72,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             }
         }
 
-        // Telefone
+
         if (touched.telefoneAluno) {
             const digits = telefoneAluno.replace(/\D/g, '');
             if (!digits) {
@@ -95,7 +82,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             }
         }
 
-        // Data de nascimento
+
         if (touched.dataNascimento) {
             if (!dataNascimento) {
                 validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
@@ -129,7 +116,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         }
     };
 
-    // Formatação automática do telefone
+
     const formatPhone = (input) => {
         const numbers = input.replace(/\D/g, '');
         let formatted = '';
@@ -152,7 +139,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         setTelefoneAluno(formatted);
     };
 
-    // Image picker function
+
     const pickImage = async () => {
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
@@ -212,7 +199,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
 
             await onCreate(alunoData, token);
 
-            // Reset
+
             setNomeAluno('');
             setEmailAluno('');
             setTelefoneAluno('');
@@ -278,7 +265,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                             <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                         </TouchableOpacity>
 
-                        {/* Profile Image Picker */}
+
                         <View style={styles.imagePickerContainer}>
                             <TouchableOpacity onPress={pickImage} disabled={isCreating}>
                                 <Image

@@ -3,7 +3,7 @@ import React from 'react'
 import { Text, TouchableOpacity } from 'react-native';
 import { Image, StyleSheet, View } from 'react-native'
 import { useTheme } from '../../path/ThemeContext';
-import { color } from 'react-native-elements/dist/helpers';
+
 
 export default function CardAlunos({ nome, alunoId, navegacao, fotoAluno }) {
     const { isDarkMode } = useTheme();
@@ -13,23 +13,22 @@ export default function CardAlunos({ nome, alunoId, navegacao, fotoAluno }) {
         navigation.navigate(navegacao, { alunoId });
     };
 
-    // Função para verificar se a URI da imagem é válida
     const imagemValida = fotoAluno && (fotoAluno.startsWith('http') || fotoAluno.startsWith('file'));
 
     return (
-        <TouchableOpacity onPress={handleNavigate} style={[styles.container, {backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
-            <View style={[styles.imageContainer, {borderColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+        <TouchableOpacity onPress={handleNavigate} style={[styles.container, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
+            <View style={[styles.imageContainer, { borderColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 {imagemValida ? (
-                    <Image 
-                        style={styles.image} 
-                        source={{ uri: fotoAluno }} 
+                    <Image
+                        style={styles.image}
+                        source={{ uri: fotoAluno }}
                         defaultSource={require('../../assets/image/Professor.png')}
                         onError={() => console.log("Erro ao carregar imagem do aluno")}
                     />
                 ) : (
-                    <Image 
-                        style={[styles.image, {backgroundColor: 'white'}]} 
-                        source={require('../../assets/image/Professor.png')} 
+                    <Image
+                        style={[styles.image, { backgroundColor: 'white' }]}
+                        source={require('../../assets/image/Professor.png')}
                     />
                 )}
             </View>
@@ -59,8 +58,8 @@ const styles = StyleSheet.create({
         marginTop: 40
     },
     imageContainer: {
-        backgroundColor: 'white', 
-        width: 80, 
+        backgroundColor: 'white',
+        width: 80,
         position: 'absolute',
         marginLeft: 40,
         marginTop: -30,

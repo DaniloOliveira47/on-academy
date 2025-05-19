@@ -3,26 +3,26 @@ import { Text, TouchableOpacity, View, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../path/ThemeContext';
 
-export default function CardProfessorIns({ nome, id, imageUrl }) { // Adicione imageUrl como prop
+export default function CardProfessorIns({ nome, id, imageUrl }) {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
-    
+
     return (
         <View style={[styles.container, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
-            <View style={[styles.imageContainer, {borderColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
+            <View style={[styles.imageContainer, { borderColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 {imageUrl ? (
-                    <Image 
-                        style={styles.image} 
-                        source={{ uri: imageUrl }} 
+                    <Image
+                        style={styles.image}
+                        source={{ uri: imageUrl }}
                         onError={(e) => {
-                   
+
                             e.nativeEvent.target.source = require('../../assets/image/Professor.png');
                         }}
                     />
                 ) : (
-                    <Image 
-                        style={styles.image} 
-                        source={require('../../assets/image/Professor.png')} // Imagem padrão
+                    <Image
+                        style={styles.image}
+                        source={require('../../assets/image/Professor.png')}
                     />
                 )}
             </View>
@@ -30,7 +30,7 @@ export default function CardProfessorIns({ nome, id, imageUrl }) { // Adicione i
                 {nome}
             </Text>
             <TouchableOpacity
-               onPress={() => navigation.navigate('PerfilProfessor', { professorId: id })}
+                onPress={() => navigation.navigate('PerfilProfessor', { professorId: id })}
                 style={styles.botao}
             >
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         backgroundColor: 'white',
-   
+
         width: 80,
         height: 80,
         position: 'absolute',

@@ -36,7 +36,7 @@ export default function ProfessoresFeedback() {
                 setPaginaSelecionada(1);
             }
         } catch {
-            // Em caso de erro, simplesmente limpa a lista sem mostrar mensagem
+
             if (isActive) {
                 setProfessores([]);
                 setProfessoresFiltrados([]);
@@ -106,7 +106,7 @@ export default function ProfessoresFeedback() {
                 await fetchProfessores();
             }
         } catch {
-            // Não mostra mensagem de erro, apenas recarrega
+
             await fetchProfessores();
         } finally {
             setIsCreating(false);
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 16,
         position: 'relative',
-        
+
     },
     inputContainer: {
         flexDirection: 'row',

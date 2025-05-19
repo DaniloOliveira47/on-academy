@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Image,
-    StyleSheet,
-    Text,
-    View,
-    TouchableOpacity,
-    Modal,
-    FlatList,
-    Alert,
-    ActivityIndicator,
-    ScrollView
-} from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity, Modal, FlatList, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CardMateria from '../../components/Boletim/CardMateria';
 import Nota from '../../components/Boletim/Nota';
@@ -22,7 +11,7 @@ import { Platform } from 'react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BarraAzul from '../../components/Boletim/barraAzul';
+
 
 export default function Boletim() {
     const [modalVisible, setModalVisible] = useState(false);
@@ -32,7 +21,6 @@ export default function Boletim() {
     const [aluno, setAluno] = useState(null);
     const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
-
     const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
     const { isDarkMode } = useTheme();
     const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
@@ -282,14 +270,13 @@ export default function Boletim() {
 
                                     </View>
 
-                                    {/* Título do modal */}
                                     <Text style={[styles.modalTitle, {
                                         color: isDarkMode ? '#FFF' : '#000'
                                     }]}>
                                         Selecione o Bimestre
                                     </Text>
 
-                                    {/* Lista de bimestres */}
+
                                     <FlatList
                                         data={bimestres}
                                         keyExtractor={(item) => item}

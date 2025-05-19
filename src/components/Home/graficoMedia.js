@@ -29,11 +29,10 @@ export default function GraficoMedia({ isDarkMode }) {
           setNotas(response.data.notas);
           calcularMedia(response.data.notas);
           extrairMaterias(response.data.notas);
-          // Inicia a animação quando os dados são carregados
           animateIn();
         }
       } catch (error) {
-     
+
       }
     };
 
@@ -41,7 +40,6 @@ export default function GraficoMedia({ isDarkMode }) {
   }, []);
 
   useEffect(() => {
-    // Anima o gráfico sempre que a matéria selecionada mudar
     animateIn();
   }, [materiaSelecionada]);
 
@@ -97,7 +95,7 @@ export default function GraficoMedia({ isDarkMode }) {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 5,
-      opacity: fadeAnim, // Aplica a animação de fade no container principal
+      opacity: fadeAnim,
       transform: [{
         scale: fadeAnim.interpolate({
           inputRange: [0, 1],
@@ -170,17 +168,17 @@ export default function GraficoMedia({ isDarkMode }) {
                   resizeMode="contain"
                 />
               </View>
-       
+
             </View>
 
-            {/* Título do modal */}
+
             <Text style={[styles.modalTitle, {
               color: isDarkMode ? '#FFF' : '#000'
             }]}>
               Selecione a Matéria
             </Text>
 
-            {/* Lista de matérias */}
+
             <FlatList
               data={materias}
               keyExtractor={(item) => item}
@@ -200,7 +198,7 @@ export default function GraficoMedia({ isDarkMode }) {
                   }]}>
                     {item}
                   </Text>
-                  
+
                 </TouchableOpacity>
               )}
             />

@@ -18,7 +18,7 @@ export default function HeaderIns() {
   const [institution, setInstitution] = useState(null);
   const navigation = useNavigation();
 
-  // Função para gerar cor aleatória
+
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -30,14 +30,14 @@ export default function HeaderIns() {
 
 
 
-  // Função para buscar dados
+
   const fetchData = useCallback(async () => {
     try {
-      // Busca os eventos
+
       const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
       const events = eventsResponse.data;
 
-      // Gerar cores aleatórias para cada evento
+
       const colors = {};
       events.forEach(event => {
         colors[event.id] = getRandomColor();
@@ -46,7 +46,7 @@ export default function HeaderIns() {
       setEvents(events);
       setEventColors(colors);
 
-      // Busca os dados da instituição
+
       const institutionId = await AsyncStorage.getItem('@user_id');
       const institutionResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/${institutionId}`);
       setInstitution(institutionResponse.data);
@@ -55,12 +55,12 @@ export default function HeaderIns() {
     }
   }, []);
 
-  // Atualiza os dados quando o componente monta
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Atualiza os dados quando a tela recebe foco
+
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -106,16 +106,16 @@ export default function HeaderIns() {
   const formatDate = (dateTime) => {
     return dateTime.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
   };
- const eventosFuturos = events
-  .filter((event) => {
-    const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-    return eventDateTime > new Date();
-  })
-  .sort((a, b) => {
-    const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
-    const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
-    return dateA - dateB; // ordem crescente: mais próximo primeiro
-  });
+  const eventosFuturos = events
+    .filter((event) => {
+      const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
+      return eventDateTime > new Date();
+    })
+    .sort((a, b) => {
+      const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
+      const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
+      return dateA - dateB;
+    });
 
   return (
     <>
@@ -173,7 +173,7 @@ export default function HeaderIns() {
           </View>
 
           <View style={styles.menuItem}>
-            <View style={[styles.calendarWrapper ]}>
+            <View style={[styles.calendarWrapper]}>
               <CustomCalendar events={events} />
             </View>
           </View>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     overflow: 'hidden',
-    backgroundColor: '#fff', // ou a cor de fundo que preferir
+    backgroundColor: '#fff',
   },
 
   contEventos: {

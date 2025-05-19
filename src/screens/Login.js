@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Text,
-  TextInput,
-  View,
-  Image,
-  ImageBackground,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-  ActivityIndicator
-} from 'react-native';
+import { Text, TextInput, View, Image, ImageBackground, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -44,7 +31,7 @@ export default function Login() {
 
 
 
-    // Verifica se matrícula tem apenas letras e números
+
     const matriculaRegex = /^[a-zA-Z0-9]+$/;
     if (!matriculaRegex.test(matriculaTrimmed)) {
       setAlertTitle('Matrícula Inválida');

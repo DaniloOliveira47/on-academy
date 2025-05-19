@@ -99,7 +99,7 @@ export default function Header() {
     .sort((a, b) => {
       const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
       const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
-      return dateA - dateB; // ordem crescente: mais próximo primeiro
+      return dateA - dateB;
     });
 
   return (
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     overflow: 'hidden',
-    backgroundColor: '#fff', // ou a cor de fundo que preferir
+    backgroundColor: '#fff',
   },
 
   contEventos: {

@@ -42,14 +42,13 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         disciplinas: false
     });
 
-    // Busca professores e disciplinas ao carregar o componente
-    // Busca professores e disciplinas ao carregar o componente
+
     useEffect(() => {
         fetchProfessores();
         fetchDisciplinas();
     }, []);
 
-    // Função para registrar nova disciplina
+
     const registrarNovaDisciplina = async () => {
         if (!novaDisciplina.trim()) {
             setAlertTitle('Erro');
@@ -96,7 +95,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         }
     };
 
-    // Função para abrir o modal e buscar os detalhes da turma
+
     const abrirModalEdicao = async () => {
         setModalVisible(true);
         setIsFetchingDetails(true);
@@ -135,12 +134,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         }
     };
 
-    // Navega para outra tela com os dados da turma
+
     const handleNavigate = () => {
         navigation.navigate(navegacao, { turmaId });
     };
 
-    // Função para excluir a turma
+
     const deletarTurma = async () => {
         try {
             const token = await AsyncStorage.getItem('@user_token');
@@ -191,7 +190,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         }
     };
 
-    // Validação dos campos antes de salvar
+
     const validarCampos = () => {
         const nomeTrimado = editTurma.trim();
         const capacidadeValida = !isNaN(parseInt(editCapacidade)) && parseInt(editCapacidade) >= 20;
@@ -245,7 +244,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         return true;
     };
 
-    // Função para salvar as alterações da turma
+
     const salvarEdicao = async () => {
         if (!validarCampos()) return;
 
@@ -292,7 +291,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         }
     };
 
-    // Demais funções auxiliares
+
     const handleProfessorSelect = (id) => {
         const novosProfessores = selectedProfessores.includes(id)
             ? selectedProfessores.filter(profId => profId !== id)
@@ -379,7 +378,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 </TouchableOpacity>
             </View>
 
-            {/* Modal de Edição */}
+
             <Modal visible={modalVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
@@ -402,11 +401,10 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                 contentContainerStyle={styles.scrollContent}
                                 showsVerticalScrollIndicator={false}
                             >
-                                {/* Informações Básicas */}
+
                                 <View style={styles.section}>
                                     <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Informações Básicas</Text>
 
-                                    {/* Nome da Turma */}
                                     <View style={styles.inputGroup}>
                                         <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Nome da Turma *</Text>
                                         <TextInput
@@ -521,7 +519,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                     </View>
                                 </View>
 
-                                {/* Professores */}
+
                                 <View style={styles.section}>
                                     <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Professores *</Text>
                                     {erros.professores && (

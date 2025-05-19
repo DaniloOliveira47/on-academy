@@ -9,9 +9,9 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
 
   return (
     <View style={[styles.card, { backgroundColor: containerColor }]}>
-      {/* Círculo com a data */}
+
       <View style={{
-        backgroundColor: '#0077FF', // Usa a cor passada como prop
+        backgroundColor: '#0077FF',
         padding: 10,
         alignItems: 'center',
         width: 45,
@@ -23,12 +23,12 @@ export default function ProximosEventos({ data, titulo, subData, periodo, color 
         </Text>
       </View>
 
-      {/* Detalhes do evento */}
+
       <View>
-        <View style={{paddingRight: 50}}>
-        <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
-          {titulo}
-        </Text>
+        <View style={{ paddingRight: 50 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
+            {titulo}
+          </Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Text style={styles.subTitulo}>

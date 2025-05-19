@@ -3,11 +3,11 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-nativ
 import { useTheme } from '../../path/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function Campo({ 
-    label, 
-    text, 
-    isPassword = false, 
-    isInline = false, 
+export default function Campo({
+    label,
+    text,
+    isPassword = false,
+    isInline = false,
     editable = false,
     onChangeText,
     textColor,

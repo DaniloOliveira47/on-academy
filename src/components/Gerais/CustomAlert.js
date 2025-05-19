@@ -13,13 +13,12 @@ const CustomAlert = ({
 }) => {
 
     const { isDarkMode, setIsDarkMode } = useTheme();
-    // Cores baseadas no modo
     const headerBackgroundColor = isDarkMode ? '#0077FF' : '#0077FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const modalBackgroundColor = isDarkMode ? '#000' : '#FFF';
     const contentTextColor = isDarkMode ? '#FFF' : '#555';
     const logoSquareBackground = isDarkMode ? '#333' : '#FFF';
-    const logoTextColor = isDarkMode ? '#FFF' : '#FFF'; // Mantido branco pois está sobre header
+    const logoTextColor = isDarkMode ? '#FFF' : '#FFF';
 
     return (
         <Modal
@@ -43,15 +42,13 @@ const CustomAlert = ({
                         <Text style={[styles.logoText, { color: logoTextColor }]}>OnAcademy</Text>
                     </View>
 
-                    {/* Conteúdo do Alert */}
                     <View style={styles.contentContainer}>
-                        {/* Cabeçalho (se necessário) */}
 
 
-                        {/* Mensagem */}
+
+
                         <Text style={[styles.modalText, { color: contentTextColor }]}>{message}</Text>
 
-                        {/* Botão */}
                         <TouchableOpacity
                             style={styles.modalButton}
                             activeOpacity={0.8}

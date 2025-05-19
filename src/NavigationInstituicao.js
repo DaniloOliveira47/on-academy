@@ -33,7 +33,7 @@ export default function NavigationDocente() {
             case 'Eventos':
               iconName = 'calendar';
               break;
-            case 'FeedbackTab': 
+            case 'FeedbackTab':
               iconName = 'message-circle';
               break;
             default:

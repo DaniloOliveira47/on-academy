@@ -11,7 +11,6 @@ import { Picker } from '@react-native-picker/picker';
 
 export default function NotasTurma() {
     const route = useRoute();
-
     const { turmaId } = route.params || {};
     const [modalVisible, setModalVisible] = useState(false);
     const [alunoSelecionado, setAlunoSelecionado] = useState(null);
@@ -94,9 +93,9 @@ export default function NotasTurma() {
             const notas = response.data.notas || [];
             setNotasAluno(notas);
 
-            // Recalcula a média
+
             if (notas.length > 0) {
-                const totalNotas = notas.reduce((sum, nota) => sum + nota.nota, 0); // Use `nota.nota` se for o nome correto
+                const totalNotas = notas.reduce((sum, nota) => sum + nota.nota, 0);
                 const media = (totalNotas / notas.length).toFixed(2);
 
                 setAlunos((prevAlunos) =>
@@ -108,7 +107,7 @@ export default function NotasTurma() {
                 );
             }
 
-            // Forçar reavaliação para garantir que o primeiro bimestre carregue
+
             setBimestreFiltro(0);
             setTimeout(() => setBimestreFiltro(1), 50);
         } catch (error) {
@@ -149,7 +148,7 @@ export default function NotasTurma() {
 
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note', novaNota);
 
-            console.log('Resposta da API:', response.data); // Verifique isso no console
+            console.log('Resposta da API:', response.data);
 
             await buscarNotasAluno(alunoSelecionado.id);
             setNotaInput('');

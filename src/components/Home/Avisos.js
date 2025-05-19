@@ -12,23 +12,22 @@ export default function Avisos({ nome, horario, texto, abreviacao, aleatorio }) 
 
     return (
         <View style={[styles.card, { borderColor: contColor, backgroundColor: BackgroundColor }]}>
-            {/* Cabeçalho da mensagem */}
+
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    {/* Ícone do remetente */}
+
                     <View style={[styles.circulo, { backgroundColor: aleatorio }]}>
                         <Text style={styles.Textcirculo}>{abreviacao}</Text>
                     </View>
-                    {/* Nome do remetente */}
+
                     <Text style={{ fontSize: 16, fontWeight: 'bold', color: contColor }}>{nome}</Text>
                 </View>
-                {/* Horário da mensagem */}
+
                 <Text style={{ color: '#8A8A8A', fontSize: 12 }}>
                     {horario}
                 </Text>
             </View>
 
-            {/* Corpo da mensagem */}
             <View style={styles.mensagemContainer}>
                 <Text style={[styles.mensagemTexto, { color: isDarkMode ? '#E0E0E0' : '#4A4A4A' }]}>
                     {texto}
@@ -40,23 +39,23 @@ export default function Avisos({ nome, horario, texto, abreviacao, aleatorio }) 
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#FFFFFF', // Fundo branco para o card
-        borderRadius: 10, // Bordas arredondadas
-        padding: 15, // Espaçamento interno
-        marginVertical: 5, // Espaçamento entre as mensagens
-        shadowColor: '#000', // Sombra para efeito de profundidade
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 15,
+        marginVertical: 5,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3, // Sombra no Android
+        elevation: 3,
     },
     circulo: {
         alignItems: 'center',
         justifyContent: 'center',
         width: 40,
         height: 40,
-        borderRadius: 20, // Torna o ícone circular
-        backgroundColor: '#FF7E3E', // Cor de fundo padrão
+        borderRadius: 20,
+        backgroundColor: '#FF7E3E',
     },
     Textcirculo: {
         color: 'white',
@@ -64,12 +63,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     mensagemContainer: {
-        marginTop: 10, // Espaçamento entre o cabeçalho e o texto
-        marginLeft: 50, // Alinhamento com o ícone
+        marginTop: 10,
+        marginLeft: 50,
     },
     mensagemTexto: {
         fontSize: 14,
-        lineHeight: 20, // Melhora a legibilidade
-        textAlign: 'left', // Alinhamento do texto
+        lineHeight: 20,
+        textAlign: 'left',
     },
 });

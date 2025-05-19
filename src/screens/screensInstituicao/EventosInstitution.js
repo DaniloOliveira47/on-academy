@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View, Modal, TextInput, TouchableOpacity, Alert, } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import CustomCalendar from '../../components/Eventos/Calendario';
 import CardHorario from '../../components/Eventos/CardHorario';
@@ -39,12 +29,12 @@ export default function EventosInstitution() {
     horarioEvento: ''
   });
 
-  // Estados para os campos do evento
+
   const [tituloEvento, setTituloEvento] = useState('');
   const [localEvento, setLocalEvento] = useState('');
   const [descricaoEvento, setDescricaoEvento] = useState('');
 
-  // Cores baseadas no tema
+
   const backgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const containerColor = isDarkMode ? '#000' : '#fff';
@@ -55,7 +45,7 @@ export default function EventosInstitution() {
   const placeholderColor = isDarkMode ? '#AAA' : '#666';
   const borderColor = isDarkMode ? '#444' : '#CCC';
 
-  // Função para buscar eventos
+
   const fetchEvents = async () => {
     try {
       const response = await fetch('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
@@ -135,11 +125,10 @@ export default function EventosInstitution() {
     setLocalEvento(event.localEvento);
     setDescricaoEvento(event.descricaoEvento);
 
-    // Formata a data do evento
     const [year, month, day] = event.dataEvento.split('-');
     setSelectedDate(new Date(year, month - 1, day));
 
-    // Formata o horário do evento
+
     const [hours, minutes] = event.horarioEvento.split(':');
     const timeDate = new Date();
     timeDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -154,13 +143,13 @@ export default function EventosInstitution() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Verifica se a data é anterior à data atual
+
     if (date < today) {
       setErrors(prev => ({ ...prev, dataEvento: 'Não é possível agendar eventos para datas passadas' }));
       return false;
     }
 
-    // Verifica se a data é mais de 2 anos no futuro
+    o
     const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() + 2);
 
@@ -221,10 +210,10 @@ export default function EventosInstitution() {
         return;
       }
 
-      // Formata a data como YYYY-MM-DD
+
       const formattedDate = selectedDate.toISOString().split('T')[0];
 
-      // Formata o horário como HH:MM:SS
+
       const hours = selectedTime.getHours().toString().padStart(2, '0');
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       const formattedTime = `${hours}:${minutes}:00`;
@@ -345,7 +334,7 @@ export default function EventosInstitution() {
                 {selectedEvent.localEvento}
               </Text>
 
-              {/* Botões de Editar e Excluir */}
+
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#0077FF' }]}
@@ -365,7 +354,6 @@ export default function EventosInstitution() {
           )}
         </View>
 
-        {/* Seção de Próximos Eventos */}
         <View style={[styles.container, { backgroundColor: containerColor }]}>
           <Text style={{ fontWeight: 'bold', fontSize: 24, color: textColor }}>
             Próximos Eventos
@@ -404,7 +392,7 @@ export default function EventosInstitution() {
 
       </View>
 
-      {/* Botão Flutuante para Adicionar Evento */}
+
       <FAB
         style={[styles.fab, { marginBottom: 70 }]}
         icon="plus"
@@ -415,7 +403,7 @@ export default function EventosInstitution() {
         }}
       />
 
-      {/* Modal para Adicionar/Editar Evento */}
+
       <Modal
         animationType="slide"
         transparent={true}

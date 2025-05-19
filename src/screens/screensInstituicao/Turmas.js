@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-    StyleSheet,
-    View,
-    Modal,
-    TouchableOpacity,
-    Text,
-    ScrollView,
-    Alert,
-    RefreshControl,
-} from 'react-native';
+import { StyleSheet, View, Modal, TouchableOpacity, Text, ScrollView, Alert, RefreshControl, } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
@@ -25,7 +16,7 @@ import CustomAlert from '../../components/Gerais/CustomAlert';
 export default function Turmas() {
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
-    const [modalEditarVisible, setModalEditarVisible] = useState(false);
+
     const [modalNovaDisciplinaVisible, setModalNovaDisciplinaVisible] = useState(false);
     const [novaTurma, setNovaTurma] = useState('');
     const [novoAno, setNovoAno] = useState('2025');
@@ -83,7 +74,7 @@ export default function Turmas() {
             loadData();
 
             return () => {
-                // Limpeza se necessário
+
             };
         }, [])
     );
@@ -452,8 +443,7 @@ export default function Turmas() {
                 </View>
             </View>
 
-            {/* Modal para criar nova turma */}
-            {/* Modal para criar nova turma - Versão melhorada */}
+
             <Modal visible={modalCriarVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
@@ -474,11 +464,11 @@ export default function Turmas() {
                             contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={false}
                         >
-                            {/* Seção de Informações Básicas */}
+
                             <View style={styles.section}>
                                 <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Informações Básicas</Text>
 
-                                {/* Nome da Turma */}
+
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Nome da Turma *</Text>
                                     <TextInput
@@ -501,7 +491,7 @@ export default function Turmas() {
                                     {erros.nomeTurma && <Text style={styles.erroTexto}>Este campo é obrigatório</Text>}
                                 </View>
 
-                                {/* Ano Letivo e Período */}
+
                                 <View style={styles.row}>
                                     <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                                         <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Ano Letivo</Text>
@@ -537,7 +527,7 @@ export default function Turmas() {
                                     </View>
                                 </View>
 
-                                {/* Capacidade e Sala */}
+
                                 <View style={styles.row}>
                                     <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                                         <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Capacidade *</Text>
@@ -591,7 +581,7 @@ export default function Turmas() {
                                 </View>
                             </View>
 
-                            {/* Seção de Professores */}
+
                             <View style={styles.section}>
                                 <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Professores *</Text>
                                 {erros.professores && <Text style={[styles.erroTexto, { marginBottom: 10 }]}>Selecione pelo menos um professor</Text>}
@@ -612,7 +602,7 @@ export default function Turmas() {
                                 </View>
                             </View>
 
-                            {/* Seção de Disciplinas */}
+
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
                                     <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Disciplinas *</Text>
@@ -667,8 +657,7 @@ export default function Turmas() {
                 </View>
             </Modal>
 
-            {/* Modal para criar nova disciplina */}
-            {/* Modal para criar nova disciplina */}
+
             <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalDisciplinaContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>

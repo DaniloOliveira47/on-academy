@@ -24,7 +24,7 @@ export default function PerfilInstitution() {
           console.log('ID do usuário não encontrado no AsyncStorage');
         }
       } catch (error) {
-     
+
       }
     };
 

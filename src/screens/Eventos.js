@@ -22,11 +22,10 @@ export default function Eventos() {
                 const response = await fetch('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
                 const data = await response.json();
                 setEvents(data);
-
-                // Gerar cores dinâmicas para os eventos
                 const colors = {};
                 data.forEach(event => {
-                    colors[event.id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // Cor aleatória
+                    colors[event.id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+
                 });
                 setEventColors(colors);
             } catch (error) {
@@ -96,12 +95,12 @@ export default function Eventos() {
                         {events
                             .filter((event) => {
                                 const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);
-                                return eventDateTime > new Date(); // apenas eventos futuros
+                                return eventDateTime > new Date();
                             })
                             .sort((a, b) => {
                                 const dateA = formatDateTime(a.dataEvento, a.horarioEvento);
                                 const dateB = formatDateTime(b.dataEvento, b.horarioEvento);
-                                return dateA - dateB; // ordena do mais próximo para o mais distante
+                                return dateA - dateB;
                             })
                             .map((event, index) => {
                                 const eventDateTime = formatDateTime(event.dataEvento, event.horarioEvento);

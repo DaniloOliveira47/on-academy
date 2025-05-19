@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    TextInput,
-    TouchableOpacity,
-    Modal,
-    Image,
-    Alert,
-    ScrollView,
-    ActivityIndicator
-} from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,7 +32,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     useEffect(() => {
         if (visible) {
             fetchDisciplines();
-            // Reset all fields when modal opens
+
             setNomeDocente('');
             setEmailDocente('');
             setTelefoneDocente('');
@@ -62,7 +51,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         }
     }, [visible]);
 
-    // Request permissions when component mounts
+
     useEffect(() => {
         (async () => {
             if (Platform.OS !== 'web') {
@@ -91,7 +80,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         }
     };
 
-    // Image picker function
+
     const pickImage = async () => {
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
@@ -236,7 +225,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             emailDocente: emailDocente.trim(),
             telefoneDocente: telefoneDocente.replace(/\D/g, ''),
             disciplineId: selectedDisciplines,
-            imageUrl: imageBase64 // Include the base64 image in the request
+            imageUrl: imageBase64
         };
 
         await onCreate(professorData);

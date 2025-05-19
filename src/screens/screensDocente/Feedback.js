@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  ActivityIndicator, 
-  ScrollView, 
-  RefreshControl
-} from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
@@ -75,12 +68,12 @@ export default function Turmas() {
             setPaginaSelecionada(1);
             return;
         }
-        
+
         const turmasFiltradas = turmas.filter(turma =>
             turma.nomeTurma.toLowerCase().includes(texto.toLowerCase()) ||
             turma.id.toString().includes(texto)
         );
-        
+
         atualizarTurmasPagina(turmasFiltradas, 1);
         setPaginaSelecionada(1);
     };
@@ -96,13 +89,6 @@ export default function Turmas() {
         if (pagina < 1 || pagina > totalPaginas) return;
         setPaginaSelecionada(pagina);
         atualizarTurmasPagina(turmas, pagina);
-    };
-
-    const handleNavigateToNotasTurma = (turmaId) => {
-        navigation.navigate('NotasStack', {
-            screen: 'NotasTurma',
-            params: { turmaId },
-        });
     };
 
     if (loading && !refreshing) {
@@ -164,10 +150,10 @@ export default function Turmas() {
                                     />
                                 ))
                             ) : (
-                                <Text style={{ 
-                                    color: isDarkMode ? '#FFF' : '#000', 
-                                    textAlign: 'center', 
-                                    marginTop: 20 
+                                <Text style={{
+                                    color: isDarkMode ? '#FFF' : '#000',
+                                    textAlign: 'center',
+                                    marginTop: 20
                                 }}>
                                     Nenhuma turma encontrada.
                                 </Text>
@@ -184,7 +170,7 @@ export default function Turmas() {
                                     onPress={() => mudarPagina(paginaSelecionada - 1)}
                                 />
                             )}
-                            
+
                             {Array.from({ length: Math.min(3, totalPaginas) }, (_, i) => {
                                 let pagina;
                                 if (totalPaginas <= 3) {
@@ -196,7 +182,7 @@ export default function Turmas() {
                                 } else {
                                     pagina = paginaSelecionada - 1 + i;
                                 }
-                                
+
                                 return (
                                     <CardSelecao
                                         key={pagina}
@@ -206,7 +192,7 @@ export default function Turmas() {
                                     />
                                 );
                             })}
-                            
+
                             {paginaSelecionada < totalPaginas && (
                                 <CardSelecao
                                     numero=">"

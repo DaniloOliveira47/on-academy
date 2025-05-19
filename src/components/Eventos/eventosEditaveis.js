@@ -9,9 +9,9 @@ export default function eventosEditaveis({ data, titulo, subData, periodo, color
 
   return (
     <View style={[styles.card, { backgroundColor: containerColor }]}>
-      {/* Círculo com a data */}
+
       <View style={{
-        backgroundColor: '#0077FF', // Usa a cor passada como prop
+        backgroundColor: '#0077FF',
         padding: 10,
         alignItems: 'center',
         width: 45,
@@ -22,7 +22,7 @@ export default function eventosEditaveis({ data, titulo, subData, periodo, color
         </Text>
       </View>
 
-      {/* Detalhes do evento */}
+
       <View>
         <Text style={{ fontWeight: 'bold', fontSize: 15, color: textColor }}>
           {titulo}

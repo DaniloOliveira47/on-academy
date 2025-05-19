@@ -5,13 +5,13 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LogoutButton = ({ 
-  iconColor = '#e74c3c', 
+const LogoutButton = ({
+  iconColor = '#e74c3c',
   textColor = '#e74c3c',
   iconSize = 28,
   textSize = 24,
   onLogoutSuccess,
-  onLogoutError 
+  onLogoutError
 }) => {
   const navigation = useNavigation();
 
@@ -30,7 +30,7 @@ const LogoutButton = ({
   };
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.logoutButton}
       onPress={handleLogout}
     >

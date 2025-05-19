@@ -16,14 +16,13 @@ const GraficoFeedback = ({
     professores
 }) => {
     const { isDarkMode } = useTheme();
-    
-    // Configurações de estilo
+
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
 
-    // Configurações do gráfico
+
     const maxValue = 5;
     const maxBarHeight = 150;
     const labels = ['Engaj.', 'Desemp.', 'Entrega', 'Atenção', 'Comp.'];

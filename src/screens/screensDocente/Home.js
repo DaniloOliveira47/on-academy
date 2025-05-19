@@ -27,16 +27,13 @@ export default function HomeDocente() {
         return cor;
     };
 
-    // Função para carregar as mensagens (avisos)
+
     const fetchMessages = async () => {
         try {
             const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
-
-            // Ordenar por data mais recente primeiro
             data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
             );
-
             setAvisos(data);
         } catch (error) {
             console.error('Erro ao carregar avisos:', error);
@@ -50,11 +47,8 @@ export default function HomeDocente() {
                 setTurmas([]);
                 return;
             }
-
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/classes/${professorId}`);
-
             console.log('Resposta da API:', response.data);
-
             if (response.data && Array.isArray(response.data.classes)) {
                 setTurmas(response.data.classes);
             } else {
@@ -66,7 +60,7 @@ export default function HomeDocente() {
         }
     };
 
-    // Carrega os dados sempre que a tela recebe foco
+
     useFocusEffect(
         useCallback(() => {
             fetchTurmas();
@@ -80,25 +74,21 @@ export default function HomeDocente() {
                 Alert.alert('Aviso', 'Por favor, selecione uma turma.');
                 return;
             }
-
             const professorId = await AsyncStorage.getItem('@user_id');
             const token = await AsyncStorage.getItem('@user_token');
             if (!professorId || !token) {
                 Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
                 return;
             }
-
             if (!conteudoAviso.trim()) {
                 Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
                 return;
             }
-
             const avisoData = {
                 conteudo: conteudoAviso,
                 createdBy: { id: parseInt(professorId) },
                 classSt: { id: turmaSelecionada },
             };
-
             await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -109,7 +99,6 @@ export default function HomeDocente() {
             Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
             setConteudoAviso('');
 
-            // Recarrega os avisos após o envio
             await fetchMessages();
         } catch (error) {
             console.error('Erro ao enviar aviso:', error);
@@ -123,7 +112,7 @@ export default function HomeDocente() {
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
                 <View style={styles.subtela}>
-                    {/* Seção de boas-vindas */}
+
                     <View style={[styles.infoContainer, {
                         backgroundColor: '#1E6BE6',
                         shadowColor: isDarkMode ? '#FFF' : '#000',
@@ -142,7 +131,7 @@ export default function HomeDocente() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas com ScrollView */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
                         <ScrollView
@@ -169,7 +158,7 @@ export default function HomeDocente() {
                         </ScrollView>
                     </View>
 
-                    {/* Seção de avisos */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
@@ -197,7 +186,7 @@ export default function HomeDocente() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos gerais com ScrollView */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos

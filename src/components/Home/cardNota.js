@@ -7,18 +7,17 @@ const CardNota = ({ title, subtitle, percentage, isDarkMode }) => {
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
   const progress = (percentage / 10) * circumference;
-  
-  // Pegar as duas primeiras letras do título e converter para maiúsculas
+
   const initials = title ? title.substring(0, 2).toUpperCase() : '';
 
-  // Determinar a cor do subtítulo baseado no status
+
   const getSubtitleColor = () => {
     if (subtitle.includes('Aprovado')) {
-      return isDarkMode ? '#4CAF50' : '#2E7D32'; // Verde
+      return isDarkMode ? '#4CAF50' : '#2E7D32';
     } else if (subtitle.includes('Reprovado')) {
-      return isDarkMode ? '#F44336' : '#C62828'; // Vermelho
+      return isDarkMode ? '#F44336' : '#C62828';
     }
-    return isDarkMode ? '#BBB' : '#8A8A8A'; // Cor padrão
+    return isDarkMode ? '#BBB' : '#8A8A8A';
   };
 
   return (

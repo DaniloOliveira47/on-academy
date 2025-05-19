@@ -28,7 +28,7 @@ export default function Home() {
         const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/${alunoId}`);
         setAluno(response.data);
 
-        // After setting aluno, fetch avisos for the student's class
+
         if (response.data.turma?.idTurma) {
           fetchAvisos(response.data.turma.idTurma);
         }
@@ -204,7 +204,7 @@ export default function Home() {
           <View style={[styles.modalContainer, {
             backgroundColor: isDarkMode ? '#141414' : '#FFF'
           }]}>
-            {/* Cabeçalho com logo */}
+
             <View style={[styles.modalHeader, {
               backgroundColor: isDarkMode ? '#0077FF' : '#0077FF'
             }]}>
@@ -217,10 +217,10 @@ export default function Home() {
                   resizeMode="contain"
                 />
               </View>
-            
+
             </View>
 
-            {/* Conteúdo do modal */}
+
             <View style={styles.modalContent}>
               <Text style={[styles.modalTitle, {
                 color: isDarkMode ? '#FFF' : '#000'
@@ -248,7 +248,7 @@ export default function Home() {
                     }}>
                       {item === 'Todas as Notas' ? item : `${item}º Bimestre`}
                     </Text>
-                    
+
                   </TouchableOpacity>
                 )}
               />
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
   },
-   modalOverlay: {
+  modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

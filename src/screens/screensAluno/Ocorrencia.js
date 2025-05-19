@@ -14,7 +14,6 @@ export default function Ocorrencia() {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
     const [professores, setProfessores] = useState([]);
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
     const [conteudo, setConteudo] = useState('');
@@ -31,9 +30,9 @@ export default function Ocorrencia() {
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
-    const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
 
-    // Busca os professores ao carregar o componente
+
+
     useEffect(() => {
         axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher')
             .then(response => {
@@ -46,7 +45,7 @@ export default function Ocorrencia() {
             });
     }, []);
 
-    // Busca o userId do AsyncStorage
+
     useEffect(() => {
         const fetchUserId = async () => {
             try {
@@ -62,7 +61,7 @@ export default function Ocorrencia() {
         fetchUserId();
     }, []);
 
-    // Busca os feedbacks do estudante
+
     useEffect(() => {
         if (userId) {
             fetchFeedbacks();
@@ -208,7 +207,7 @@ export default function Ocorrencia() {
         <ScrollView style={{ backgroundColor: perfilBackgroundColor }}>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                {/* Componente de Gráfico */}
+
                 <GraficoFeedback
                     dadosGrafico={dadosGrafico}
                     bimestreSelecionado={bimestreSelecionado}
@@ -221,8 +220,6 @@ export default function Ocorrencia() {
                     isDarkMode={isDarkMode}
                 />
 
-                {/* Modal para seleção de bimestre */}
-                {/* Modal para seleção de bimestre */}
                 <Modal visible={modalBimestreVisible} transparent animationType="fade">
                     <TouchableOpacity
                         style={styles.modalOverlay}
@@ -230,7 +227,7 @@ export default function Ocorrencia() {
                         activeOpacity={1}
                     >
                         <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-                            {/* Cabeçalho com logo */}
+
                             <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
                                 <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
                                     <Image
@@ -265,7 +262,6 @@ export default function Ocorrencia() {
                     </TouchableOpacity>
                 </Modal>
 
-                {/* Modal para seleção de professor */}
                 <Modal visible={modalProfessorVisible} transparent animationType="fade">
                     <TouchableOpacity
                         style={styles.modalOverlay}
@@ -273,7 +269,7 @@ export default function Ocorrencia() {
                         activeOpacity={1}
                     >
                         <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-                            {/* Cabeçalho com logo */}
+
                             <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
                                 <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
                                     <Image
@@ -320,7 +316,6 @@ export default function Ocorrencia() {
                     </TouchableOpacity>
                 </Modal>
 
-                {/* Modal para valor da barra */}
                 <Modal visible={modalBarraVisible} transparent animationType="slide">
                     <View style={styles.modalBackdrop2}>
                         <View style={[styles.modalContainer2, { backgroundColor: '#1E6BE6' }]}>
@@ -351,7 +346,7 @@ export default function Ocorrencia() {
                         </Text>
                     </View>
 
-                    {/* Lista de professores */}
+
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
                         {professores.slice(0, 2).map((professor, index) => (
                             <CardProfessor
@@ -386,7 +381,7 @@ export default function Ocorrencia() {
                         ))}
                     </View>
 
-                    {/* Input de feedback (aparece apenas quando um professor é selecionado) */}
+
                     {professorSelecionado && (
                         <>
                             <TextInput

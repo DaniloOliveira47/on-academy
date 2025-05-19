@@ -42,18 +42,11 @@ export default function AlunosFeedback({ route }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Buscar dados da turma
                 const turmaResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/students/${turmaId}`);
                 setTurma(turmaResponse.data);
-
-                // Buscar médias dos feedbacks
                 await fetchMediasFeedbacks();
-
-                // Buscar ID do professor
                 const id = await AsyncStorage.getItem('@user_id');
                 setProfessorId(id);
-
-                // Buscar token
                 const token = await AsyncStorage.getItem('@user_token');
                 setUserToken(token);
             } catch (error) {
@@ -85,7 +78,7 @@ export default function AlunosFeedback({ route }) {
         }
     };
 
-    // Função para obter alunos da página atual
+
     const getAlunosPaginaAtual = () => {
         if (!turma || !turma.students) return [[], []];
 
@@ -93,7 +86,7 @@ export default function AlunosFeedback({ route }) {
         const fim = inicio + ALUNOS_POR_PAGINA;
         const alunosPagina = turma.students.slice(inicio, fim);
 
-        // Dividir em duas colunas
+
         const metade = Math.ceil(alunosPagina.length / 2);
         const coluna1 = alunosPagina.slice(0, metade);
         const coluna2 = alunosPagina.slice(metade);
@@ -101,13 +94,13 @@ export default function AlunosFeedback({ route }) {
         return [coluna1, coluna2];
     };
 
-    // Calcular o número total de páginas
+
     const totalPaginas = turma ? Math.ceil(turma.students.length / ALUNOS_POR_PAGINA) : 1;
 
-    // Gerar array de números de página ou '>' para próxima página
+
     const getBotoesPagina = () => {
         const botoes = [];
-        const maxBotoes = 3; // Número máximo de botões de página a mostrar
+        const maxBotoes = 3;
 
         if (totalPaginas <= maxBotoes) {
             for (let i = 1; i <= totalPaginas; i++) {
@@ -144,7 +137,7 @@ export default function AlunosFeedback({ route }) {
         }
     };
 
-    // Função para lidar com o clique em uma barra do gráfico
+
     const handleBarraClick = (categoria, valor) => {
         if (valor > 0) {
             setBarraSelecionada({
@@ -163,8 +156,8 @@ export default function AlunosFeedback({ route }) {
 
         const feedbackData = {
             conteudo: feedbackConteudo,
-            createdBy: professorId,  // Apenas o ID como string
-            classSt: turmaId        // Apenas o ID como string
+            createdBy: professorId,
+            classSt: turmaId
         };
 
         try {
@@ -178,7 +171,7 @@ export default function AlunosFeedback({ route }) {
             if (response.status >= 200 && response.status < 300) {
                 alert('Feedback adicionado com sucesso!');
                 setFeedbackConteudo('');
-                await fetchMediasFeedbacks(); // Atualiza os dados do gráfico se necessário
+                await fetchMediasFeedbacks();
             }
         } catch (error) {
             console.error('Erro ao enviar feedback:', error);
@@ -210,7 +203,7 @@ export default function AlunosFeedback({ route }) {
         );
     }
 
-   
+
     const botoesPagina = getBotoesPagina();
 
     const [coluna1, coluna2] = getAlunosPaginaAtual();

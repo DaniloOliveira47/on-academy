@@ -21,8 +21,6 @@ export default function Perfil() {
           const data = await response.json();
           console.log('Dados do aluno:', data);
           setDadosAluno(data);
-          
-          // Verifica se há uma URL de imagem no perfil (corrigido para imageUrl)
           if (data.imageUrl) {
             setFotoPerfil({ uri: data.imageUrl });
           } else {
@@ -33,7 +31,7 @@ export default function Perfil() {
         }
       } catch (error) {
         console.error('Erro ao buscar dados do aluno:', error);
-        // Em caso de erro, manter a imagem padrão
+
         setFotoPerfil(require('../../assets/image/Professor.png'));
       }
     };
@@ -45,7 +43,7 @@ export default function Perfil() {
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
   const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
-  
+
   return (
     <View>
       <HeaderSimples titulo="PERFIL" />
@@ -56,7 +54,7 @@ export default function Perfil() {
         <View>
           <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
           <View style={[styles.form, {
-            backgroundColor: formBackgroundColor, 
+            backgroundColor: formBackgroundColor,
             shadowColor: isDarkMode ? '#FFF' : '#000',
             shadowOpacity: 0.1,
             shadowRadius: 4,
@@ -65,16 +63,14 @@ export default function Perfil() {
             {dadosAluno && (
               <>
                 <View style={styles.linhaUser}>
-                  <View style={{backgroundColor: 'white', borderRadius: 40}}>
-
-                 
-                  <Image 
-                    source={fotoPerfil} 
-                    style={styles.fotoPerfil}
-                    onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
-                    defaultSource={require('../../assets/image/Professor.png')}
-                  />
-                   </View>
+                  <View style={{ backgroundColor: 'white', borderRadius: 40 }}>
+                    <Image
+                      source={fotoPerfil}
+                      style={styles.fotoPerfil}
+                      onError={() => setFotoPerfil(require('../../assets/image/Professor.png'))}
+                      defaultSource={require('../../assets/image/Professor.png')}
+                    />
+                  </View>
                   <View style={styles.name}>
                     <Text style={[styles.nome, { color: textColor }]}>{dadosAluno.nome}</Text>
                     <Text style={[styles.email, { color: textColor }]}>{dadosAluno.emailAluno}</Text>
@@ -94,7 +90,7 @@ export default function Perfil() {
                     <Campo label="Data de Nascimento" text={new Date(dadosAluno.dataNascimentoAluno).toLocaleDateString()} textColor={textColor} />
                   </View>
                 </View>
-               
+
               </>
             )}
           </View>

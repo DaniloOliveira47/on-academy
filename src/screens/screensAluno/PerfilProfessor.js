@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Image } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import Campo from '../../components/Perfil/Campo';
-import axios from 'axios'; // Importe o axios
+import axios from 'axios';
 
 export default function ProfessorPerfil({ route }) {
   const { id } = route.params;

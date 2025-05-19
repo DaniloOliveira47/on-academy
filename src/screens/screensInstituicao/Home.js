@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Header from '../../components/Home/Header';
+
 import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
@@ -24,7 +24,7 @@ export default function HomeInstituicao() {
         useCallback(() => {
             const fetchData = async () => {
                 try {
-                    // Fetch das turmas
+
                     const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
                     if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
                         setTurmas(turmasResponse.data);
@@ -32,14 +32,14 @@ export default function HomeInstituicao() {
                         setTurmas([]);
                     }
 
-                    // Fetch dos avisos
+
                     const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
                     const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                         new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
                     );
                     setAvisos(avisosOrdenados);
                 } catch {
-                 
+
                     setTurmas([]);
                     setAvisos([]);
                 }
@@ -96,7 +96,7 @@ export default function HomeInstituicao() {
                 }
             });
 
-            // Recarrega os avisos após o envio
+
             const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
             const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
@@ -121,7 +121,6 @@ export default function HomeInstituicao() {
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
                 <View style={styles.subtela}>
-                    {/* Seção de boas-vindas */}
                     <View style={[styles.infoContainer, {
                         backgroundColor: '#1E6BE6',
                         shadowColor: isDarkMode ? '#FFF' : '#000',
@@ -140,7 +139,7 @@ export default function HomeInstituicao() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-                    {/* Seção de turmas com ScrollView */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
                         <ScrollView
@@ -167,7 +166,7 @@ export default function HomeInstituicao() {
                         </ScrollView>
                     </View>
 
-                    {/* Seção de avisos com TextInput */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
@@ -195,7 +194,7 @@ export default function HomeInstituicao() {
                         </View>
                     </View>
 
-                    {/* Seção de avisos gerais com ScrollView */}
+
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos

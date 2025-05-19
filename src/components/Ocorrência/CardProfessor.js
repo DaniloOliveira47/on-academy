@@ -6,24 +6,24 @@ import { useTheme } from '../../path/ThemeContext';
 export default function CardProfessor({ nome, id, onPress, selecionado, onVerPerfil, imageUrl }) {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
-    
+
     return (
         <TouchableOpacity
             onPress={onPress}
             style={[styles.container, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }, selecionado && styles.selecionado]}
         >
-            <View style={[styles.imageContainer, {borderColor: isDarkMode ? '#141414' : '#F0F7FF'}]}>
+            <View style={[styles.imageContainer, { borderColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
                 {imageUrl ? (
-                    <Image 
-                        style={styles.image} 
-                        source={{ uri: imageUrl }} 
+                    <Image
+                        style={styles.image}
+                        source={{ uri: imageUrl }}
                         onError={(e) => {
                             e.nativeEvent.target.source = require('../../assets/image/Professor.png');
                         }}
                     />
                 ) : (
-                    <Image 
-                        style={styles.image} 
+                    <Image
+                        style={styles.image}
                         source={require('../../assets/image/Professor.png')}
                     />
                 )}

@@ -22,8 +22,8 @@ export default function PerfilDocente() {
           console.log('Dados do docente:', data);
           setDadosDocente(data);
 
-          // Verifica se há uma URL de imagem no perfil
-          if (data.imageUrl) { // Alterado para fotoDocente (ajuste conforme seu backend)
+
+          if (data.imageUrl) {
             setFotoPerfil({ uri: data.imageUrl });
           } else {
             setFotoPerfil(require('../../assets/image/Professor.png'));
@@ -33,7 +33,7 @@ export default function PerfilDocente() {
         }
       } catch (error) {
         console.error('Erro ao buscar dados do docente:', error);
-        // Em caso de erro, manter a imagem padrão
+
         setFotoPerfil(require('../../assets/image/Professor.png'));
       }
     };
@@ -67,7 +67,7 @@ export default function PerfilDocente() {
             {dadosDocente && (
               <>
                 <View style={styles.linhaUser}>
-                  <View style={{backgroundColor: 'white', borderRadius: 50}}>
+                  <View style={{ backgroundColor: 'white', borderRadius: 50 }}>
 
 
                     <Image

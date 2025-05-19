@@ -10,7 +10,7 @@ import { View } from 'react-native';
 const Stack = createStackNavigator();
 
 export default function FeedbackStack() {
-      const { isDarkMode } = useTheme();
+    const { isDarkMode } = useTheme();
     return (
         <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }}>
             <Stack.Navigator screenOptions={{
