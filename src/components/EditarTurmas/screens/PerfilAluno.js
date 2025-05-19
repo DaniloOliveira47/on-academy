@@ -25,6 +25,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import GraficoFeedback from '../../Gerais/GraficoFeedback';
+import CustomAlert from '../../Gerais/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -58,24 +59,19 @@ const validarDataNascimento = (date) => {
 };
 
 const validarTelefone = (telefone) => {
-    // Aceita (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
-    const regex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$/;
-    return regex.test(telefone);
+    // Remove formatação para validação
+    const numeros = telefone.replace(/\D/g, '');
+    // Verifica se tem 10 ou 11 dígitos (com ou sem 9 adicional)
+    return numeros.length === 10 || numeros.length === 11;
 };
-
 const formatarTelefone = (input) => {
     if (!input) return '';
 
-    // Remove tudo que não é dígito
+    // Remove toda formatação existente (parênteses, espaços, hífens)
     const numeros = input.replace(/\D/g, '');
 
     // Limita a 11 caracteres (DD + 9 dígitos)
     const limite = numeros.substring(0, 11);
-
-    // Se estiver apagando, retorna o valor atual sem forçar a formatação completa
-    if (limite.length < input.replace(/\D/g, '').length) {
-        return input; // Permite apagar caracteres livremente
-    }
 
     // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
     if (limite.length > 10) {
@@ -131,6 +127,9 @@ export default function PerfilAluno() {
         nascimento: '',
         turma: null,
     });
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertVisible, setAlertVisible] = useState(false);
     const [perfilEdit, setPerfilEdit] = useState(perfil);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -176,10 +175,14 @@ export default function PerfilAluno() {
             const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
             if (cameraStatus !== 'granted') {
-                Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para esta funcionalidade');
+                setAlertTitle('Permissão Necessária');
+                setAlertMessage('Precisamos de acesso a sua camêra para continuar');
+                setAlertVisible(true);
             }
             if (libraryStatus !== 'granted') {
-                Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para esta funcionalidade');
+                setAlertTitle('Permissão Necessária');
+                setAlertMessage('Precisamos de acesso à galeria para esta funcionalidade');
+                setAlertVisible(true);
             }
         }
     };
@@ -333,7 +336,7 @@ export default function PerfilAluno() {
             setFeedbacksAvaliacao(response.data || []);
             atualizarDadosGrafico(response.data);
         } catch (error) {
-            console.error("Error fetching feedback data:", error);
+
             setFeedbacksAvaliacao([]);
             setDadosGrafico([0, 0, 0, 0, 0]);
             setSemFeedbacks(true);
@@ -432,7 +435,9 @@ export default function PerfilAluno() {
                 }
             }
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+            setAlertTitle('Desculpe');
+            setAlertMessage('Não foi possível selecionar a imagem.');
+            setAlertVisible(true);
         }
     };
 
@@ -461,15 +466,23 @@ export default function PerfilAluno() {
                 }
             }
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível tirar a foto.');
+            setAlertTitle('Desculpe');
+            setAlertMessage('Não foi possível tirar a foto');
+            setAlertVisible(true);
         }
     };
 
 
     // Funções de edição
+    // Ao entrar no modo de edição
     const toggleEdit = () => {
         if (!isEditing) {
-            setPerfilEdit(perfil);
+            // Garante que o telefone está formatado antes de entrar no modo edição
+            const perfilComTelefoneFormatado = {
+                ...perfil,
+                telefone: formatarTelefone(perfil.telefone)
+            };
+            setPerfilEdit(perfilComTelefoneFormatado);
             setValidationErrors({
                 nome: '',
                 email: '',
@@ -485,34 +498,46 @@ export default function PerfilAluno() {
             // Verificar se há erros de validação
             const hasErrors = Object.values(validationErrors).some(error => error !== '');
             if (hasErrors) {
-                Alert.alert('Erro', 'Por favor, corrija os campos destacados antes de salvar');
+                setAlertTitle('Atenção');
+                setAlertMessage('Corrija os campos');
+                setAlertVisible(true);
                 return;
             }
 
             // Validações adicionais
             if (!perfilEdit.nome) {
-                Alert.alert('Erro', 'Nome é um campo obrigatório');
+                setAlertTitle('Atenção');
+                setAlertMessage('Nome é obrigatório');
+                setAlertVisible(true);
                 return;
             }
 
             if (!perfilEdit.email) {
-                Alert.alert('Erro', 'Email é um campo obrigatório');
+                setAlertTitle('Atenção');
+                setAlertMessage('Email é obrigatório');
+                setAlertVisible(true);
                 return;
             }
 
             if (!validarEmail(perfilEdit.email)) {
-                Alert.alert('Erro', 'Por favor, insira um email válido');
+                setAlertTitle('Atenção');
+                setAlertMessage('insira uma email válido @gmail ou @hotmail');
+                setAlertVisible(true);
                 return;
             }
 
             if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
-                Alert.alert('Erro', 'Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                setAlertTitle('Atenção');
+                setAlertMessage('Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                setAlertVisible(true);
                 return;
             }
 
             const idade = validarDataNascimento(selectedDate);
             if (idade < 5 || idade > 90) {
-                Alert.alert('Erro', 'O aluno deve ter entre 5 e 90 anos');
+                setAlertTitle('Atenção');
+                setAlertMessage('O aluno deve ter entre 5 e 90 anos');
+                setAlertVisible(true);
                 return;
             }
 
@@ -528,7 +553,9 @@ export default function PerfilAluno() {
                 // Verificar se a data é válida
                 const testDate = new Date(formattedDate);
                 if (isNaN(testDate.getTime())) {
-                    Alert.alert('Erro', 'Data de nascimento inválida');
+                    setAlertTitle('Atenção');
+                    setAlertMessage('Data de nascimento inválida');
+                    setAlertVisible(true);
                     return;
                 }
             }
@@ -560,7 +587,9 @@ export default function PerfilAluno() {
             );
 
             if (response.status === 200) {
-                Alert.alert('Sucesso', 'Dados do aluno atualizados com sucesso!');
+                setAlertTitle('Sucesso');
+                setAlertMessage('Os dados dos alunos foram atualizados com sucesso');
+                setAlertVisible(true);
                 await fetchAluno();
                 setIsEditing(false);
                 setNewImageBase64(null);
@@ -596,8 +625,12 @@ export default function PerfilAluno() {
             });
 
             if (response.status === 200) {
-                Alert.alert('Sucesso', 'Aluno excluído com sucesso!');
+
+                setAlertTitle('Sucesso');
+                setAlertMessage('O aluno foi excluído da turma');
+                setAlertVisible(true);
                 navigation.goBack();
+
             }
         } catch (error) {
             Alert.alert(
@@ -661,7 +694,7 @@ export default function PerfilAluno() {
                 </View>
 
                 <Modal visible={feedbackModalVisible} transparent animationType="fade">
-                    <View style={styles.modalBackdrop}>
+                    <View style={styles.modalBackdrop2}>
                         <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
                             <Text style={[styles.feedbackModalTitle, { color: textColor }]}>
                                 Feedback de {selectedFeedback?.teacher?.nomeDocente || 'Professor'}
@@ -991,59 +1024,125 @@ export default function PerfilAluno() {
                 </View>
             </View>
 
-            <Modal visible={modalDeleteVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Tem certeza que deseja excluir o perfil?</Text>
-                        <View style={styles.modalButtonsContainer}>
-                            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+            {/* Delete Confirmation Modal */}
+            <Modal visible={modalDeleteVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalDeleteVisible(false)}
+                    activeOpacity={1}
+                >
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                            Tem certeza que deseja excluir o perfil?
+                        </Text>
+
+                        <View style={[styles.modalButtonsContainer, { padding: 10 }]}>
+                            <TouchableOpacity
+                                style={[styles.deleteButton, { backgroundColor: '#FF3B30' }]}
+                                onPress={handleDelete}
+                            >
                                 <Text style={styles.buttonText}>Excluir</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalDeleteVisible(false)}>
-                                <Text style={styles.buttonText}>Cancelar</Text>
+                            <TouchableOpacity
+                                style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#444' : '#EEE' }]}
+                                onPress={() => setModalDeleteVisible(false)}
+                            >
+                                <Text style={[styles.buttonText, { color: isDarkMode ? '#FFF' : '#000' }]}>Cancelar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
+
             {/* Bimestre Selection Modal */}
-            <Modal visible={modalBimestreVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+            <Modal visible={modalBimestreVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalBimestreVisible(false)}
+                    activeOpacity={1}
+                >
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                            Selecione o Bimestre
+                        </Text>
+
                         {[1, 2, 3, 4].map((bimestre) => (
                             <TouchableOpacity
                                 key={bimestre}
-                                style={styles.modalItem}
+                                style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                 onPress={() => {
                                     setBimestreSelecionado(bimestre);
                                     setModalBimestreVisible(false);
                                 }}
                             >
-                                <Text style={[styles.modalText, { color: textColor }]}>
+                                <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                     {bimestre}º Bimestre
                                 </Text>
+
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
             {/* Professor Selection Modal */}
-            <Modal visible={modalProfessorVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+            <Modal visible={modalProfessorVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalProfessorVisible(false)}
+                    activeOpacity={1}
+                >
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                            Selecione o Professor
+                        </Text>
+
                         <TouchableOpacity
-                            style={styles.modalItem}
-                            onPress={() => {
-                                handleSelecionarProfessor(null);
-                            }}
+                            style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
+                            onPress={() => handleSelecionarProfessor(null)}
                         >
-                            <Text style={[styles.modalText, { color: textColor }]}>
+                            <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                 Todos Professores
                             </Text>
+
                         </TouchableOpacity>
+
                         {feedbacksAvaliacao
                             .filter((feedback, index, self) =>
                                 feedback.createdByDTO &&
@@ -1052,26 +1151,25 @@ export default function PerfilAluno() {
                             .map((feedback) => (
                                 <TouchableOpacity
                                     key={feedback.createdByDTO.id}
-                                    style={styles.modalItem}
-                                    onPress={() => {
-                                        handleSelecionarProfessor(feedback.createdByDTO);
-                                    }}
+                                    style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
+                                    onPress={() => handleSelecionarProfessor(feedback.createdByDTO)}
                                 >
-                                    <Text style={[styles.modalText, { color: textColor }]}>
+                                    <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                         {feedback.createdByDTO.nomeDocente}
                                     </Text>
+
                                 </TouchableOpacity>
                             ))}
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
             {/* Bar Value Modal */}
             <Modal visible={modalBarraVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
-                        <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
-                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                <View style={styles.modalBackdrop2}>
+                    <View style={[styles.modalContainer2, { backgroundColor: '#1E6BE6' }]}>
+                        <Text style={[styles.modalTitle2, { color: 'white' }]}>Valor</Text>
+                        <Text style={[styles.modalText2, { color: 'white', fontSize: 24 }]}>
                             {barraSelecionada.value.toFixed(1)}
                         </Text>
                         <TouchableOpacity
@@ -1083,6 +1181,12 @@ export default function PerfilAluno() {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </ScrollView>
     );
 }
@@ -1095,6 +1199,90 @@ const styles = StyleSheet.create({
     },
     campo: {
         marginTop: 15,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+    },
+    modalContainer: {
+        width: '85%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingBottom: 25,
+    },
+    logoSquare: {
+        width: 70,
+        height: 70,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    logo: {
+        width: 50,
+        height: 50,
+    },
+    logoText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginVertical: 15,
+        textAlign: 'center',
+        paddingHorizontal: 15,
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+    },
+    modalText: {
+        fontSize: 16,
+    },
+    modalButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        padding: 20,
+    },
+    deleteButton: {
+        padding: 15,
+        borderRadius: 10,
+        width: '45%',
+        alignItems: 'center',
+    },
+    cancelButton: {
+        padding: 15,
+        borderRadius: 10,
+        width: '45%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     graficoContainer: {
         marginTop: 0,
@@ -1237,13 +1425,13 @@ const styles = StyleSheet.create({
     iconeBotao: {
         padding: 10,
     },
-    modalBackdrop: {
+    modalBackdrop2: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    modalContainer: {
+    modalContainer2: {
         backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
@@ -1255,19 +1443,19 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 10,
     },
-    modalTitle: {
+    modalTitle2: {
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 15,
         textAlign: 'center',
     },
-    modalItem: {
+    modalItem2: {
         padding: 15,
         width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
-    modalText: {
+    modalText2: {
         fontSize: 16,
         textAlign: 'center'
     },

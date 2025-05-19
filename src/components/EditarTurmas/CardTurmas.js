@@ -7,6 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
+import CustomAlert from '../Gerais/CustomAlert';
 
 export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete, onEditSuccess }) {
     const formatarNomeProfessor = (nomeCompleto) => {
@@ -16,6 +17,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     };
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertVisible, setAlertVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalNovaDisciplinaVisible, setModalNovaDisciplinaVisible] = useState(false);
     const [novaDisciplina, setNovaDisciplina] = useState('');
@@ -30,7 +34,15 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     const [disciplinas, setDisciplinas] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+    const [erros, setErros] = useState({
+        nomeTurma: false,
+        capacidade: false,
+        sala: false,
+        professores: false,
+        disciplinas: false
+    });
 
+    // Busca professores e disciplinas ao carregar o componente
     // Busca professores e disciplinas ao carregar o componente
     useEffect(() => {
         fetchProfessores();
@@ -40,14 +52,18 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     // Função para registrar nova disciplina
     const registrarNovaDisciplina = async () => {
         if (!novaDisciplina.trim()) {
-            Alert.alert('Erro', 'Por favor, insira um nome para a disciplina');
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, insira um nome para a disciplina');
+            setAlertVisible(true);
             return;
         }
 
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
-                console.error('Token não encontrado no AsyncStorage');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -61,18 +77,20 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 }
             });
 
-            // Atualiza a lista de disciplinas
             await fetchDisciplinas();
-
-            // Seleciona automaticamente a nova disciplina
             setSelectedDisciplinas(prev => [...prev, response.data.id]);
 
-            Alert.alert('Sucesso', 'Disciplina registrada com sucesso!');
+            setAlertTitle('Sucesso');
+            setAlertMessage('Disciplina registrada com sucesso!');
+            setAlertVisible(true);
+
             setModalNovaDisciplinaVisible(false);
             setNovaDisciplina('');
         } catch (error) {
-            console.error('Erro ao registrar disciplina:', error);
-            Alert.alert('Erro', 'Não foi possível registrar a disciplina');
+            const mensagem = error.response?.data?.message || 'Não foi possível registrar a disciplina';
+            setAlertTitle('Erro');
+            setAlertMessage(mensagem);
+            setAlertVisible(true);
         } finally {
             setIsLoading(false);
         }
@@ -84,27 +102,34 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         setIsFetchingDetails(true);
 
         try {
-            // Busca os detalhes completos da turma
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/teacher/disciplinas/${turmaId}`);
             const turmaDetalhada = response.data;
 
-            // Atualiza os estados com os dados da turma
             setEditTurma(turmaDetalhada.nomeTurma || '');
             setEditAnoLetivo(turmaDetalhada.anoLetivoTurma || '2025');
             setEditPeriodo(turmaDetalhada.periodoTurma || periodo || 'Manhã');
             setEditCapacidade(turmaDetalhada.capacidadeMaximaTurma?.toString() || '35');
             setEditSala(turmaDetalhada.salaTurma?.toString() || '01');
 
-            // Atualiza professores e disciplinas selecionados
             const professoresIds = turmaDetalhada.teachers.map(prof => prof.id);
             setSelectedProfessores(professoresIds);
 
             const disciplinasIds = turmaDetalhada.disciplines.map(disc => disc.id);
             setSelectedDisciplinas(disciplinasIds);
 
+            setErros({
+                nomeTurma: false,
+                capacidade: false,
+                sala: false,
+                professores: false,
+                disciplinas: false
+            });
+
         } catch (error) {
             console.error('Erro ao buscar detalhes da turma:', error);
-            Alert.alert('Erro', 'Não foi possível carregar os detalhes da turma');
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível carregar os detalhes da turma');
+            setAlertVisible(true);
         } finally {
             setIsFetchingDetails(false);
         }
@@ -120,7 +145,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
-                console.error('Token não encontrado no AsyncStorage');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -140,11 +167,16 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                     }
                                 });
 
-                                Alert.alert('Sucesso', 'Turma excluída com sucesso!');
-                                onDelete(turmaId); // Chame a função onDelete passada como prop
+                                setAlertTitle('Sucesso');
+                                setAlertMessage('Turma excluída com sucesso!');
+                                setAlertVisible(true);
+
+                                onDelete(turmaId);
                             } catch (error) {
-                                console.error('Erro ao deletar turma:', error);
-                                Alert.alert('Erro', 'Erro ao deletar turma. Tente novamente.');
+                                const mensagem = error.response?.data?.message || 'Erro ao deletar turma. Tente novamente.';
+                                setAlertTitle('Erro');
+                                setAlertMessage(mensagem);
+                                setAlertVisible(true);
                             } finally {
                                 setIsLoading(false);
                             }
@@ -153,22 +185,76 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 ]
             );
         } catch (error) {
-            Alert.alert('Erro', 'Erro ao deletar turma. Tente novamente.');
+            setAlertTitle('Erro');
+            setAlertMessage('Erro ao deletar turma. Tente novamente.');
+            setAlertVisible(true);
         }
+    };
+
+    // Validação dos campos antes de salvar
+    const validarCampos = () => {
+        const nomeTrimado = editTurma.trim();
+        const capacidadeValida = !isNaN(parseInt(editCapacidade)) && parseInt(editCapacidade) >= 20;
+        const salaValida = !isNaN(parseInt(editSala)) && parseInt(editSala) > 0;
+
+        const novosErros = {
+            nomeTurma: nomeTrimado === '',
+            capacidade: !capacidadeValida,
+            sala: !salaValida,
+            professores: selectedProfessores.length === 0,
+            disciplinas: selectedDisciplinas.length === 0,
+        };
+
+        setErros(novosErros);
+
+        if (nomeTrimado === '') {
+            setAlertTitle('Atenção');
+            setAlertMessage('O nome da turma é obrigatório.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (!capacidadeValida) {
+            setAlertTitle('Atenção');
+            setAlertMessage('A capacidade mínima é 20 alunos e deve ser um número válido.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (!salaValida) {
+            setAlertTitle('Atenção');
+            setAlertMessage('Digite um número de sala válido.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (novosErros.professores) {
+            setAlertTitle('Atenção');
+            setAlertMessage('Selecione pelo menos um professor.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        if (novosErros.disciplinas) {
+            setAlertTitle('Atenção');
+            setAlertMessage('Selecione pelo menos uma disciplina.');
+            setAlertVisible(true);
+            return false;
+        }
+
+        return true;
     };
 
     // Função para salvar as alterações da turma
     const salvarEdicao = async () => {
-        // Validação dos campos numéricos
-        if (isNaN(parseInt(editCapacidade)) || isNaN(parseInt(editSala))) {
-            Alert.alert('Erro', 'Capacidade e Sala devem ser números válidos');
-            return;
-        }
+        if (!validarCampos()) return;
 
         try {
             const token = await AsyncStorage.getItem('@user_token');
             if (!token) {
-                console.error('Token não encontrado no AsyncStorage');
+                setAlertTitle('Erro');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
 
@@ -190,31 +276,39 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 }
             });
 
-            Alert.alert('Sucesso', 'Turma atualizada com sucesso!');
+            setAlertTitle('Sucesso');
+            setAlertMessage('Turma atualizada com sucesso!');
+            setAlertVisible(true);
+
             setModalVisible(false);
-            if (onEditSuccess) onEditSuccess(); // Notifica o componente pai sobre a edição
+            if (onEditSuccess) onEditSuccess();
         } catch (error) {
-            console.error('Erro ao atualizar turma:', error);
-            Alert.alert('Erro', 'Erro ao atualizar turma. Tente novamente.');
+            const mensagem = error.response?.data?.message || 'Erro ao atualizar turma. Tente novamente.';
+            setAlertTitle('Erro');
+            setAlertMessage(mensagem);
+            setAlertVisible(true);
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Demais funções auxiliares
     const handleProfessorSelect = (id) => {
-        setSelectedProfessores((prevSelected) =>
-            prevSelected.includes(id)
-                ? prevSelected.filter((profId) => profId !== id)
-                : [...prevSelected, id]
-        );
+        const novosProfessores = selectedProfessores.includes(id)
+            ? selectedProfessores.filter(profId => profId !== id)
+            : [...selectedProfessores, id];
+
+        setSelectedProfessores(novosProfessores);
+        setErros({ ...erros, professores: novosProfessores.length === 0 });
     };
 
     const handleDisciplinaSelect = (id) => {
-        setSelectedDisciplinas((prevSelected) =>
-            prevSelected.includes(id)
-                ? prevSelected.filter((discId) => discId !== id)
-                : [...prevSelected, id]
-        );
+        const novasDisciplinas = selectedDisciplinas.includes(id)
+            ? selectedDisciplinas.filter(discId => discId !== id)
+            : [...selectedDisciplinas, id];
+
+        setSelectedDisciplinas(novasDisciplinas);
+        setErros({ ...erros, disciplinas: novasDisciplinas.length === 0 });
     };
 
     const fetchProfessores = async () => {
@@ -223,6 +317,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             setProfessores(response.data);
         } catch (error) {
             console.error('Erro ao buscar professores:', error);
+            setAlertTitle('Aviso');
+            setAlertMessage('Não foi possível carregar a lista de professores');
+            setAlertVisible(true);
         }
     };
 
@@ -232,8 +329,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             setDisciplinas(response.data);
         } catch (error) {
             console.error('Erro ao buscar disciplinas:', error);
+            setAlertTitle('Aviso');
+            setAlertMessage('Não foi possível carregar a lista de disciplinas');
+            setAlertVisible(true);
         }
     };
+
 
     return (
         <View style={[styles.card, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF' }]}>
@@ -279,13 +380,12 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             </View>
 
             {/* Modal de Edição */}
-             {/* Modal de Edição */}
-             <Modal visible={modalVisible} animationType="slide" transparent>
+            <Modal visible={modalVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
                     <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: isDarkMode ? 'white' : 'black' }]}>Editar Turma</Text>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={() => setModalVisible(false)}
                                 style={styles.closeButton}
                             >
@@ -298,22 +398,37 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                 <Text style={{ color: isDarkMode ? 'white' : 'black' }}>Carregando detalhes da turma...</Text>
                             </View>
                         ) : (
-                            <ScrollView 
+                            <ScrollView
                                 contentContainerStyle={styles.scrollContent}
                                 showsVerticalScrollIndicator={false}
                             >
                                 {/* Informações Básicas */}
                                 <View style={styles.section}>
                                     <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Informações Básicas</Text>
+
+                                    {/* Nome da Turma */}
                                     <View style={styles.inputGroup}>
-                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Nome da Turma</Text>
+                                        <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Nome da Turma *</Text>
                                         <TextInput
-                                            style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                            style={[
+                                                styles.modalInput,
+                                                {
+                                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                                    color: isDarkMode ? 'white' : 'black',
+                                                    borderColor: erros.nomeTurma ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                }
+                                            ]}
                                             value={editTurma}
-                                            onChangeText={setEditTurma}
+                                            onChangeText={(text) => {
+                                                setEditTurma(text);
+                                                setErros({ ...erros, nomeTurma: false });
+                                            }}
                                             placeholder="Digite o nome da turma"
                                             placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                         />
+                                        {erros.nomeTurma && (
+                                            <Text style={styles.erroTexto}>Este campo é obrigatório</Text>
+                                        )}
                                     </View>
 
                                     <View style={styles.row}>
@@ -353,34 +468,65 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
                                     <View style={styles.row}>
                                         <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                                            <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Capacidade</Text>
+                                            <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Capacidade *</Text>
                                             <TextInput
-                                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                                style={[
+                                                    styles.modalInput,
+                                                    {
+                                                        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                                        color: isDarkMode ? 'white' : 'black',
+                                                        borderColor: erros.capacidade ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                    }
+                                                ]}
                                                 value={editCapacidade}
-                                                onChangeText={setEditCapacidade}
+                                                onChangeText={(text) => {
+                                                    setEditCapacidade(text);
+                                                    setErros({ ...erros, capacidade: false });
+                                                }}
                                                 keyboardType="numeric"
                                                 placeholder="Ex: 35"
                                                 placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                             />
+                                            {erros.capacidade && (
+                                                <Text style={styles.erroTexto}>
+                                                    {parseInt(editCapacidade) < 20 ? 'Mínimo 20 alunos' : 'Preencha este campo'}
+                                                </Text>
+                                            )}
                                         </View>
 
                                         <View style={[styles.inputGroup, { flex: 1 }]}>
-                                            <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Sala</Text>
+                                            <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Sala *</Text>
                                             <TextInput
-                                                style={[styles.modalInput, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF', color: isDarkMode ? 'white' : 'black' }]}
+                                                style={[
+                                                    styles.modalInput,
+                                                    {
+                                                        backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                                        color: isDarkMode ? 'white' : 'black',
+                                                        borderColor: erros.sala ? 'red' : isDarkMode ? '#555' : '#D1D1D1'
+                                                    }
+                                                ]}
                                                 value={editSala}
-                                                onChangeText={setEditSala}
+                                                onChangeText={(text) => {
+                                                    setEditSala(text);
+                                                    setErros({ ...erros, sala: false });
+                                                }}
                                                 keyboardType="numeric"
                                                 placeholder="Ex: 101"
                                                 placeholderTextColor={isDarkMode ? '#888' : '#756262'}
                                             />
+                                            {erros.sala && (
+                                                <Text style={styles.erroTexto}>Preencha este campo</Text>
+                                            )}
                                         </View>
                                     </View>
                                 </View>
 
                                 {/* Professores */}
                                 <View style={styles.section}>
-                                    <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Professores</Text>
+                                    <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Professores *</Text>
+                                    {erros.professores && (
+                                        <Text style={[styles.erroTexto, { marginBottom: 10 }]}>Selecione pelo menos um professor</Text>
+                                    )}
                                     <View style={styles.checkboxList}>
                                         {professores.map((professor) => (
                                             <View key={professor.id} style={styles.checkboxItem}>
@@ -401,7 +547,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                 {/* Disciplinas */}
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Disciplinas</Text>
+                                        <Text style={[styles.sectionTitle, { color: isDarkMode ? 'white' : 'black' }]}>Disciplinas *</Text>
                                         <TouchableOpacity
                                             onPress={() => setModalNovaDisciplinaVisible(true)}
                                             style={styles.addButton}
@@ -409,6 +555,9 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                             <Icon name="plus" size={20} color={isDarkMode ? '#1A85FF' : '#007AFF'} />
                                         </TouchableOpacity>
                                     </View>
+                                    {erros.disciplinas && (
+                                        <Text style={[styles.erroTexto, { marginBottom: 10 }]}>Selecione pelo menos uma disciplina</Text>
+                                    )}
                                     <View style={styles.checkboxList}>
                                         {disciplinas.map((disciplina) => (
                                             <View key={disciplina.id} style={styles.checkboxItem}>
@@ -449,9 +598,78 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                     </View>
                 </View>
             </Modal>
+
+            {/* Modal para criar nova disciplina */}
+            <Modal visible={modalNovaDisciplinaVisible} animationType="slide" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalDisciplinaContent, { backgroundColor: isDarkMode ? '#141414' : 'white' }]}>
+                        <Text style={[styles.modalDisciplinaTitle, { color: isDarkMode ? 'white' : 'black' }]}>
+                            Registrar Nova Disciplina
+                        </Text>
+
+                        <Text style={{
+                            color: isDarkMode ? 'white' : 'black',
+                            marginBottom: 5,
+                            alignSelf: 'flex-start'
+                        }}>
+                            Nome da Disciplina *
+                        </Text>
+
+                        <TextInput
+                            style={[
+                                styles.modalDisciplinaInput,
+                                {
+                                    backgroundColor: isDarkMode ? '#333' : '#F0F7FF',
+                                    color: isDarkMode ? 'white' : 'black'
+                                }
+                            ]}
+                            value={novaDisciplina}
+                            onChangeText={setNovaDisciplina}
+                            placeholder="Digite o nome da disciplina"
+                            placeholderTextColor={isDarkMode ? '#888' : '#756262'}
+                        />
+
+                        <View style={styles.modalDisciplinaButtons}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalDisciplinaButton,
+                                    styles.modalDisciplinaCancelButton
+                                ]}
+                                onPress={() => {
+                                    setModalNovaDisciplinaVisible(false);
+                                    setNovaDisciplina('');
+                                }}
+                            >
+                                <Text style={styles.modalDisciplinaButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalDisciplinaButton,
+                                    styles.modalDisciplinaConfirmButton,
+                                    isLoading && { opacity: 0.6 }
+                                ]}
+                                onPress={registrarNovaDisciplina}
+                                disabled={isLoading}
+                            >
+                                <Text style={styles.modalDisciplinaButtonText}>
+                                    {isLoading ? 'Registrando...' : 'Registrar'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </View>
     );
 }
+
 const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
     card: {
@@ -542,7 +760,6 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
     pickerContainer: {
         borderRadius: 10,
@@ -655,5 +872,53 @@ const styles = StyleSheet.create({
     botaoNovaDisciplina: {
         padding: 5,
         borderRadius: 20,
+    },
+    erroTexto: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 5,
+        marginLeft: 5,
+    },
+    modalDisciplinaContent: {
+        width: '100%',
+        borderTopRightRadius: 15,
+        borderTopLeftRadius: 15,
+        padding: 25,
+        alignItems: 'center',
+    },
+    modalDisciplinaTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    modalDisciplinaInput: {
+        width: '100%',
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 20,
+        borderWidth: 1,
+    },
+    modalDisciplinaButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalDisciplinaButton: {
+        flex: 1,
+        padding: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginHorizontal: 5,
+    },
+    modalDisciplinaCancelButton: {
+        backgroundColor: '#FF3B30',
+    },
+    modalDisciplinaConfirmButton: {
+        backgroundColor: '#007AFF',
+    },
+    modalDisciplinaButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });

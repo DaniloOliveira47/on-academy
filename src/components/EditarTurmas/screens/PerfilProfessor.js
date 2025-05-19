@@ -24,6 +24,7 @@ import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
+import CustomAlert from '../../Gerais/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -61,24 +62,20 @@ const validarDataNascimento = (date) => {
 };
 
 const validarTelefone = (telefone) => {
-    // Aceita (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
-    const regex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$/;
-    return regex.test(telefone);
+    // Remove formatação para validação
+    const numeros = telefone.replace(/\D/g, '');
+    // Verifica se tem 10 ou 11 dígitos (com ou sem 9 adicional)
+    return numeros.length === 10 || numeros.length === 11;
 };
 
 const formatarTelefone = (input) => {
     if (!input) return '';
 
-    // Remove tudo que não é dígito
+    // Remove toda formatação existente (parênteses, espaços, hífens)
     const numeros = input.replace(/\D/g, '');
 
     // Limita a 11 caracteres (DD + 9 dígitos)
     const limite = numeros.substring(0, 11);
-
-    // Se estiver apagando, retorna o valor atual sem forçar a formatação completa
-    if (limite.length < input.replace(/\D/g, '').length) {
-        return input; // Permite apagar caracteres livremente
-    }
 
     // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
     if (limite.length > 10) {
@@ -95,7 +92,6 @@ const formatarTelefone = (input) => {
     }
     return '';
 };
-
 const formatarTelefoneExibicao = (telefone) => {
     if (!telefone) return 'Não informado';
 
@@ -139,6 +135,9 @@ export default function PerfilProfessor() {
         feedbacks: [],
         foto: null,
     });
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertVisible, setAlertVisible] = useState(false);
     const [perfilEdit, setPerfilEdit] = useState(perfil);
     const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -176,10 +175,14 @@ export default function PerfilProfessor() {
             const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
             if (cameraStatus !== 'granted') {
-                Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para esta funcionalidade');
+                setAlertTitle('Permissão Necessária');
+                setAlertMessage('Precisamos de acesso a sua camêra para continuar');
+                setAlertVisible(true);
             }
             if (libraryStatus !== 'granted') {
-                Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para esta funcionalidade');
+                setAlertTitle('Permissão Necessária');
+                setAlertMessage('Precisamos de acesso à galeria para esta funcionalidade');
+                setAlertVisible(true);
             }
         }
     };
@@ -257,7 +260,7 @@ export default function PerfilProfessor() {
             setAllDisciplinas(disciplinasResponse.data || []);
 
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível carregar as turmas e disciplinas disponíveis');
+
         }
     };
 
@@ -360,7 +363,9 @@ export default function PerfilProfessor() {
                 }
             }
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+            setAlertTitle('Desculpe');
+            setAlertMessage('Não foi possível selecionar a imagem.');
+            setAlertVisible(true);
         }
     };
 
@@ -389,7 +394,9 @@ export default function PerfilProfessor() {
                 }
             }
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível tirar a foto.');
+            setAlertTitle('Desculpe');
+            setAlertMessage('Não foi possível tirar a foto');
+            setAlertVisible(true);
         }
     };
 
@@ -398,42 +405,58 @@ export default function PerfilProfessor() {
             // Verificar se há erros de validação
             const hasErrors = Object.values(validationErrors).some(error => error !== '');
             if (hasErrors) {
-                Alert.alert('Erro', 'Por favor, corrija os campos destacados antes de salvar');
+                setAlertTitle('Atenção');
+                setAlertMessage('Corrija os campos');
+                setAlertVisible(true);
                 return;
             }
-    
+
             // Validações adicionais
-            if (!perfilEdit.nome || !perfilEdit.email) {
-                Alert.alert('Erro', 'Nome e email são campos obrigatórios');
+            if (!perfilEdit.nome) {
+                setAlertTitle('Atenção');
+                setAlertMessage('Nome é obrigatório');
+                setAlertVisible(true);
                 return;
             }
-    
+
+            if (!perfilEdit.email) {
+                setAlertTitle('Atenção');
+                setAlertMessage('Email é obrigatório');
+                setAlertVisible(true);
+                return;
+            }
+
             if (!validarEmail(perfilEdit.email)) {
-                Alert.alert('Erro', 'Por favor, insira um email válido');
+                setAlertTitle('Atenção');
+                setAlertMessage('insira uma email válido @gmail ou @hotmail');
+                setAlertVisible(true);
                 return;
             }
-    
             if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
-                Alert.alert('Erro', 'Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                setAlertTitle('Atenção');
+                setAlertMessage('Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
+                setAlertVisible(true);
                 return;
             }
-    
+
             const idade = validarDataNascimento(selectedDate);
             if (idade < 18 || idade > 90) {
-                Alert.alert('Erro', 'O professor deve ter entre 18 e 90 anos');
+                setAlertTitle('Atenção');
+                setAlertMessage('O aluno deve ter entre 5 e 90 anos');
+                setAlertVisible(true);
                 return;
             }
-    
+
             setUpdating(true);
             const token = await getAuthToken();
-    
+
             // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
             const [dia, mes, ano] = perfilEdit.nascimento.split('/');
             const formattedDate = `${ano}-${mes}-${dia}`;
-    
+
             // Remover formatação do telefone (deixar apenas números)
             const telefoneNumerico = perfilEdit.telefone ? perfilEdit.telefone.replace(/\D/g, '') : null;
-    
+
             // Preparar os dados no formato esperado pelo backend
             const dadosParaEnviar = {
                 nomeDocente: perfilEdit.nome,
@@ -445,7 +468,7 @@ export default function PerfilProfessor() {
                 classId: selectedTurmas,
                 imageUrl: newImageBase64 // Inclui a imagem base64 no corpo da requisição
             };
-    
+
             const response = await axios.put(
                 `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`,
                 dadosParaEnviar,
@@ -456,9 +479,11 @@ export default function PerfilProfessor() {
                     }
                 }
             );
-    
+
             if (response.status === 200) {
-                Alert.alert('Sucesso', 'Dados do professor atualizados com sucesso!');
+                setAlertTitle('Sucesso');
+                setAlertMessage('Os dados do Professor foram atualizados com sucesso');
+                setAlertVisible(true);
                 await fetchProfessor();
                 setIsEditing(false);
                 setNewImageBase64(null); // Limpa a imagem após o sucesso
@@ -466,16 +491,16 @@ export default function PerfilProfessor() {
         } catch (error) {
             console.error('Erro ao atualizar professor:', error);
             let errorMessage = 'Erro ao atualizar os dados do professor';
-    
+
             if (error.response) {
                 console.error('Resposta do servidor:', error.response.data);
                 errorMessage = error.response.data.message || errorMessage;
-                
+
                 if (error.response.data.errors) {
                     errorMessage += '\n' + Object.values(error.response.data.errors).join('\n');
                 }
             }
-    
+
             Alert.alert('Erro', errorMessage);
         } finally {
             setUpdating(false);
@@ -494,24 +519,33 @@ export default function PerfilProfessor() {
                 }
             });
 
-            if (response.status === 200) {
-                Alert.alert('Sucesso', 'Professor excluído com sucesso!', [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.goBack()
-                    }
-                ]);
+            console.log('Status da resposta:', response.status);
+            console.log('Dados da resposta:', response.data);
+
+            if (response.status === 200 || response.status === 204) {
+                try {
+                    setAlertTitle('Sucesso');
+                    setAlertMessage('O Professor foi excluído');
+                    setAlertVisible(true);
+                    navigation.goBack();
+                } catch (internalError) {
+                    console.error('Erro ao mostrar alerta:', internalError);
+                }
             }
         } catch (error) {
+            console.log('Erro completo:', error);
+            console.log('Erro response:', error.response);
             Alert.alert(
                 'Erro',
-                error.response?.data?.message || 'Não foi possível excluir o professor'
+                error.response?.data?.message || error.message || 'Não foi possível excluir o professor'
             );
         } finally {
             setLoading(false);
+            // Você pode testar comentando o fechamento do modal se suspeitar que interfere
             setModalDeleteVisible(false);
         }
     };
+
 
     const toggleEdit = async () => {
         if (!isEditing) {
@@ -653,7 +687,7 @@ export default function PerfilProfessor() {
                     <View style={styles.linhaUser}>
                         <TouchableOpacity onPress={() => {
                             if (!isEditing) return;
-                            
+
                             Alert.alert(
                                 "Alterar Foto",
                                 "Escolha uma opção",
@@ -674,11 +708,11 @@ export default function PerfilProfessor() {
                             );
                         }}>
                             <Image
-                                source={isEditing && perfilEdit.foto ? 
-                                    { uri: perfilEdit.foto } : 
-                                    perfil.foto ? 
-                                    { uri: perfil.foto } : 
-                                    require('../../../assets/image/icon_add_user.png')}
+                                source={isEditing && perfilEdit.foto ?
+                                    { uri: perfilEdit.foto } :
+                                    perfil.foto ?
+                                        { uri: perfil.foto } :
+                                        require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                             />
                             {isEditing && (
@@ -894,20 +928,45 @@ export default function PerfilProfessor() {
 
             </View>
 
-            <Modal visible={modalDeleteVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Tem certeza que deseja excluir o perfil?</Text>
-                        <View style={styles.modalButtonsContainer}>
-                            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+            <Modal visible={modalDeleteVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalDeleteVisible(false)}
+                    activeOpacity={1}
+                >
+                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                            Tem certeza que deseja excluir o perfil?
+                        </Text>
+
+                        <View style={[styles.modalButtonsContainer, { padding: 10 }]}>
+                            <TouchableOpacity
+                                style={[styles.deleteButton, { backgroundColor: '#FF3B30' }]}
+                                onPress={handleDelete}
+                            >
                                 <Text style={styles.buttonText}>Excluir</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalDeleteVisible(false)}>
-                                <Text style={styles.buttonText}>Cancelar</Text>
+                            <TouchableOpacity
+                                style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#444' : '#EEE' }]}
+                                onPress={() => setModalDeleteVisible(false)}
+                            >
+                                <Text style={[styles.buttonText, { color: isDarkMode ? '#FFF' : '#000' }]}>Cancelar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
             <Modal visible={!!error} transparent animationType="slide">
@@ -923,6 +982,13 @@ export default function PerfilProfessor() {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
+
         </ScrollView>
     );
 }
@@ -1067,16 +1133,84 @@ const styles = StyleSheet.create({
         marginTop: 20,
         gap: 15,
     },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+    },
+    modalContainer: {
+        width: '85%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingBottom: 25,
+    },
+    logoSquare: {
+        width: 70,
+        height: 70,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    logo: {
+        width: 50,
+        height: 50,
+    },
+    logoText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginVertical: 15,
+        textAlign: 'center',
+        paddingHorizontal: 15,
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+    },
+    modalText: {
+        fontSize: 16,
+    },
+    modalButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        padding: 20,
+    },
     iconeBotao: {
         padding: 10,
     },
-    modalBackdrop: {
+    modalBackdrop2: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    modalContainer: {
+    modalContainer2: {
         backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
@@ -1087,19 +1221,19 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 10,
     },
-    modalTitle: {
+    modalTitle2: {
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 15,
         textAlign: 'center',
     },
-    modalItem: {
+    modalItem2: {
         padding: 15,
         width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
-    modalText: {
+    modalText2: {
         fontSize: 16,
         textAlign: 'center'
     },

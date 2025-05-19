@@ -26,7 +26,7 @@ export default function NotasTurma() {
     const [disciplinaSelecionada, setDisciplinaSelecionada] = useState(null);
     const [notasAluno, setNotasAluno] = useState([]);
     const [mostrarCamposNota, setMostrarCamposNota] = useState(false);
-
+    const [disciplinasProfessor, setDisciplinasProfessor] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -67,6 +67,18 @@ export default function NotasTurma() {
         if (turmaId) fetchData();
     }, [turmaId]);
 
+    useEffect(() => {
+        const fetchDisciplinasProfessor = async () => {
+            try {
+                const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/39');
+                setDisciplinasProfessor(response.data.disciplinas);
+            } catch (error) {
+                console.error("Erro ao buscar disciplinas do professor:", error);
+            }
+        };
+
+        fetchDisciplinasProfessor();
+    }, []);
     const abrirModal = async (aluno) => {
         setAlunoSelecionado(aluno);
         setModalVisible(true);
@@ -341,13 +353,20 @@ export default function NotasTurma() {
                                                 style={[styles.picker, { color: isDarkMode ? 'white' : 'black' }]}
                                                 dropdownIconColor={isDarkMode ? 'white' : '#1A85FF'}
                                             >
-                                                {disciplinas.map((disciplina) => (
-                                                    <Picker.Item
-                                                        key={disciplina.id}
-                                                        label={disciplina.nomeDisciplina}
-                                                        value={disciplina.id}
-                                                    />
-                                                ))}
+                                                {disciplinasProfessor
+                                                    .filter(disciplinaProf =>
+                                                        disciplinas.some(disciplinaTurma =>
+                                                            disciplinaTurma.id === disciplinaProf.discipline_id
+                                                        )
+                                                    )
+                                                    .map((disciplina) => (
+                                                        <Picker.Item
+                                                            key={disciplina.discipline_id}
+                                                            label={disciplina.nomeDisciplina}
+                                                            value={disciplina.discipline_id}
+                                                        />
+                                                    ))
+                                                }
                                             </Picker>
                                         </View>
 

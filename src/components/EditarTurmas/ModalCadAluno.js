@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    View, 
-    TextInput, 
-    TouchableOpacity, 
-    Modal, 
-    Image, 
-    Alert, 
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    Modal,
+    Image,
+    Alert,
     ActivityIndicator,
-    Platform 
+    Platform
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -18,6 +18,7 @@ import * as FileSystem from 'expo-file-system';
 import { useTheme } from '../../path/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import CustomAlert from '../Gerais/CustomAlert';
 
 export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreating, onCreate }) {
     const [nomeAluno, setNomeAluno] = useState('');
@@ -31,6 +32,10 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     const [profileImage, setProfileImage] = useState(null);
     const [imageBase64, setImageBase64] = useState(null);
     const { isDarkMode } = useTheme();
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+
 
     // Request permissions when component mounts
     useEffect(() => {
@@ -59,40 +64,52 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         }
     }, [visible]);
 
-    // Validação em tempo real
     useEffect(() => {
         const validationErrors = {};
 
-        if (touched.nomeAluno && !nomeAluno.trim()) {
-            validationErrors.nomeAluno = 'Nome é obrigatório';
-        } else if (nomeAluno.length > 0 && nomeAluno.length < 3) {
-            validationErrors.nomeAluno = 'Nome muito curto';
+        // Nome
+        if (touched.nomeAluno) {
+            if (!nomeAluno.trim()) {
+                validationErrors.nomeAluno = 'Nome é obrigatório';
+            } else if (nomeAluno.length < 3) {
+                validationErrors.nomeAluno = 'Nome muito curto';
+            }
         }
 
-        if (touched.emailAluno && !emailAluno) {
-            validationErrors.emailAluno = 'Email é obrigatório';
-        } else if (touched.emailAluno && !/\S+@\S+\.\S+/.test(emailAluno)) {
-            validationErrors.emailAluno = 'Email inválido';
+        // Email
+        if (touched.emailAluno) {
+            if (!emailAluno.trim()) {
+                validationErrors.emailAluno = 'Email é obrigatório';
+            } else if (!/^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/.test(emailAluno.trim().toLowerCase())) {
+                validationErrors.emailAluno = 'Use um email do Gmail ou Hotmail';
+            }
         }
 
-        if (touched.telefoneAluno && !telefoneAluno) {
-            validationErrors.telefoneAluno = 'Telefone é obrigatório';
-        } else if (telefoneAluno && !/^[0-9]{10,11}$/.test(telefoneAluno.replace(/\D/g, ''))) {
-            validationErrors.telefoneAluno = 'Telefone inválido (10 ou 11 dígitos)';
+        // Telefone
+        if (touched.telefoneAluno) {
+            const digits = telefoneAluno.replace(/\D/g, '');
+            if (!digits) {
+                validationErrors.telefoneAluno = 'Telefone é obrigatório';
+            } else if (!/^\d{10,11}$/.test(digits)) {
+                validationErrors.telefoneAluno = 'Telefone inválido (10 ou 11 dígitos)';
+            }
         }
 
-        if (touched.dataNascimento && !dataNascimento) {
-            validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
-        } else if (dataNascimento) {
-            const birthDate = new Date(selectedBirthDate);
-            const today = new Date();
-            const minDate = new Date();
-            minDate.setFullYear(today.getFullYear() - 100);
+        // Data de nascimento
+        if (touched.dataNascimento) {
+            if (!dataNascimento) {
+                validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
+            } else {
+                const birthDate = new Date(selectedBirthDate);
+                const today = new Date();
+                const minDate = new Date();
+                minDate.setFullYear(today.getFullYear() - 100);
 
-            if (birthDate > today) {
-                validationErrors.dataNascimento = 'Data não pode ser no futuro';
-            } else if (birthDate < minDate) {
-                validationErrors.dataNascimento = 'Data inválida (muito antiga)';
+                if (birthDate > today) {
+                    validationErrors.dataNascimento = 'Data não pode ser no futuro';
+                } else if (birthDate < minDate) {
+                    validationErrors.dataNascimento = 'Data inválida (muito antiga)';
+                }
             }
         }
 
@@ -165,7 +182,6 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     };
 
     const handleCadastrar = async () => {
-        // Mark all fields as touched to show all errors
         setTouched({
             nomeAluno: true,
             emailAluno: true,
@@ -173,13 +189,10 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             dataNascimento: true
         });
 
-        // Check for errors
-        if (Object.keys(errors).length > 0 ||
-            !nomeAluno ||
-            !emailAluno ||
-            !telefoneAluno ||
-            !dataNascimento) {
-            Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente');
+        if (!isFormValid()) {
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, preencha todos os campos corretamente.');
+            setAlertVisible(true);
             return;
         }
 
@@ -194,12 +207,12 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 emailAluno: emailAluno.trim().toLowerCase(),
                 telefoneAluno: phoneDigits,
                 turmaId,
-                imageUrl: imageBase64 // Agora enviando a imagem corretamente
+                imageUrl: imageBase64
             };
 
             await onCreate(alunoData, token);
 
-            // Reset form after successful creation
+            // Reset
             setNomeAluno('');
             setEmailAluno('');
             setTelefoneAluno('');
@@ -208,8 +221,13 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             setProfileImage(null);
             setImageBase64(null);
             setTouched({});
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Aluno cadastrado com sucesso!');
+            setAlertVisible(true);
+
         } catch (error) {
-            let errorMessage = 'Erro ao cadastrar aluno. Tente novamente mais tarde.';
+            let errorMessage = 'Erro ao cadastrar aluno. Tente novamente.';
 
             if (error.response) {
                 if (error.response.status === 400) {
@@ -221,7 +239,9 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                 }
             }
 
-            Alert.alert('Erro', errorMessage);
+            setAlertTitle('Erro');
+            setAlertMessage(errorMessage);
+            setAlertVisible(true);
         }
     };
 
@@ -241,15 +261,15 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
             >
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
                     <Image
-                        style={{ 
-                            width: '100%', 
-                            borderTopRightRadius: 10, 
+                        style={{
+                            width: '100%',
+                            borderTopRightRadius: 10,
                             borderTopLeftRadius: 10,
-                            height: 100 
+                            height: 100
                         }}
                         source={require('../../assets/image/barraAzul.png')}
                     />
-                    <View style={{width: '100%', padding: 20}}>
+                    <View style={{ width: '100%', padding: 20 }}>
                         <TouchableOpacity
                             style={styles.closeButton}
                             onPress={onClose}
@@ -262,8 +282,8 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                         <View style={styles.imagePickerContainer}>
                             <TouchableOpacity onPress={pickImage} disabled={isCreating}>
                                 <Image
-                                    source={profileImage ? 
-                                        { uri: profileImage } : 
+                                    source={profileImage ?
+                                        { uri: profileImage } :
                                         require('../../assets/image/icon_add_user.png')}
                                     style={styles.profileImage}
                                 />
@@ -368,6 +388,13 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
                     </View>
                 </View>
             </TouchableOpacity>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
+
         </Modal>
     );
 }
