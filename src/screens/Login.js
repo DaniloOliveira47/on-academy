@@ -25,6 +25,22 @@ export default function Login() {
     setIsDarkMode(!isDarkMode);
   };
 
+  const fetchInstitutionData = async (userId) => {
+    try {
+      const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution');
+      const institutions = response.data;
+
+      // Encontrar a instituição com ID correspondente ao usuário logado
+      const loggedInInstitution = institutions.find(inst => inst.id.toString() === userId);
+
+      if (loggedInInstitution) {
+        await AsyncStorage.setItem('@institution_data', JSON.stringify(loggedInInstitution));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados da instituição:', error);
+    }
+  };
+
   const handleLogin = async () => {
     const matriculaTrimmed = matricula.trim();
     const passwordTrimmed = password.trim();
@@ -70,7 +86,6 @@ export default function Login() {
     } else {
       url = 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/login';
     }
-
     try {
       const response = await axios.post(url, usuario);
       const data = response.data;
@@ -89,6 +104,7 @@ export default function Login() {
         } else if (firstChar === 'p') {
           navigation.navigate('MainDoc');
         } else {
+          await fetchInstitutionData(userId);
           navigation.navigate('MainIns');
         }
       }
@@ -142,7 +158,7 @@ export default function Login() {
             >
               <View style={styles.contText}>
                 <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>
-                  Bem-vindo à (On-Academy)
+                  Bem-vindo à On-Academy
                 </Text>
                 <Text style={[styles.text, { color: isDarkMode ? '#A4A4A4' : '#555' }]}>
                   Acompanhe seu desempenho, receba notificações e explore recursos personalizados

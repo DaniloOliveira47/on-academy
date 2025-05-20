@@ -57,7 +57,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
 
     // Regex
     const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com)$/i;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|hotmail\.com)$/i;
 
     // Nome
     if (touched.nomeAluno) {
@@ -73,7 +73,7 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         if (!emailAluno.trim()) {
             validationErrors.emailAluno = 'Email é obrigatório';
         } else if (!emailRegex.test(emailAluno.trim().toLowerCase())) {
-            validationErrors.emailAluno = 'Use um e-mail válido: @gmail.com ou @outlook.com';
+            validationErrors.emailAluno = 'Use um e-mail válido: @gmail.com ou @hotmail.com';
         }
     }
 

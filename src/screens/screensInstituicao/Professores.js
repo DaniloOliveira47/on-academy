@@ -9,6 +9,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfessor';
 import CardProfessorIns from '../../components/Ocorrência/CardProfessoreIns';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
@@ -19,6 +20,9 @@ export default function ProfessoresFeedback() {
     const [professorSelecionado, setProfessorSelecionado] = useState(null);
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const professoresPorPagina = 6;
     const totalPaginas = Math.ceil(professoresFiltrados.length / professoresPorPagina);
@@ -94,26 +98,93 @@ export default function ProfessoresFeedback() {
 
     const handleCriarProfessor = async (dadosProfessor) => {
         try {
+            const nomeTrim = dadosProfessor.nomeDocente?.trim() || '';
+            const emailTrim = dadosProfessor.emailDocente?.trim().toLowerCase() || '';
+            const phoneDigits = dadosProfessor.telefoneDocente?.replace(/\D/g, '') || '';
+            const dataNascimento = dadosProfessor.dataNascimentoDocente;
+
+            // Regex para validar nome (somente letras e espaços)
+            const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
+            // Regex para validar e-mails somente do gmail e outlook (sem nada após .com)
+            const emailRegex = /^[a-z0-9._%+-]+@(gmail\.com|outlook\.com)$/i;
+
+            // Validações
+            if (!nomeRegex.test(nomeTrim)) {
+                setAlertTitle('Erro');
+                setAlertMessage('O nome deve conter apenas letras e no mínimo 3 caracteres.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (!emailRegex.test(emailTrim)) {
+                setAlertTitle('Erro');
+                setAlertMessage('Insira um e-mail válido: apenas @gmail.com ou @outlook.com, sem nada após o domínio.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (phoneDigits.length !== 11) {
+                setAlertTitle('Erro');
+                setAlertMessage('O telefone deve conter exatamente 11 dígitos.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (!dataNascimento) {
+                setAlertTitle('Erro');
+                setAlertMessage('Por favor, informe a data de nascimento.');
+                setAlertVisible(true);
+                return;
+            }
+
             setIsCreating(true);
+
             const token = await AsyncStorage.getItem('@user_token');
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher', dadosProfessor, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            if (!token) {
+                setAlertTitle('Erro');
+                setAlertMessage('Token de autenticação não encontrado.');
+                setAlertVisible(true);
+                return;
+            }
+
+            // Substitui o telefone formatado com apenas dígitos
+            const professorParaEnviar = {
+                ...dadosProfessor,
+                nomeDocente: nomeTrim,
+                emailDocente: emailTrim,
+                telefoneDocente: phoneDigits,
+            };
+
+            const response = await axios.post(
+                'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher',
+                professorParaEnviar,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             if (response.status === 201) {
+                setAlertTitle('Sucesso');
+                setAlertMessage('Professor cadastrado com sucesso!');
+                setAlertVisible(true);
                 await fetchProfessores();
+                setModalCriarVisible(false);
             }
-        } catch {
 
-            await fetchProfessores();
+        } catch (error) {
+            let msg = error.response?.data?.message || 'Erro ao cadastrar professor. Tente novamente.';
+            if (error.response?.status === 400) {
+                msg = 'Este e-mail já está cadastrado para outro professor.';
+            }
+            setAlertTitle('Erro');
+            setAlertMessage(msg);
+            setAlertVisible(true);
         } finally {
             setIsCreating(false);
-            setModalCriarVisible(false);
         }
     };
-
     const renderProfessores = () => {
         const professoresPagina = getProfessoresPagina();
         const rows = [];
@@ -299,6 +370,13 @@ export default function ProfessoresFeedback() {
                     isCreating={isCreating}
                 />
             </View>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
+
         </View>
     );
 }

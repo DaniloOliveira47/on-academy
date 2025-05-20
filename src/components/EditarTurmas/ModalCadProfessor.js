@@ -44,19 +44,23 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     useEffect(() => {
         const validationErrors = {};
 
+        // Regex
+        const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|hotmail\.com)$/i;
+
         if (touched.nomeDocente) {
             if (!nomeDocente.trim()) {
                 validationErrors.nomeDocente = 'Nome é obrigatório';
-            } else if (nomeDocente.length < 3) {
-                validationErrors.nomeDocente = 'Nome muito curto';
+            } else if (!nomeRegex.test(nomeDocente.trim())) {
+                validationErrors.nomeDocente = 'O nome deve conter apenas letras e no mínimo 3 caracteres';
             }
         }
 
         if (touched.emailDocente) {
             if (!emailDocente.trim()) {
                 validationErrors.emailDocente = 'Email é obrigatório';
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDocente.trim())) {
-                validationErrors.emailDocente = 'Email inválido';
+            } else if (!emailRegex.test(emailDocente.trim().toLowerCase())) {
+                validationErrors.emailDocente = 'Use um e-mail válido: @gmail.com ou @hotmail.com';
             }
         }
 
@@ -251,11 +255,8 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
 
             await onCreate(professorData);
 
-            setAlertTitle('Sucesso');
-            setAlertMessage('Professor cadastrado com sucesso!');
-            setAlertVisible(true);
         } catch (error) {
-  
+
         }
     };
 
@@ -266,9 +267,9 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                 activeOpacity={1}
             >
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-                
 
-                    
+
+
                     <Image
                         style={styles.headerImage}
                         source={require('../../assets/image/barraAzul.png')}
@@ -417,7 +418,7 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             )}
                         </TouchableOpacity>
                     </View>
-                  
+
                 </View>
             </TouchableOpacity>
 

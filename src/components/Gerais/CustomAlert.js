@@ -9,7 +9,7 @@ const CustomAlert = ({
     message,
     onDismiss,
     iconName = "checkmark-circle",
-    buttonText = "ENTENDI"
+    buttonText = "OK"
 }) => {
 
     const { isDarkMode, setIsDarkMode } = useTheme();

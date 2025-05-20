@@ -926,7 +926,7 @@ const styles = StyleSheet.create({
     },
     modalDisciplinaInput: {
         width: '100%',
-height: 50,
+        height: 50,
         borderRadius: 10,
         padding: 14,
         marginBottom: 20,

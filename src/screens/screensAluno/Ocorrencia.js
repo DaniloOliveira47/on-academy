@@ -352,6 +352,7 @@ export default function Ocorrencia() {
                             <CardProfessor
                                 key={index}
                                 nome={"Prof - " + professor.nomeDocente}
+                                imageUrl={professor.imageUrl}
                                 id={professor.id}
                                 onPress={() => selecionarProfessor(professor)}
                                 selecionado={professorSelecionado?.id === professor.id}
