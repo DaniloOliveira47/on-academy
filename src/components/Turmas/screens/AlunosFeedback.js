@@ -33,6 +33,7 @@ export default function AlunosFeedback({ route }) {
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
     const [modalBarraVisible, setModalBarraVisible] = useState(false);
+        const [filtro, setFiltro] = useState('');
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const navigation = useNavigation();
 
@@ -78,14 +79,27 @@ export default function AlunosFeedback({ route }) {
         }
     };
 
+     const getAlunosFiltrados = () => {
+        if (!turma || !turma.students) return [];
+
+        if (!filtro.trim()) {
+            return turma.students;
+        }
+
+        const filtroMinusculo = filtro.toLowerCase();
+
+        return turma.students.filter(aluno => 
+            aluno.nomeAluno.toLowerCase().includes(filtroMinusculo) ||
+            aluno.matricula?.toString().includes(filtroMinusculo)
+        );
+    };
 
     const getAlunosPaginaAtual = () => {
-        if (!turma || !turma.students) return [[], []];
+        const alunosFiltrados = getAlunosFiltrados();
 
         const inicio = (paginaSelecionada - 1) * ALUNOS_POR_PAGINA;
         const fim = inicio + ALUNOS_POR_PAGINA;
-        const alunosPagina = turma.students.slice(inicio, fim);
-
+        const alunosPagina = alunosFiltrados.slice(inicio, fim);
 
         const metade = Math.ceil(alunosPagina.length / 2);
         const coluna1 = alunosPagina.slice(0, metade);
@@ -95,7 +109,7 @@ export default function AlunosFeedback({ route }) {
     };
 
 
-    const totalPaginas = turma ? Math.ceil(turma.students.length / ALUNOS_POR_PAGINA) : 1;
+    const totalPaginas = Math.max(1, Math.ceil(getAlunosFiltrados().length / ALUNOS_POR_PAGINA));
 
 
     const getBotoesPagina = () => {
@@ -223,10 +237,15 @@ export default function AlunosFeedback({ route }) {
 
                     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
-                            <TextInput
+                             <TextInput
                                 style={[styles.input, { color: isDarkMode ? '#FFF' : '#000' }]}
                                 placeholder="Digite o nome ou número da matrícula"
                                 placeholderTextColor="#756262"
+                                value={filtro}
+                                onChangeText={text => {
+                                    setFiltro(text);
+                                    setPaginaSelecionada(1); // resetar página ao filtrar
+                                }}
                             />
                             <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                         </View>
@@ -404,6 +423,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+        height: 50
     },
     selecao: {
         flexDirection: 'row',

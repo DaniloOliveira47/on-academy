@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+        height: 50
     },
     icon: {
         marginLeft: 10,

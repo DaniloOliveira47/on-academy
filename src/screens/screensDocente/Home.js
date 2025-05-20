@@ -8,6 +8,7 @@ import { useTheme } from '../../path/ThemeContext';
 import CardTurmas from '../../components/Home/CardTurmas';
 import Avisos from '../../components/Home/Avisos';
 import HeaderDoc from '../../components/Home/HeaderDoc';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function HomeDocente() {
     const { isDarkMode } = useTheme();
@@ -16,6 +17,9 @@ export default function HomeDocente() {
     const [conteudoAviso, setConteudoAviso] = useState('');
     const [avisos, setAvisos] = useState([]);
     const [turmaSelecionada, setTurmaSelecionada] = useState(null);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const handleSelecionarTurma = (id) => {
         setTurmaSelecionada(id);
@@ -67,28 +71,62 @@ export default function HomeDocente() {
             fetchMessages();
         }, [])
     );
-
     const enviarAviso = async () => {
         try {
-            if (!turmaSelecionada) {
-                Alert.alert('Aviso', 'Por favor, selecione uma turma.');
+            const isConnected = true; // Substitua por NetInfo se necessário
+            if (!isConnected) {
+                setAlertTitle('Erro de Conexão');
+                setAlertMessage('Sem conexão com a internet. Verifique sua rede e tente novamente.');
+                setAlertVisible(true);
                 return;
             }
+
+            if (!turmaSelecionada || isNaN(Number(turmaSelecionada))) {
+                setAlertTitle('Turma não selecionada');
+                setAlertMessage('Por favor, selecione uma turma.');
+                setAlertVisible(true);
+                return;
+            }
+
             const professorId = await AsyncStorage.getItem('@user_id');
             const token = await AsyncStorage.getItem('@user_token');
+
             if (!professorId || !token) {
-                Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+                setAlertTitle('Sessão expirada');
+                setAlertMessage('Sua sessão expirou. Faça login novamente.');
+                setAlertVisible(true);
                 return;
             }
-            if (!conteudoAviso.trim()) {
-                Alert.alert('Aviso', 'Por favor, digite um aviso antes de enviar.');
+
+            const avisoTexto = conteudoAviso.trim();
+
+            if (!avisoTexto) {
+                setAlertTitle('Aviso vazio');
+                setAlertMessage('Por favor, digite um aviso antes de enviar.');
+                setAlertVisible(true);
                 return;
             }
+
+            if (avisoTexto.length < 5) {
+                setAlertTitle('Aviso muito curto');
+                setAlertMessage('O aviso precisa ter pelo menos 5 caracteres.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (avisoTexto.length > 100) {
+                setAlertTitle('Aviso muito longo');
+                setAlertMessage('O aviso não pode ultrapassar 100 caracteres.');
+                setAlertVisible(true);
+                return;
+            }
+
             const avisoData = {
-                conteudo: conteudoAviso,
+                conteudo: avisoTexto,
                 createdBy: { id: parseInt(professorId) },
                 classSt: { id: turmaSelecionada },
             };
+
             await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder', avisoData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -96,15 +134,22 @@ export default function HomeDocente() {
                 }
             });
 
-            Alert.alert('Sucesso', 'Aviso enviado com sucesso!');
-            setConteudoAviso('');
+            setAlertTitle('Sucesso');
+            setAlertMessage('Aviso enviado com sucesso!');
+            setAlertVisible(true);
 
+            setConteudoAviso('');
             await fetchMessages();
+
         } catch (error) {
             console.error('Erro ao enviar aviso:', error);
-            Alert.alert('Erro', 'Erro ao enviar aviso. Tente novamente.');
+            setAlertTitle('Erro');
+            setAlertMessage('Erro ao enviar aviso. Tente novamente mais tarde.');
+            setAlertVisible(true);
         }
     };
+
+
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -237,6 +282,12 @@ export default function HomeDocente() {
                     </View>
                 </View>
             </ScrollView>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

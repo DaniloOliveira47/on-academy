@@ -168,35 +168,35 @@ export default function Turmas() {
 
         if (nomeTrimado === '') {
             setAlertTitle('Atenção');
-            setAlertMessage('O nome da turma é obrigatório.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (!capacidadeValida) {
             setAlertTitle('Atenção');
-            setAlertMessage('A capacidade mínima é 20 alunos e deve ser um número válido.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (!salaValida) {
             setAlertTitle('Atenção');
-            setAlertMessage('Digite um número de sala válido.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (novosErros.professores) {
             setAlertTitle('Atenção');
-            setAlertMessage('Selecione pelo menos um professor.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (novosErros.disciplinas) {
             setAlertTitle('Atenção');
-            setAlertMessage('Selecione pelo menos uma disciplina.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
@@ -759,6 +759,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+        height: 50
     },
     icon: {
         marginLeft: 10
@@ -831,6 +832,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         borderWidth: 1,
+        height: 50
     },
     pickerContainer: {
         borderRadius: 10,
@@ -924,7 +926,7 @@ const styles = StyleSheet.create({
     },
     modalDisciplinaInput: {
         width: '100%',
-
+height: 50,
         borderRadius: 10,
         padding: 14,
         marginBottom: 20,

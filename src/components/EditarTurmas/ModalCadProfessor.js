@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { useTheme } from '../../path/ThemeContext';
+import CustomAlert from '../Gerais/CustomAlert';
 
 export default function CadastroProfessorModal({ visible, onClose, onCreate, isCreating }) {
     const [nomeDocente, setNomeDocente] = useState('');
@@ -21,47 +22,110 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
     const [profileImage, setProfileImage] = useState(null);
     const [imageBase64, setImageBase64] = useState(null);
     const { isDarkMode } = useTheme();
-    const [errors, setErrors] = useState({
-        nomeDocente: '',
-        emailDocente: '',
-        telefoneDocente: '',
-        dataNascimento: '',
-        disciplines: ''
+    const [touched, setTouched] = useState({
+        nomeDocente: false,
+        emailDocente: false,
+        telefoneDocente: false,
+        dataNascimento: false,
+        disciplines: false
     });
+    const [errors, setErrors] = useState({});
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         if (visible) {
             fetchDisciplines();
-
-            setNomeDocente('');
-            setEmailDocente('');
-            setTelefoneDocente('');
-            setDataNascimento('');
-            setSelectedBirthDate(new Date());
-            setSelectedDisciplines([]);
-            setProfileImage(null);
-            setImageBase64(null);
-            setErrors({
-                nomeDocente: '',
-                emailDocente: '',
-                telefoneDocente: '',
-                dataNascimento: '',
-                disciplines: ''
-            });
+            resetForm();
         }
     }, [visible]);
 
-
     useEffect(() => {
-        (async () => {
-            if (Platform.OS !== 'web') {
-                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                if (status !== 'granted') {
-                    Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para adicionar fotos');
+        const validationErrors = {};
+
+        if (touched.nomeDocente) {
+            if (!nomeDocente.trim()) {
+                validationErrors.nomeDocente = 'Nome é obrigatório';
+            } else if (nomeDocente.length < 3) {
+                validationErrors.nomeDocente = 'Nome muito curto';
+            }
+        }
+
+        if (touched.emailDocente) {
+            if (!emailDocente.trim()) {
+                validationErrors.emailDocente = 'Email é obrigatório';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDocente.trim())) {
+                validationErrors.emailDocente = 'Email inválido';
+            }
+        }
+
+        if (touched.telefoneDocente) {
+            const digits = telefoneDocente.replace(/\D/g, '');
+            if (!digits) {
+                validationErrors.telefoneDocente = 'Telefone é obrigatório';
+            } else if (!/^\d{10,11}$/.test(digits)) {
+                validationErrors.telefoneDocente = 'Telefone inválido (10 ou 11 dígitos)';
+            }
+        }
+
+        if (touched.dataNascimento) {
+            if (!dataNascimento) {
+                validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
+            } else {
+                const birthDate = new Date(selectedBirthDate);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 18) {
+                    validationErrors.dataNascimento = 'O professor deve ter pelo menos 18 anos';
                 }
             }
-        })();
-    }, []);
+        }
+
+        if (touched.disciplines && selectedDisciplines.length === 0) {
+            validationErrors.disciplines = 'Selecione pelo menos uma disciplina';
+        }
+
+        setErrors(validationErrors);
+    }, [nomeDocente, emailDocente, telefoneDocente, dataNascimento, selectedDisciplines, touched]);
+
+    const resetForm = () => {
+        setNomeDocente('');
+        setEmailDocente('');
+        setTelefoneDocente('');
+        setDataNascimento('');
+        setSelectedBirthDate(new Date());
+        setSelectedDisciplines([]);
+        setProfileImage(null);
+        setImageBase64(null);
+        setTouched({
+            nomeDocente: false,
+            emailDocente: false,
+            telefoneDocente: false,
+            dataNascimento: false,
+            disciplines: false
+        });
+        setErrors({});
+    };
+
+    const isFormValid = () => {
+        return nomeDocente.trim() &&
+            emailDocente.trim() &&
+            telefoneDocente.replace(/\D/g, '').length >= 10 &&
+            dataNascimento &&
+            selectedDisciplines.length > 0 &&
+            Object.keys(errors).length === 0;
+    };
+
+    const handleBlur = (field) => {
+        setTouched({ ...touched, [field]: true });
+    };
 
     const fetchDisciplines = async () => {
         try {
@@ -74,12 +138,13 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
             });
             setDisciplines(response.data);
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível carregar as disciplinas');
+            setAlertVisible(true);
         } finally {
             setLoadingDisciplines(false);
         }
     };
-
 
     const pickImage = async () => {
         try {
@@ -105,7 +170,9 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                 }
             }
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível selecionar a imagem.');
+            setAlertVisible(true);
         }
     };
 
@@ -114,121 +181,82 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
         if (date) {
             setSelectedBirthDate(date);
             setDataNascimento(date.toLocaleDateString('pt-BR'));
-            setErrors(prev => ({ ...prev, dataNascimento: '' }));
+            handleBlur('dataNascimento');
         }
+    };
+
+    const formatPhone = (input) => {
+        const numbers = input.replace(/\D/g, '');
+        let formatted = '';
+
+        if (numbers.length > 0) {
+            formatted = `(${numbers.substring(0, 2)}`;
+        }
+        if (numbers.length > 2) {
+            formatted += `) ${numbers.substring(2, 7)}`;
+        }
+        if (numbers.length > 7) {
+            formatted += `-${numbers.substring(7, 11)}`;
+        }
+
+        return formatted;
+    };
+
+    const handlePhoneChange = (text) => {
+        const formatted = formatPhone(text);
+        setTelefoneDocente(formatted);
+        handleBlur('telefoneDocente');
     };
 
     const toggleDiscipline = (disciplineId) => {
         if (isCreating) return;
+
         setSelectedDisciplines(prev => {
             const newSelection = prev.includes(disciplineId)
                 ? prev.filter(id => id !== disciplineId)
                 : [...prev, disciplineId];
-
-            if (newSelection.length > 0) {
-                setErrors(prev => ({ ...prev, disciplines: '' }));
-            }
-
             return newSelection;
         });
-    };
 
-    const formatPhoneNumber = (input) => {
-        const cleaned = input.replace(/\D/g, '');
-        const limited = cleaned.slice(0, 11);
-
-        if (limited.length <= 10) {
-            return limited.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        } else {
-            return limited.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        }
-    };
-
-    const handlePhoneChange = (text) => {
-        const formatted = formatPhoneNumber(text);
-        setTelefoneDocente(formatted);
-        if (formatted.replace(/\D/g, '').length >= 10) {
-            setErrors(prev => ({ ...prev, telefoneDocente: '' }));
-        }
-    };
-
-    const validateFields = () => {
-        let valid = true;
-        const newErrors = {
-            nomeDocente: '',
-            emailDocente: '',
-            telefoneDocente: '',
-            dataNascimento: '',
-            disciplines: ''
-        };
-
-        if (!nomeDocente.trim()) {
-            newErrors.nomeDocente = 'Nome é obrigatório';
-            valid = false;
-        } else if (nomeDocente.trim().length < 3) {
-            newErrors.nomeDocente = 'Nome deve ter pelo menos 3 caracteres';
-            valid = false;
-        }
-
-        if (!emailDocente.trim()) {
-            newErrors.emailDocente = 'Email é obrigatório';
-            valid = false;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDocente)) {
-            newErrors.emailDocente = 'Email inválido';
-            valid = false;
-        }
-
-        const phoneDigits = telefoneDocente.replace(/\D/g, '');
-        if (!phoneDigits) {
-            newErrors.telefoneDocente = 'Telefone é obrigatório';
-            valid = false;
-        } else if (phoneDigits.length < 10) {
-            newErrors.telefoneDocente = 'Telefone inválido';
-            valid = false;
-        }
-
-        if (!dataNascimento) {
-            newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-            valid = false;
-        } else {
-            const today = new Date();
-            const birthDate = new Date(selectedBirthDate);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-
-            if (age < 18) {
-                newErrors.dataNascimento = 'O professor deve ter pelo menos 18 anos';
-                valid = false;
-            }
-        }
-
-        if (selectedDisciplines.length === 0) {
-            newErrors.disciplines = 'Selecione pelo menos uma disciplina';
-            valid = false;
-        }
-
-        setErrors(newErrors);
-        return valid;
+        handleBlur('disciplines');
     };
 
     const handleSubmit = async () => {
-        if (!validateFields()) return;
+        // Marca todos os campos como tocados para mostrar erros
+        setTouched({
+            nomeDocente: true,
+            emailDocente: true,
+            telefoneDocente: true,
+            dataNascimento: true,
+            disciplines: true
+        });
 
-        const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
-        const professorData = {
-            nomeDocente: nomeDocente.trim(),
-            dataNascimentoDocente: dataFormatada,
-            emailDocente: emailDocente.trim(),
-            telefoneDocente: telefoneDocente.replace(/\D/g, ''),
-            disciplineId: selectedDisciplines,
-            imageUrl: imageBase64
-        };
+        if (!isFormValid()) {
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, preencha todos os campos corretamente.');
+            setAlertVisible(true);
+            return;
+        }
 
-        await onCreate(professorData);
+        try {
+            const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
+            const professorData = {
+                nomeDocente: nomeDocente.trim(),
+                dataNascimentoDocente: dataFormatada,
+                emailDocente: emailDocente.trim().toLowerCase(),
+                telefoneDocente: telefoneDocente.replace(/\D/g, ''),
+                disciplineId: selectedDisciplines,
+                imageUrl: imageBase64
+            };
+
+            await onCreate(professorData);
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Professor cadastrado com sucesso!');
+            setAlertVisible(true);
+        } catch (error) {
+  
+        }
     };
 
     return (
@@ -237,18 +265,15 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                 style={[styles.modalContainer, isDarkMode && styles.darkModalContainer]}
                 activeOpacity={1}
             >
-
                 <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+                
+
+                    
                     <Image
-                        style={{
-                            width: '100%', borderTopRightRadius: 10, borderTopLeftRadius: 10, height
-                                : 100
-                        }}
+                        style={styles.headerImage}
                         source={require('../../assets/image/barraAzul.png')}
                     />
-                    <View style={{ width: '100%', padding: 20 }}>
-
-
+                    <View style={styles.contentContainer}>
                         <TouchableOpacity
                             style={styles.closeButton}
                             onPress={onClose}
@@ -257,7 +282,6 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             <Icon name="x" size={30} color={isCreating ? '#CCC' : isDarkMode ? '#FFF' : '#000'} />
                         </TouchableOpacity>
 
-                        {/* Profile Image Picker */}
                         <View style={styles.imagePickerContainer}>
                             <TouchableOpacity onPress={pickImage} disabled={isCreating}>
                                 <Image
@@ -279,15 +303,11 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             placeholder="Nome Completo"
                             placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                             value={nomeDocente}
-                            onChangeText={(text) => {
-                                setNomeDocente(text);
-                                if (text.trim()) {
-                                    setErrors(prev => ({ ...prev, nomeDocente: '' }));
-                                }
-                            }}
+                            onChangeText={setNomeDocente}
+                            onBlur={() => handleBlur('nomeDocente')}
                             editable={!isCreating}
                         />
-                        {errors.nomeDocente ? <Text style={styles.errorText}>{errors.nomeDocente}</Text> : null}
+                        {errors.nomeDocente && <Text style={styles.errorText}>{errors.nomeDocente}</Text>}
 
                         <TextInput
                             style={[styles.input,
@@ -298,41 +318,41 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             keyboardType="email-address"
                             autoCapitalize="none"
                             value={emailDocente}
-                            onChangeText={(text) => {
-                                setEmailDocente(text);
-                                if (text.trim()) {
-                                    setErrors(prev => ({ ...prev, emailDocente: '' }));
-                                }
-                            }}
+                            onChangeText={setEmailDocente}
+                            onBlur={() => handleBlur('emailDocente')}
                             editable={!isCreating}
                         />
-                        {errors.emailDocente ? <Text style={styles.errorText}>{errors.emailDocente}</Text> : null}
+                        {errors.emailDocente && <Text style={styles.errorText}>{errors.emailDocente}</Text>}
 
                         <TextInput
                             style={[styles.input,
                             isDarkMode && styles.darkInput,
                             errors.telefoneDocente && styles.inputError]}
-                            placeholder="Telefone (DDD) + número"
+                            placeholder="Telefone (XX) XXXXX-XXXX"
                             placeholderTextColor={isDarkMode ? '#888' : '#AAA'}
                             keyboardType="phone-pad"
                             value={telefoneDocente}
                             onChangeText={handlePhoneChange}
+                            onBlur={() => handleBlur('telefoneDocente')}
                             editable={!isCreating}
                             maxLength={15}
                         />
-                        {errors.telefoneDocente ? <Text style={styles.errorText}>{errors.telefoneDocente}</Text> : null}
+                        {errors.telefoneDocente && <Text style={styles.errorText}>{errors.telefoneDocente}</Text>}
 
                         <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Data de Nascimento</Text>
                         <View style={styles.dateContainer}>
                             <TextInput
-                                style={[styles.input,
-                                styles.dateInput,
-                                isDarkMode && styles.darkInput,
-                                errors.dataNascimento && styles.inputError]}
+                                style={[
+                                    styles.input,
+                                    styles.dateInput,
+                                    isDarkMode && styles.darkInput,
+                                    errors.dataNascimento && styles.inputError
+                                ]}
                                 placeholder="Selecione a data de nascimento"
                                 placeholderTextColor={isDarkMode ? '#888' : '#666'}
                                 value={dataNascimento}
                                 editable={false}
+                                onFocus={() => !isCreating && setShowBirthDatePicker(true)}
                             />
                             <TouchableOpacity
                                 style={styles.dateIconButton}
@@ -342,24 +362,24 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                                 <Icon name="calendar" size={24} color={isCreating ? '#CCC' : '#1A85FF'} />
                             </TouchableOpacity>
                         </View>
-                        {errors.dataNascimento ? <Text style={styles.errorText}>{errors.dataNascimento}</Text> : null}
+                        {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
                         {showBirthDatePicker && (
                             <DateTimePicker
                                 value={selectedBirthDate}
                                 mode="date"
+                                display="default"
                                 onChange={handleBirthDateChange}
                                 maximumDate={new Date()}
-                                themeVariant={isDarkMode ? 'dark' : 'light'}
-                                textColor={isDarkMode ? '#FFF' : '#000'}
+                                minimumDate={new Date(1900, 0, 1)}
                             />
                         )}
 
                         <Text style={[styles.label, isDarkMode && styles.darkLabel]}>Disciplinas</Text>
-                        {errors.disciplines ? <Text style={[styles.errorText, isDarkMode && styles.darkErrorText]}>{errors.disciplines}</Text> : null}
+                        {errors.disciplines && <Text style={styles.errorText}>{errors.disciplines}</Text>}
                         {loadingDisciplines ? (
                             <ActivityIndicator size="small" color={isDarkMode ? '#1A85FF' : '#1A85FF'} />
                         ) : (
-                            <ScrollView style={[styles.disciplinesContainer, isDarkMode && styles.darkDisciplinesContainer]} contentContainerStyle={styles.disciplinesContent}>
+                            <ScrollView nestedScrollEnabled={true} style={[styles.disciplinesContainer, isDarkMode && styles.darkDisciplinesContainer]} contentContainerStyle={styles.disciplinesContent}>
                                 {disciplines.map(discipline => (
                                     <TouchableOpacity
                                         key={discipline.id}
@@ -385,10 +405,10 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                         <TouchableOpacity
                             style={[
                                 styles.saveButton,
-                                isCreating && styles.saveButtonDisabled
+                                (!isFormValid() || isCreating) && styles.saveButtonDisabled
                             ]}
                             onPress={handleSubmit}
-                            disabled={isCreating}
+                            disabled={!isFormValid() || isCreating}
                         >
                             {isCreating ? (
                                 <ActivityIndicator size="small" color="#FFF" />
@@ -397,11 +417,21 @@ export default function CadastroProfessorModal({ visible, onClose, onCreate, isC
                             )}
                         </TouchableOpacity>
                     </View>
+                  
                 </View>
             </TouchableOpacity>
+
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </Modal>
     );
 }
+
+// Estilos permanecem os mesmos
 
 const styles = StyleSheet.create({
     modalContainer: {
@@ -410,14 +440,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     modalContent: {
         width: '92%',
         backgroundColor: '#FFF',
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
         borderRadius: 20,
         alignItems: 'center',
-
+    },
+    headerImage: {
+        width: '100%',
+        borderTopRightRadius: 10,
+        borderTopLeftRadius: 10,
+        height: 100
+    },
+    contentContainer: {
+        width: '100%',
+        padding: 20,
+        position: 'relative'
     },
     closeButton: {
         position: 'absolute',

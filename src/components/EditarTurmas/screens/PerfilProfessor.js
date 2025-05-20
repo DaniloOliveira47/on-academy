@@ -12,6 +12,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import CustomAlert from '../../Gerais/CustomAlert';
+import DeleteAlert from '../../Gerais/DeleteAlert';
+import FeedbackModal from '../../Gerais/FeedbackModal';
 
 const { width } = Dimensions.get('window');
 
@@ -122,6 +124,9 @@ export default function PerfilProfessor() {
         feedbacks: [],
         foto: null,
     });
+
+    const [shouldGoBack, setShouldGoBack] = useState(false);
+
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVisible, setAlertVisible] = useState(false);
@@ -231,6 +236,13 @@ export default function PerfilProfessor() {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        if (!alertVisible && shouldGoBack) {
+            navigation.goBack();
+            setShouldGoBack(false); // Resetar para não disparar de novo
+        }
+    }, [alertVisible, shouldGoBack]);
+
 
     const fetchAllTurmasAndDisciplinas = async () => {
         try {
@@ -389,7 +401,6 @@ export default function PerfilProfessor() {
 
     const handleEditSave = async () => {
         try {
-
             const hasErrors = Object.values(validationErrors).some(error => error !== '');
             if (hasErrors) {
                 setAlertTitle('Atenção');
@@ -398,7 +409,7 @@ export default function PerfilProfessor() {
                 return;
             }
 
-
+            // Validações de nome
             if (!perfilEdit.nome) {
                 setAlertTitle('Atenção');
                 setAlertMessage('Nome é obrigatório');
@@ -406,6 +417,14 @@ export default function PerfilProfessor() {
                 return;
             }
 
+            if (!/^[A-Za-zÀ-ÿ\s]{3,}$/.test(perfilEdit.nome.trim())) {
+                setAlertTitle('Atenção');
+                setAlertMessage('O nome deve conter apenas letras e no mínimo 3 caracteres.');
+                setAlertVisible(true);
+                return;
+            }
+
+            // Validação de e-mail
             if (!perfilEdit.email) {
                 setAlertTitle('Atenção');
                 setAlertMessage('Email é obrigatório');
@@ -413,37 +432,57 @@ export default function PerfilProfessor() {
                 return;
             }
 
-            if (!validarEmail(perfilEdit.email)) {
+            const emailRegex = /^[a-z0-9._%+-]+@(gmail\.com|hotmail\.com)$/i;
+            if (!emailRegex.test(perfilEdit.email.trim())) {
                 setAlertTitle('Atenção');
-                setAlertMessage('insira uma email válido @gmail ou @hotmail');
+                setAlertMessage('Insira um e-mail válido @gmail.com ou hotmail.com');
                 setAlertVisible(true);
                 return;
             }
-            if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
+
+            // Validação de telefone (se fornecido)
+            if (!perfilEdit.telefone) {
+                setAlertTitle('Atenção');
+                setAlertMessage('Telefone é obrigatório');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (!validarTelefone(perfilEdit.telefone)) {
                 setAlertTitle('Atenção');
                 setAlertMessage('Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
                 setAlertVisible(true);
                 return;
             }
 
+            // Validação de idade
             const idade = validarDataNascimento(selectedDate);
             if (idade < 18 || idade > 90) {
                 setAlertTitle('Atenção');
-                setAlertMessage('O aluno deve ter entre 5 e 90 anos');
+                setAlertMessage('O professor deve ter entre 18 e 90 anos');
                 setAlertVisible(true);
                 return;
+            }
+
+            // Validação da data de nascimento
+            let formattedDate = '';
+            if (perfilEdit.nascimento) {
+                const [dia, mes, ano] = perfilEdit.nascimento.split('/');
+                formattedDate = `${ano}-${mes}-${dia}`;
+
+                const testDate = new Date(formattedDate);
+                if (isNaN(testDate.getTime())) {
+                    setAlertTitle('Atenção');
+                    setAlertMessage('Data de nascimento inválida');
+                    setAlertVisible(true);
+                    return;
+                }
             }
 
             setUpdating(true);
             const token = await getAuthToken();
 
-
-            const [dia, mes, ano] = perfilEdit.nascimento.split('/');
-            const formattedDate = `${ano}-${mes}-${dia}`;
-
-
             const telefoneNumerico = perfilEdit.telefone ? perfilEdit.telefone.replace(/\D/g, '') : null;
-
 
             const dadosParaEnviar = {
                 nomeDocente: perfilEdit.nome,
@@ -455,6 +494,8 @@ export default function PerfilProfessor() {
                 classId: selectedTurmas,
                 imageUrl: newImageBase64
             };
+
+            console.log('Dados sendo enviados:', dadosParaEnviar); // Para debug
 
             const response = await axios.put(
                 `https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${professorId}`,
@@ -514,7 +555,7 @@ export default function PerfilProfessor() {
                     setAlertTitle('Sucesso');
                     setAlertMessage('O Professor foi excluído');
                     setAlertVisible(true);
-                    navigation.goBack();
+                    setShouldGoBack(true); // Marca que o goBack deve ocorrer após o alerta
                 } catch (internalError) {
                     console.error('Erro ao mostrar alerta:', internalError);
                 }
@@ -598,24 +639,14 @@ export default function PerfilProfessor() {
                     )}
                 </View>
 
-                <Modal visible={modalVisible} transparent animationType="fade">
-                    <View style={styles.modalBackdrop}>
-                        <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
-                            <Text style={[styles.feedbackModalTitle, { color: textColor }]}>
-                                Feedback de {selectedFeedback?.createdBy.nomeAluno}
-                            </Text>
-                            <Text style={[styles.feedbackModalText, { color: textColor }]}>
-                                {selectedFeedback?.conteudo}
-                            </Text>
-                            <TouchableOpacity
-                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.buttonText}>Fechar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
+                <FeedbackModal
+                    visible={modalVisible}
+                    onDismiss={() => setModalVisible(false)}
+                    studentName={selectedFeedback?.createdBy.nomeAluno}
+                    feedbackContent={selectedFeedback?.conteudo}
+                    formBackgroundColor={formBackgroundColor}
+                    textColor={textColor}
+                />
             </>
         );
     };
@@ -702,11 +733,7 @@ export default function PerfilProfessor() {
                                         require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                             />
-                            {isEditing && (
-                                <View style={styles.editPhotoIndicator}>
-                                    <Icon name="camera" size={16} color="white" />
-                                </View>
-                            )}
+
                         </TouchableOpacity>
                         <View style={styles.name}>
                             {isEditing ? (
@@ -915,46 +942,6 @@ export default function PerfilProfessor() {
 
             </View>
 
-            <Modal visible={modalDeleteVisible} transparent animationType="fade">
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    onPress={() => setModalDeleteVisible(false)}
-                    activeOpacity={1}
-                >
-                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-
-                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
-                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
-                                <Image
-                                    source={require('../../../assets/image/logo.png')}
-                                    style={styles.logo}
-                                    resizeMode="contain"
-                                />
-                            </View>
-
-                        </View>
-
-                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                            Tem certeza que deseja excluir o perfil?
-                        </Text>
-
-                        <View style={[styles.modalButtonsContainer, { padding: 10 }]}>
-                            <TouchableOpacity
-                                style={[styles.deleteButton, { backgroundColor: '#FF3B30' }]}
-                                onPress={handleDelete}
-                            >
-                                <Text style={styles.buttonText}>Excluir</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#444' : '#EEE' }]}
-                                onPress={() => setModalDeleteVisible(false)}
-                            >
-                                <Text style={[styles.buttonText, { color: isDarkMode ? '#FFF' : '#000' }]}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
 
             <Modal visible={!!error} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
@@ -974,6 +961,16 @@ export default function PerfilProfessor() {
                 title={alertTitle}
                 message={alertMessage}
                 onDismiss={() => setAlertVisible(false)}
+            />
+            <DeleteAlert
+                visible={modalDeleteVisible}
+                onDismiss={() => setModalDeleteVisible(false)}
+                onConfirm={handleDelete}
+                message="Tem certeza que deseja excluir o perfil?"
+                confirmText="EXCLUIR"
+                cancelText="CANCELAR"
+
+
             />
 
         </ScrollView>
@@ -1056,6 +1053,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#1E6BE6',
         paddingBottom: 5,
         marginBottom: 5,
+        height: 40
     },
     email: {
         fontSize: 15,
@@ -1065,6 +1063,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#1E6BE6',
         paddingBottom: 5,
+        height: 40
     },
     inlineFieldsContainer: {
         flexDirection: 'row',

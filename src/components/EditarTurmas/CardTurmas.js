@@ -8,6 +8,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
 import CustomAlert from '../Gerais/CustomAlert';
+import DeleteAlert from '../Gerais/DeleteAlert';
 
 export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete, onEditSuccess }) {
     const formatarNomeProfessor = (nomeCompleto) => {
@@ -17,6 +18,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
     };
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
+    const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVisible, setAlertVisible] = useState(false);
@@ -150,43 +152,37 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 return;
             }
 
-            Alert.alert(
-                'Confirmar Exclusão',
-                'Tem certeza que deseja excluir esta turma?',
-                [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                        text: 'Excluir',
-                        onPress: async () => {
-                            setIsLoading(true);
-                            try {
-                                await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/${turmaId}`, {
-                                    headers: {
-                                        Authorization: `Bearer ${token}`
-                                    }
-                                });
-
-                                setAlertTitle('Sucesso');
-                                setAlertMessage('Turma excluída com sucesso!');
-                                setAlertVisible(true);
-
-                                onDelete(turmaId);
-                            } catch (error) {
-                                const mensagem = error.response?.data?.message || 'Erro ao deletar turma. Tente novamente.';
-                                setAlertTitle('Erro');
-                                setAlertMessage(mensagem);
-                                setAlertVisible(true);
-                            } finally {
-                                setIsLoading(false);
-                            }
-                        }
-                    }
-                ]
-            );
+            // Show our custom delete alert instead of the default Alert.alert
+            setDeleteAlertVisible(true);
         } catch (error) {
             setAlertTitle('Erro');
             setAlertMessage('Erro ao deletar turma. Tente novamente.');
             setAlertVisible(true);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        setIsLoading(true);
+        try {
+            const token = await AsyncStorage.getItem('@user_token');
+            await axios.delete(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/${turmaId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Turma excluída com sucesso!');
+            setAlertVisible(true);
+            setDeleteAlertVisible(false);
+            onDelete(turmaId);
+        } catch (error) {
+            const mensagem = error.response?.data?.message || 'Erro ao deletar turma. Tente novamente.';
+            setAlertTitle('Erro');
+            setAlertMessage(mensagem);
+            setAlertVisible(true);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -208,35 +204,35 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
         if (nomeTrimado === '') {
             setAlertTitle('Atenção');
-            setAlertMessage('O nome da turma é obrigatório.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (!capacidadeValida) {
             setAlertTitle('Atenção');
-            setAlertMessage('A capacidade mínima é 20 alunos e deve ser um número válido.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (!salaValida) {
             setAlertTitle('Atenção');
-            setAlertMessage('Digite um número de sala válido.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (novosErros.professores) {
             setAlertTitle('Atenção');
-            setAlertMessage('Selecione pelo menos um professor.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
 
         if (novosErros.disciplinas) {
             setAlertTitle('Atenção');
-            setAlertMessage('Selecione pelo menos uma disciplina.');
+            setAlertMessage('Revise os campos');
             setAlertVisible(true);
             return false;
         }
@@ -664,6 +660,15 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                 message={alertMessage}
                 onDismiss={() => setAlertVisible(false)}
             />
+            <DeleteAlert
+                visible={deleteAlertVisible}
+                onDismiss={() => setDeleteAlertVisible(false)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão"
+                message="Tem certeza que deseja excluir esta turma permanentemente?"
+                confirmText="EXCLUIR"
+                cancelText="CANCELAR"
+            />
         </View>
     );
 }
@@ -758,6 +763,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         borderWidth: 1,
+        height: 50
     },
     pickerContainer: {
         borderRadius: 10,
@@ -895,6 +901,7 @@ const styles = StyleSheet.create({
         padding: 14,
         marginBottom: 20,
         borderWidth: 1,
+        height: 50
     },
     modalDisciplinaButtons: {
         flexDirection: 'row',

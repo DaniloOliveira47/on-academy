@@ -9,6 +9,8 @@ import { FAB } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DeleteAlert from '../../components/Gerais/DeleteAlert';
+import CustomAlert from '../../components/Gerais/CustomAlert';
 
 export default function EventosInstitution() {
   const { isDarkMode } = useTheme();
@@ -33,8 +35,10 @@ export default function EventosInstitution() {
   const [tituloEvento, setTituloEvento] = useState('');
   const [localEvento, setLocalEvento] = useState('');
   const [descricaoEvento, setDescricaoEvento] = useState('');
-
-
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
   const backgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const containerColor = isDarkMode ? '#000' : '#fff';
@@ -143,13 +147,12 @@ export default function EventosInstitution() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-
     if (date < today) {
       setErrors(prev => ({ ...prev, dataEvento: 'Não é possível agendar eventos para datas passadas' }));
       return false;
     }
 
-    o
+    // Removida a letra 'o' solta que causava o erro
     const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() + 2);
 
@@ -160,7 +163,6 @@ export default function EventosInstitution() {
 
     return true;
   };
-
   const validateFields = () => {
     let valid = true;
     const newErrors = {
@@ -171,24 +173,47 @@ export default function EventosInstitution() {
       horarioEvento: ''
     };
 
+    // Expressões regulares para validação
+    const textRegex = /^[a-zA-ZÀ-ÿ0-9\s.,!?()@#$%&*+-=:;'"\u00C0-\u00FF]+$/; // Permite acentos e caracteres comuns
+    const noInjectionRegex = /^[^<>\/\\&|;]+$/; // Bloqueia caracteres usados em injeção de código
+
+    // Validação do título
     if (!tituloEvento.trim()) {
       newErrors.tituloEvento = 'Título é obrigatório';
       valid = false;
     } else if (tituloEvento.trim().length < 3) {
       newErrors.tituloEvento = 'Título deve ter pelo menos 3 caracteres';
       valid = false;
+    } else if (!textRegex.test(tituloEvento)) {
+      newErrors.tituloEvento = 'Título contém caracteres inválidos';
+      valid = false;
+    } else if (!noInjectionRegex.test(tituloEvento)) {
+      newErrors.tituloEvento = 'Título contém caracteres não permitidos';
+      valid = false;
     }
 
+    // Validação do local
     if (!localEvento.trim()) {
       newErrors.localEvento = 'Local é obrigatório';
       valid = false;
-    }
-
-    if (!descricaoEvento.trim()) {
-      newErrors.descricaoEvento = 'Descrição é obrigatória';
+    } else if (!textRegex.test(localEvento)) {
+      newErrors.localEvento = 'Local contém caracteres inválidos';
+      valid = false;
+    } else if (!noInjectionRegex.test(localEvento)) {
+      newErrors.localEvento = 'Local contém caracteres não permitidos';
       valid = false;
     }
 
+    // Validação da descrição
+    if (!descricaoEvento.trim()) {
+      newErrors.descricaoEvento = 'Descrição é obrigatória';
+      valid = false;
+    } else if (!noInjectionRegex.test(descricaoEvento)) {
+      newErrors.descricaoEvento = 'Descrição contém caracteres não permitidos';
+      valid = false;
+    }
+
+    // Validação da data
     if (!selectedDate) {
       newErrors.dataEvento = 'Data é obrigatória';
       valid = false;
@@ -202,6 +227,13 @@ export default function EventosInstitution() {
 
   const handleAddEvent = async () => {
     try {
+      if (!tituloEvento.trim() || !localEvento.trim() || !descricaoEvento.trim() || !selectedDate || !selectedTime) {
+        setAlertTitle('Atenção');
+        setAlertMessage('Por favor, preencha todos os campos');
+        setAlertVisible(true);
+
+        return;
+      }
       if (!validateFields()) return;
 
       const token = await AsyncStorage.getItem('@user_token');
@@ -242,7 +274,9 @@ export default function EventosInstitution() {
       });
 
       if (response.ok) {
-        Alert.alert('Sucesso', isEditMode ? 'Evento atualizado com sucesso!' : 'Evento adicionado com sucesso!');
+        setAlertTitle('Sucesso');
+        setAlertMessage(isEditMode ? 'Evento atualizado com sucesso!' : 'Evento adicionado com sucesso!');
+        setAlertVisible(true);
         setModalVisible(false);
         resetForm();
         fetchEvents();
@@ -256,51 +290,44 @@ export default function EventosInstitution() {
     }
   };
 
-  const handleDeleteEvent = async () => {
-    try {
-      if (!selectedEventId) return;
+  const handleDeleteEvent = () => {
+    if (!selectedEventId) return;
+    setDeleteAlertVisible(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    try {
       const token = await AsyncStorage.getItem('@user_token');
       if (!token) {
         Alert.alert('Erro', 'Token não encontrado. Faça login novamente.');
         return;
       }
 
-      Alert.alert(
-        'Confirmar',
-        'Tem certeza que deseja excluir este evento?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Excluir',
-            onPress: async () => {
-              const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event/${selectedEventId}`, {
-                method: 'DELETE',
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+      const response = await fetch(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event/${selectedEventId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-              if (response.ok) {
-                Alert.alert('Sucesso', 'Evento excluído com sucesso!');
-                resetForm();
-                fetchEvents();
-              } else {
-                const errorData = await response.json();
-                Alert.alert('Erro', errorData.message || 'Erro ao excluir evento.');
-              }
-            },
-            style: 'destructive',
-          },
-        ],
-        { cancelable: false }
-      );
+      if (response.ok) {
+        setAlertTitle('Sucesso');
+        setAlertMessage('Evento excluído com sucesso!');
+        setAlertVisible(true);
+        resetForm();
+        fetchEvents();
+      } else {
+        const errorData = await response.json();
+        Alert.alert('Erro', errorData.message || 'Erro ao excluir evento.');
+      }
     } catch (error) {
       console.error('Erro:', error);
-      Alert.alert('Erro', 'Ocorreu um erro ao excluir o evento.');
+      setAlertTitle('Sucesso');
+      setAlertMessage('Ocorreu um erro ao excluir o evento.');
+      setAlertVisible(true);
+
+    } finally {
+      setDeleteAlertVisible(false);
     }
   };
 
@@ -573,6 +600,21 @@ export default function EventosInstitution() {
           </View>
         </View>
       </Modal>
+      <DeleteAlert
+        visible={deleteAlertVisible}
+        onDismiss={() => setDeleteAlertVisible(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir este evento permanentemente?"
+        confirmText="EXCLUIR"
+        cancelText="CANCELAR"
+      />
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onDismiss={() => setAlertVisible(false)}
+      />
     </ScrollView>
   );
 }

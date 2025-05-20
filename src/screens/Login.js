@@ -29,9 +29,23 @@ export default function Login() {
     const matriculaTrimmed = matricula.trim();
     const passwordTrimmed = password.trim();
 
+    // Validação: campos obrigatórios
+    if (!matriculaTrimmed || !passwordTrimmed) {
+      setAlertTitle('Campos obrigatórios');
+      setAlertMessage('Preencha todos os campos para continuar.');
+      setAlertVisible(true);
+      return;
+    }
 
+    // Validação: tamanho mínimo
+    if (matriculaTrimmed.length < 4 || passwordTrimmed.length < 4) {
+      setAlertTitle('Dados muito curtos');
+      setAlertMessage('Matrícula e senha devem ter pelo menos 4 caracteres.');
+      setAlertVisible(true);
+      return;
+    }
 
-
+    // Validação: matrícula com apenas letras e números
     const matriculaRegex = /^[a-zA-Z0-9]+$/;
     if (!matriculaRegex.test(matriculaTrimmed)) {
       setAlertTitle('Matrícula Inválida');
@@ -68,7 +82,6 @@ export default function Login() {
 
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.sub;
-
         await AsyncStorage.setItem('@user_id', userId.toString());
 
         if (firstChar === 'a') {
@@ -83,12 +96,11 @@ export default function Login() {
       if (error.response && error.response.status === 401) {
         setAlertTitle('Erro de Login');
         setAlertMessage('Matrícula ou senha inválida, verifique os campos.');
-        setAlertVisible(true);
       } else {
         setAlertTitle('Erro de Conexão');
         setAlertMessage('Erro de conexão. Verifique sua internet.');
-        setAlertVisible(true);
       }
+      setAlertVisible(true);
     } finally {
       setIsLoading(false);
     }
@@ -315,6 +327,7 @@ const styles = StyleSheet.create({
     padding: 20,
     fontSize: 14,
     fontFamily: 'Epilogue-Medium',
+    height: 65
   },
   eyeIcon: {
     position: 'absolute',

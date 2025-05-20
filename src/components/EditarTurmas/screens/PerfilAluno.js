@@ -26,6 +26,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import GraficoFeedback from '../../Gerais/GraficoFeedback';
 import CustomAlert from '../../Gerais/CustomAlert';
+import DeleteAlert from '../../Gerais/DeleteAlert';
+import FeedbackModal from '../../Gerais/FeedbackModal';
 
 const { width } = Dimensions.get('window');
 
@@ -138,6 +140,7 @@ export default function PerfilAluno() {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [feedbacks, setFeedbacks] = useState([]);
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [shouldGoBack, setShouldGoBack] = useState(false);
     const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
     const [validationErrors, setValidationErrors] = useState({
         nome: '',
@@ -202,13 +205,18 @@ export default function PerfilAluno() {
             nome: ''
         }));
     };
-
+    useEffect(() => {
+        if (!alertVisible && shouldGoBack) {
+            navigation.goBack();
+            setShouldGoBack(false); // Resetar para não disparar de novo
+        }
+    }, [alertVisible, shouldGoBack]);
     const handleEmailChange = (text) => {
         setPerfilEdit({ ...perfilEdit, email: text });
         if (!validarEmail(text)) {
             setValidationErrors(prev => ({
                 ...prev,
-                email: 'Por favor, insira um email válido'
+                email: 'Por favor, insira um email válido (Gmail ou Hotmail)'
             }));
         } else {
             setValidationErrors(prev => ({
@@ -519,19 +527,36 @@ export default function PerfilAluno() {
                 return;
             }
 
-            if (!validarEmail(perfilEdit.email)) {
+            if (!perfilEdit.nome || !/^[A-Za-zÀ-ÿ\s]{3,}$/.test(perfilEdit.nome.trim())) {
                 setAlertTitle('Atenção');
-                setAlertMessage('insira uma email válido @gmail ou @hotmail');
+                setAlertMessage('O nome deve conter apenas letras e no mínimo 3 caracteres.');
                 setAlertVisible(true);
                 return;
             }
 
-            if (perfilEdit.telefone && !validarTelefone(perfilEdit.telefone)) {
+            const emailRegex = /^[a-z0-9._%+-]+@(gmail\.com|hotmail\.com)$/i;
+            if (!perfilEdit.email || !emailRegex.test(perfilEdit.email.trim())) {
+                setAlertTitle('Atenção');
+                setAlertMessage('Insira um e-mail válido @gmail.com ou hotmail.com');
+                setAlertVisible(true);
+                return;
+            }
+
+
+            if (!perfilEdit.telefone) {
+                setAlertTitle('Atenção');
+                setAlertMessage('Telefone é obrigatório');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (!validarTelefone(perfilEdit.telefone)) {
                 setAlertTitle('Atenção');
                 setAlertMessage('Por favor, insira um telefone válido no formato (DD) 9XXXX-XXXX');
                 setAlertVisible(true);
                 return;
             }
+
 
             const idade = validarDataNascimento(selectedDate);
             if (idade < 5 || idade > 90) {
@@ -626,11 +651,14 @@ export default function PerfilAluno() {
 
             if (response.status === 200) {
 
-                setAlertTitle('Sucesso');
-                setAlertMessage('O aluno foi excluído da turma');
-                setAlertVisible(true);
-                navigation.goBack();
-
+                try {
+                    setAlertTitle('Sucesso');
+                    setAlertMessage('O Professor foi excluído');
+                    setAlertVisible(true);
+                    setShouldGoBack(true); // Marca que o goBack deve ocorrer após o alerta
+                } catch (internalError) {
+                    console.error('Erro ao mostrar alerta:', internalError);
+                }
             }
         } catch (error) {
             Alert.alert(
@@ -693,24 +721,15 @@ export default function PerfilAluno() {
                     )}
                 </View>
 
-                <Modal visible={feedbackModalVisible} transparent animationType="fade">
-                    <View style={styles.modalBackdrop2}>
-                        <View style={[styles.feedbackModalContainer, { backgroundColor: formBackgroundColor }]}>
-                            <Text style={[styles.feedbackModalTitle, { color: textColor }]}>
-                                Feedback de {selectedFeedback?.teacher?.nomeDocente || 'Professor'}
-                            </Text>
-                            <Text style={[styles.feedbackModalText, { color: textColor }]}>
-                                {selectedFeedback?.conteudo || 'Nenhum conteúdo disponível'}
-                            </Text>
-                            <TouchableOpacity
-                                style={[styles.closeFeedbackButton, { backgroundColor: barraAzulColor }]}
-                                onPress={() => setFeedbackModalVisible(false)}
-                            >
-                                <Text style={styles.buttonText}>Fechar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
+
+                <FeedbackModal
+                    visible={feedbackModalVisible}
+                    onDismiss={() => setFeedbackModalVisible(false)}
+                    studentName={selectedFeedback?.teacher?.nomeDocente}
+                    feedbackContent={selectedFeedback?.conteudo}
+                    formBackgroundColor={formBackgroundColor}
+                    textColor={textColor}
+                />
             </>
         );
     };
@@ -1024,47 +1043,7 @@ export default function PerfilAluno() {
                 </View>
             </View>
 
-            {/* Delete Confirmation Modal */}
-            <Modal visible={modalDeleteVisible} transparent animationType="fade">
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    onPress={() => setModalDeleteVisible(false)}
-                    activeOpacity={1}
-                >
-                    <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-                        {/* Header with logo */}
-                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
-                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
-                                <Image
-                                    source={require('../../../assets/image/logo.png')}
-                                    style={styles.logo}
-                                    resizeMode="contain"
-                                />
-                            </View>
 
-                        </View>
-
-                        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
-                            Tem certeza que deseja excluir o perfil?
-                        </Text>
-
-                        <View style={[styles.modalButtonsContainer, { padding: 10 }]}>
-                            <TouchableOpacity
-                                style={[styles.deleteButton, { backgroundColor: '#FF3B30' }]}
-                                onPress={handleDelete}
-                            >
-                                <Text style={styles.buttonText}>Excluir</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#444' : '#EEE' }]}
-                                onPress={() => setModalDeleteVisible(false)}
-                            >
-                                <Text style={[styles.buttonText, { color: isDarkMode ? '#FFF' : '#000' }]}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
 
             {/* Bimestre Selection Modal */}
             <Modal visible={modalBimestreVisible} transparent animationType="fade">
@@ -1186,6 +1165,17 @@ export default function PerfilAluno() {
                 title={alertTitle}
                 message={alertMessage}
                 onDismiss={() => setAlertVisible(false)}
+            />
+            {/* Delete Confirmation Modal */}
+            <DeleteAlert
+                visible={modalDeleteVisible}
+                onDismiss={() => setModalDeleteVisible(false)}
+                onConfirm={handleDelete}
+                message="Tem certeza que deseja excluir o perfil?"
+                confirmText="EXCLUIR"
+                cancelText="CANCELAR"
+
+
             />
         </ScrollView>
     );
@@ -1366,6 +1356,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         paddingBottom: 5,
         marginBottom: 5,
+        height: 40
     },
     email: {
         fontSize: 15,
@@ -1374,6 +1365,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         borderBottomWidth: 1,
         paddingBottom: 5,
+        height: 40
     },
     inlineFieldsContainer: {
         flexDirection: 'row',

@@ -8,6 +8,7 @@ import CadastroAlunoModal from '../ModalCadAluno';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
+import CustomAlert from '../../Gerais/CustomAlert';
 
 export default function Alunos() {
     const route = useRoute();
@@ -28,6 +29,9 @@ export default function Alunos() {
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
     const [hasFeedbacks, setHasFeedbacks] = useState(false);
 
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     const fetchAlunos = async () => {
         try {
             setLoading(true);
@@ -123,34 +127,98 @@ export default function Alunos() {
             }
         }, [turmaId])
     );
-
     const handleCreateAluno = async (alunoData) => {
         try {
-            setIsCreating(true);
-            const token = await AsyncStorage.getItem('@user_token');
-            if (!token) {
-                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+            const nomeTrim = alunoData.nomeAluno?.trim() || '';
+            const emailTrim = alunoData.emailAluno?.trim().toLowerCase() || '';
+            const phoneDigits = alunoData.telefoneAluno?.replace(/\D/g, '') || '';
+            const dataNascimento = alunoData.dataNascimentoAluno;
+
+            // Regex para validar nome (somente letras e espaços)
+            const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
+            // Regex para validar e-mails somente do gmail e outlook (sem nada após .com)
+            const emailRegex = /^[a-z0-9._%+-]+@(gmail\.com|outlook\.com)$/i;
+
+            // Validações
+            if (!nomeRegex.test(nomeTrim)) {
+                setAlertTitle('Erro');
+                setAlertMessage('O nome deve conter apenas letras e no mínimo 3 caracteres.');
+                setAlertVisible(true);
                 return;
             }
 
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student', alunoData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            if (!emailRegex.test(emailTrim)) {
+                setAlertTitle('Erro');
+                setAlertMessage('Insira um e-mail válido: apenas @gmail.com ou @outlook.com, sem nada após o domínio.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (phoneDigits.length !== 11) {
+                setAlertTitle('Erro');
+                setAlertMessage('O telefone deve conter exatamente 11 dígitos.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (!dataNascimento) {
+                setAlertTitle('Erro');
+                setAlertMessage('Por favor, informe a data de nascimento.');
+                setAlertVisible(true);
+                return;
+            }
+
+            setIsCreating(true);
+
+            const token = await AsyncStorage.getItem('@user_token');
+            if (!token) {
+                setAlertTitle('Erro');
+                setAlertMessage('Token de autenticação não encontrado.');
+                setAlertVisible(true);
+                return;
+            }
+
+            // Substitui o telefone formatado com apenas dígitos
+            const alunoParaEnviar = {
+                ...alunoData,
+                nomeAluno: nomeTrim,
+                emailAluno: emailTrim,
+                telefoneAluno: phoneDigits,
+            };
+
+            const response = await axios.post(
+                'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student',
+                alunoParaEnviar,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             if (response.status === 201) {
-                Alert.alert('Sucesso', 'Aluno cadastrado com sucesso!');
+                setAlertTitle('Sucesso');
+                setAlertMessage('Aluno cadastrado com sucesso!');
+                setAlertVisible(true);
                 await fetchAlunos();
                 setModalCriarVisible(false);
             }
+
         } catch (error) {
-            console.error('Erro ao cadastrar aluno:', error);
-            Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.');
+            let msg = error.response?.data?.message || 'Erro ao cadastrar aluno. Tente novamente.';
+            if (error.response?.status === 400) {
+                msg = 'Este e-mail já está cadastrado para outro aluno.';
+            }
+            setAlertTitle('Erro');
+            setAlertMessage(msg);
+            setAlertVisible(true);
         } finally {
             setIsCreating(false);
         }
     };
+
+
+
 
     const filtrarAlunos = (texto) => {
         setFiltro(texto);
@@ -301,6 +369,12 @@ export default function Alunos() {
                         </View>
                     </View>
                 </Modal>
+                <CustomAlert
+                    visible={alertVisible}
+                    title={alertTitle}
+                    message={alertMessage}
+                    onDismiss={() => setAlertVisible(false)}
+                />
             </ScrollView>
         </View>
     );
@@ -369,6 +443,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
+        marginTop: 20
     },
     noFeedbackText: {
         marginLeft: 10,
@@ -392,6 +467,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+        height: 50
     },
     tableHeader: {
         flexDirection: 'row',

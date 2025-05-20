@@ -9,6 +9,7 @@ import GraficoFeedback from '../../Gerais/GraficoFeedback';
 import axios from 'axios';
 import Swiper from 'react-native-swiper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomAlert from '../../Gerais/CustomAlert';
 
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
@@ -29,7 +30,9 @@ export default function AlunoPerfil({ route }) {
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [semFeedbacks, setSemFeedbacks] = useState(false);
     const scrollViewRef = React.useRef();
-
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
@@ -155,12 +158,36 @@ export default function AlunoPerfil({ route }) {
 
     const enviarFeedback = async () => {
         if (ratings.some(rating => rating === 0)) {
-            Alert.alert('Erro', 'Por favor, avalie todas as perguntas antes de enviar.');
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, avalie todas as perguntas antes de enviar.');
+            setAlertVisible(true);
+            return;
+        }
+
+        if (!bimestreSelecionado) {
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, selecione um bimestre antes de enviar o feedback.');
+            setAlertVisible(true);
             return;
         }
 
         try {
             const professorId = await AsyncStorage.getItem('@user_id');
+
+            if (!professorId) {
+                setAlertTitle('Erro de sessão');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
+                return;
+            }
+
+            if (conteudoFeedback && conteudoFeedback.trim().length > 0 && conteudoFeedback.trim().length < 5) {
+                setAlertTitle('Feedback muito curto');
+                setAlertMessage('O conteúdo do feedback deve ter pelo menos 5 caracteres ou deixe em branco.');
+                setAlertVisible(true);
+                return;
+            }
+
             const feedbackData = {
                 resposta1: ratings[0],
                 resposta2: ratings[1],
@@ -170,42 +197,73 @@ export default function AlunoPerfil({ route }) {
                 bimestre: bimestreSelecionado,
                 createdBy: { id: professorId },
                 recipientStudent: { id: alunoId },
-                conteudo: conteudoFeedback,
+                conteudo: conteudoFeedback?.trim() || ''
             };
 
             await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackForm', feedbackData);
-            Alert.alert('Sucesso', 'Feedback enviado com sucesso!');
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Feedback enviado com sucesso!');
+            setAlertVisible(true);
 
             fetchFeedbacks();
             setRatings(Array(5).fill(0));
-        } catch (error) {
-            Alert.alert('Erro', 'Não foi possível enviar o feedback. Tente novamente.');
 
+        } catch (error) {
+            console.error('Erro ao enviar feedback:', error);
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível enviar o feedback. Tente novamente.');
+            setAlertVisible(true);
         }
     };
 
+
     const enviarFeedbackEscrito = async () => {
         if (!conteudoFeedback.trim()) {
-            Alert.alert('Erro', 'Por favor, escreva algo antes de enviar.');
+            setAlertTitle('Erro');
+            setAlertMessage('Por favor, escreva algo antes de enviar.');
+            setAlertVisible(true);
+            return;
+        }
+
+        if (conteudoFeedback.trim().length < 5) {
+            setAlertTitle('Erro');
+            setAlertMessage('O feedback precisa ter pelo menos 5 caracteres.');
+            setAlertVisible(true);
             return;
         }
 
         try {
             const professorId = await AsyncStorage.getItem('@user_id');
+
+            if (!professorId) {
+                setAlertTitle('Erro de sessão');
+                setAlertMessage('Sessão expirada. Faça login novamente.');
+                setAlertVisible(true);
+                return;
+            }
+
             const feedbackData = {
-                conteudo: conteudoFeedback,
+                conteudo: conteudoFeedback.trim(),
                 createdBy: { id: professorId },
                 recipientStudent: { id: alunoId },
             };
 
             await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/student', feedbackData);
-            Alert.alert('Sucesso', 'Feedback escrito enviado com sucesso!');
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Feedback escrito enviado com sucesso!');
+            setAlertVisible(true);
+
             setConteudoFeedback('');
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível enviar o feedback escrito. Tente novamente.');
-
+            console.error('Erro ao enviar feedback escrito:', error);
+            setAlertTitle('Erro');
+            setAlertMessage('Não foi possível enviar o feedback escrito. Tente novamente.');
+            setAlertVisible(true);
         }
     };
+
 
     const renderPergunta = (pergunta, index) => {
         return (
@@ -386,14 +444,32 @@ export default function AlunoPerfil({ route }) {
                 </View>
             </View>
 
-            <Modal visible={modalBimestreVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
+            <Modal visible={modalBimestreVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalBimestreVisible(false)}
+                    activeOpacity={1}
+                >
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Bimestre</Text>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: textColor }]}>
+                            Selecione o Bimestre
+                        </Text>
+
                         {[1, 2, 3, 4].map((bimestre) => (
                             <TouchableOpacity
                                 key={bimestre}
-                                style={styles.modalItem}
+                                style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                 onPress={() => {
                                     setBimestreSelecionado(bimestre);
                                     setModalBimestreVisible(false);
@@ -405,19 +481,34 @@ export default function AlunoPerfil({ route }) {
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
-            <Modal visible={modalProfessorVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
+            <Modal visible={modalProfessorVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    onPress={() => setModalProfessorVisible(false)}
+                    activeOpacity={1}
+                >
                     <View style={[styles.modalContainer, { backgroundColor: formBackgroundColor }]}>
-                        <Text style={[styles.modalTitle, { color: textColor }]}>Selecione o Professor</Text>
+                        {/* Header with logo */}
+                        <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
+                            <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+                                <Image
+                                    source={require('../../../assets/image/logo.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: textColor }]}>
+                            Selecione o Professor
+                        </Text>
 
                         <TouchableOpacity
-                            style={styles.modalItem}
-                            onPress={() => {
-                                handleSelecionarProfessor(null);
-                            }}
+                            style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
+                            onPress={() => handleSelecionarProfessor(null)}
                         >
                             <Text style={[styles.modalText, { color: textColor }]}>
                                 Todos Professores
@@ -427,10 +518,8 @@ export default function AlunoPerfil({ route }) {
                         {professores.map((professor) => (
                             <TouchableOpacity
                                 key={professor.id}
-                                style={styles.modalItem}
-                                onPress={() => {
-                                    handleSelecionarProfessor(professor);
-                                }}
+                                style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
+                                onPress={() => handleSelecionarProfessor(professor)}
                             >
                                 <Text style={[styles.modalText, { color: textColor }]}>
                                     {professor.nomeDocente}
@@ -438,14 +527,14 @@ export default function AlunoPerfil({ route }) {
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
 
             <Modal visible={modalBarraVisible} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={[styles.modalContainer, { backgroundColor: '#1E6BE6' }]}>
-                        <Text style={[styles.modalTitle, { color: 'white' }]}>Valor</Text>
-                        <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
+                <View style={styles.modalBackdrop2}>
+                    <View style={[styles.modalContainer2, { backgroundColor: '#1E6BE6' }]}>
+                        <Text style={[styles.modalTitle2, { color: 'white' }]}>Valor</Text>
+                        <Text style={[styles.modalText2, { color: 'white', fontSize: 24 }]}>
                             {barraSelecionada.value.toFixed(1)}
                         </Text>
 
@@ -458,6 +547,12 @@ export default function AlunoPerfil({ route }) {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </ScrollView>
     );
 }
@@ -470,6 +565,64 @@ const styles = StyleSheet.create({
     },
     campo: {
         marginTop: 15,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+    },
+    modalContainer: {
+        width: '85%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingBottom: 25,
+    },
+    logoSquare: {
+        width: 70,
+        height: 70,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    logo: {
+        width: 50,
+        height: 50,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginVertical: 15,
+        textAlign: 'center',
+        paddingHorizontal: 15,
+    },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+    },
+    modalText: {
+        fontSize: 16,
     },
     profileImage: {
         width: 60,
@@ -589,13 +742,13 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
-    modalBackdrop: {
+    modalBackdrop2: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    modalContainer: {
+    modalContainer2: {
         backgroundColor: '#FFF',
         borderRadius: 12,
         width: '80%',
@@ -607,19 +760,19 @@ const styles = StyleSheet.create({
         elevation: 10,
         alignItems: 'center'
     },
-    modalTitle: {
+    modalTitle2: {
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 15,
         textAlign: 'center',
     },
-    modalItem: {
+    modalItem2: {
         padding: 15,
         width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
-    modalText: {
+    modalText2: {
         fontSize: 16,
         textAlign: 'center'
     },

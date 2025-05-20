@@ -56,7 +56,6 @@ export default function HomeInstituicao() {
     const gerarCorAleatoria = () => {
         return '#0077FF';
     };
-
     const enviarAviso = async () => {
         try {
             if (!turmaSelecionada) {
@@ -76,15 +75,24 @@ export default function HomeInstituicao() {
                 return;
             }
 
-            if (!conteudoAviso.trim()) {
+            const avisoTexto = conteudoAviso.trim();
+
+            if (!avisoTexto) {
                 setAlertTitle('Aviso');
                 setAlertMessage('Por favor, digite um aviso ou lembrete para a turma antes de enviar.');
                 setAlertVisible(true);
                 return;
             }
 
+            if (avisoTexto.length > 100) {
+                setAlertTitle('Aviso muito longo');
+                setAlertMessage('O aviso não pode ultrapassar 100 caracteres.');
+                setAlertVisible(true);
+                return;
+            }
+
             const avisoData = {
-                conteudo: conteudoAviso,
+                conteudo: avisoTexto,
                 createdByInstitution: { id: parseInt(instituicaoId) },
                 classSt: { id: turmaSelecionada },
             };
@@ -95,7 +103,6 @@ export default function HomeInstituicao() {
                     'Content-Type': 'application/json'
                 }
             });
-
 
             const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
             const avisosOrdenados = avisosResponse.data.sort((a, b) =>
@@ -113,6 +120,7 @@ export default function HomeInstituicao() {
             setAlertVisible(true);
         }
     };
+
 
 
     return (

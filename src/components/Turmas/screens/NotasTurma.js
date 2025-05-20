@@ -8,6 +8,8 @@ import { useTheme } from '../../../path/ThemeContext';
 import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomAlert from '../../Gerais/CustomAlert';
 
 export default function NotasTurma() {
     const route = useRoute();
@@ -15,6 +17,7 @@ export default function NotasTurma() {
     const [modalVisible, setModalVisible] = useState(false);
     const [alunoSelecionado, setAlunoSelecionado] = useState(null);
     const { isDarkMode } = useTheme();
+    const [searchText, setSearchText] = useState('');
     const [alunos, setAlunos] = useState([]);
     const [turmaInfo, setTurmaInfo] = useState({ nomeTurma: '', periodoTurma: '' });
     const [disciplinas, setDisciplinas] = useState([]);
@@ -26,6 +29,9 @@ export default function NotasTurma() {
     const [notasAluno, setNotasAluno] = useState([]);
     const [mostrarCamposNota, setMostrarCamposNota] = useState(false);
     const [disciplinasProfessor, setDisciplinasProfessor] = useState([]);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -66,10 +72,19 @@ export default function NotasTurma() {
         if (turmaId) fetchData();
     }, [turmaId]);
 
+    const alunosFiltrados = alunos.filter((aluno) => {
+        const texto = searchText.toLowerCase();
+        return (
+            aluno.nomeAluno.toLowerCase().includes(texto) ||
+            aluno.identifierCode?.toLowerCase().includes(texto)
+        );
+    });
+
     useEffect(() => {
         const fetchDisciplinasProfessor = async () => {
             try {
-                const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/39');
+                const userId = await AsyncStorage.getItem('@user_id');
+                const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/${userId}`);
                 setDisciplinasProfessor(response.data.disciplinas);
             } catch (error) {
                 console.error("Erro ao buscar disciplinas do professor:", error);
@@ -116,11 +131,28 @@ export default function NotasTurma() {
         }
     };
 
-
-
     const adicionarNota = async () => {
+        // Validações iniciais
         if (!notaInput || !alunoSelecionado || !disciplinaSelecionada) {
-            Alert.alert('Erro', 'Preencha todos os campos e selecione uma disciplina.');
+            setAlertTitle('Campos obrigatórios');
+            setAlertMessage('Preencha todos os campos e selecione uma disciplina.');
+            setAlertVisible(true);
+            return;
+        }
+
+        const notaNumero = parseFloat(notaInput.replace(',', '.'));
+
+        if (isNaN(notaNumero)) {
+            setAlertTitle('Nota inválida');
+            setAlertMessage('Digite um número válido para a nota.');
+            setAlertVisible(true);
+            return;
+        }
+
+        if (notaNumero < 0 || notaNumero > 10) {
+            setAlertTitle('Nota fora do intervalo');
+            setAlertMessage('A nota deve estar entre 0 e 10.');
+            setAlertVisible(true);
             return;
         }
 
@@ -130,7 +162,9 @@ export default function NotasTurma() {
         );
 
         if (notaDuplicada) {
-            Alert.alert('Nota já existente', 'Já existe uma nota para essa disciplina e bimestre.');
+            setAlertTitle('Nota já existente');
+            setAlertMessage('Já existe uma nota para essa disciplina e bimestre.');
+            setAlertVisible(true);
             return;
         }
 
@@ -139,34 +173,44 @@ export default function NotasTurma() {
 
             const novaNota = {
                 studentId: alunoSelecionado.id,
-                nota: parseFloat(notaInput),
+                nota: notaNumero,
                 bimestre: bimestreFiltro,
                 status: "Aprovado",
                 disciplineId: disciplinaSelecionada,
                 nomeDisciplina: disciplina?.nomeDisciplina || 'Desconhecida'
             };
 
-            const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note', novaNota);
+            const response = await axios.post(
+                'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note',
+                novaNota
+            );
 
             console.log('Resposta da API:', response.data);
 
             await buscarNotasAluno(alunoSelecionado.id);
             setNotaInput('');
-            Alert.alert('Sucesso', 'Nota adicionada com sucesso!');
             setMostrarCamposNota(false);
+
+            setAlertTitle('Sucesso');
+            setAlertMessage('Nota adicionada com sucesso!');
+            setAlertVisible(true);
+
         } catch (error) {
             const mensagemServidor = error.response?.data?.message || error.message;
 
             if (mensagemServidor.includes('duplicada') || error.response?.status === 409) {
-                Alert.alert('Nota já existente', 'Já existe uma nota para essa disciplina e bimestre.');
+                setAlertTitle('Nota já existente');
+                setAlertMessage('Já existe uma nota para essa disciplina e bimestre.');
             } else {
-                Alert.alert('Erro', 'Não foi possível adicionar a nota. Tente novamente.');
+                setAlertTitle('Erro');
+                setAlertMessage('Não foi possível adicionar a nota. Tente novamente.');
             }
+
+            setAlertVisible(true);
             console.log('Erro ao adicionar nota:', mensagemServidor);
         }
-
-
     };
+
 
 
     const notasPorBimestreEDisciplina = () => {
@@ -204,9 +248,12 @@ export default function NotasTurma() {
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Digite o nome ou código da turma"
+                            placeholder="Digite o nome ou matrícula do aluno"
                             placeholderTextColor="#756262"
+                            value={searchText}
+                            onChangeText={setSearchText}
                         />
+
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
 
@@ -219,7 +266,7 @@ export default function NotasTurma() {
                     </View>
 
                     <FlatList
-                        data={alunos}
+                        data={alunosFiltrados}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({ item }) => {
                             const nomeCompleto = item.nomeAluno.split(' ');
@@ -243,6 +290,7 @@ export default function NotasTurma() {
                             );
                         }}
                     />
+
                 </View>
             </View>
 
@@ -311,6 +359,7 @@ export default function NotasTurma() {
                                                 alunoId={alunoSelecionado?.id}
                                                 disciplinaId={disciplina.id}
                                                 bimestre={bimestreFiltro}
+                                                editable={disciplinasProfessor.some(discProf => discProf.discipline_id === disciplina.id)}
                                                 onNotaUpdated={(novaNota) => {
                                                     const notasAtualizadas = notasAluno.map(nota =>
                                                         nota.nomeDisciplina === disciplina.nomeDisciplina && nota.bimestre === bimestreFiltro
@@ -416,6 +465,13 @@ export default function NotasTurma() {
                     </View>
                 </View>
             </Modal>
+
+            <CustomAlert
+                visible={alertVisible}
+                title={alertTitle}
+                message={alertMessage}
+                onDismiss={() => setAlertVisible(false)}
+            />
         </View>
     );
 }
@@ -478,6 +534,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
         paddingVertical: 10,
+        height: 50
     },
     tableHeader: {
         flexDirection: 'row',
@@ -560,6 +617,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginTop: 10,
         fontSize: 16,
+        height: 50
     },
     actionButtonsContainer: {
         flexDirection: 'row',

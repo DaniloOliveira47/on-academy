@@ -53,55 +53,60 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
     }, [visible]);
 
     useEffect(() => {
-        const validationErrors = {};
+    const validationErrors = {};
 
+    // Regex
+    const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com)$/i;
 
-        if (touched.nomeAluno) {
-            if (!nomeAluno.trim()) {
-                validationErrors.nomeAluno = 'Nome é obrigatório';
-            } else if (nomeAluno.length < 3) {
-                validationErrors.nomeAluno = 'Nome muito curto';
+    // Nome
+    if (touched.nomeAluno) {
+        if (!nomeAluno.trim()) {
+            validationErrors.nomeAluno = 'Nome é obrigatório';
+        } else if (!nomeRegex.test(nomeAluno.trim())) {
+            validationErrors.nomeAluno = 'O nome deve conter apenas letras e no mínimo 3 caracteres';
+        }
+    }
+
+    // Email
+    if (touched.emailAluno) {
+        if (!emailAluno.trim()) {
+            validationErrors.emailAluno = 'Email é obrigatório';
+        } else if (!emailRegex.test(emailAluno.trim().toLowerCase())) {
+            validationErrors.emailAluno = 'Use um e-mail válido: @gmail.com ou @outlook.com';
+        }
+    }
+
+    // Telefone
+    if (touched.telefoneAluno) {
+        const digits = telefoneAluno.replace(/\D/g, '');
+        if (!digits) {
+            validationErrors.telefoneAluno = 'Telefone é obrigatório';
+        } else if (digits.length !== 11) {
+            validationErrors.telefoneAluno = 'Telefone deve conter exatamente 11 dígitos';
+        }
+    }
+
+    // Data de nascimento
+    if (touched.dataNascimento) {
+        if (!dataNascimento) {
+            validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
+        } else {
+            const birthDate = new Date(selectedBirthDate);
+            const today = new Date();
+            const minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - 100);
+
+            if (birthDate > today) {
+                validationErrors.dataNascimento = 'Data não pode ser no futuro';
+            } else if (birthDate < minDate) {
+                validationErrors.dataNascimento = 'Data inválida (muito antiga)';
             }
         }
+    }
 
-        if (touched.emailAluno) {
-            if (!emailAluno.trim()) {
-                validationErrors.emailAluno = 'Email é obrigatório';
-            } else if (!/^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/.test(emailAluno.trim().toLowerCase())) {
-                validationErrors.emailAluno = 'Use um email do Gmail ou Hotmail';
-            }
-        }
-
-
-        if (touched.telefoneAluno) {
-            const digits = telefoneAluno.replace(/\D/g, '');
-            if (!digits) {
-                validationErrors.telefoneAluno = 'Telefone é obrigatório';
-            } else if (!/^\d{10,11}$/.test(digits)) {
-                validationErrors.telefoneAluno = 'Telefone inválido (10 ou 11 dígitos)';
-            }
-        }
-
-
-        if (touched.dataNascimento) {
-            if (!dataNascimento) {
-                validationErrors.dataNascimento = 'Data de nascimento é obrigatória';
-            } else {
-                const birthDate = new Date(selectedBirthDate);
-                const today = new Date();
-                const minDate = new Date();
-                minDate.setFullYear(today.getFullYear() - 100);
-
-                if (birthDate > today) {
-                    validationErrors.dataNascimento = 'Data não pode ser no futuro';
-                } else if (birthDate < minDate) {
-                    validationErrors.dataNascimento = 'Data inválida (muito antiga)';
-                }
-            }
-        }
-
-        setErrors(validationErrors);
-    }, [nomeAluno, emailAluno, telefoneAluno, dataNascimento, touched]);
+    setErrors(validationErrors);
+}, [nomeAluno, emailAluno, telefoneAluno, dataNascimento, touched]);
 
     const handleBlur = (field) => {
         setTouched({ ...touched, [field]: true });
@@ -168,69 +173,70 @@ export default function CadastroAlunoModal({ visible, onClose, turmaId, isCreati
         }
     };
 
-    const handleCadastrar = async () => {
-        setTouched({
-            nomeAluno: true,
-            emailAluno: true,
-            telefoneAluno: true,
-            dataNascimento: true
-        });
+  const handleCadastrar = async () => {
+    setTouched({
+        nomeAluno: true,
+        emailAluno: true,
+        telefoneAluno: true,
+        dataNascimento: true
+    });
 
-        if (!isFormValid()) {
-            setAlertTitle('Erro');
-            setAlertMessage('Por favor, preencha todos os campos corretamente.');
-            setAlertVisible(true);
-            return;
-        }
+    const nomeTrim = nomeAluno.trim();
+    const emailTrim = emailAluno.trim().toLowerCase();
+    const phoneDigits = telefoneAluno.replace(/\D/g, '');
+    const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
 
-        try {
-            const token = await AsyncStorage.getItem('@user_token');
-            const dataFormatada = selectedBirthDate.toISOString().split('T')[0];
-            const phoneDigits = telefoneAluno.replace(/\D/g, '');
+    const emailRegex = /^[^\s@]+@(gmail\.com|outlook\.com)$/i;
 
-            const alunoData = {
-                nomeAluno: nomeAluno.trim(),
-                dataNascimentoAluno: dataFormatada,
-                emailAluno: emailAluno.trim().toLowerCase(),
-                telefoneAluno: phoneDigits,
-                turmaId,
-                imageUrl: imageBase64
-            };
+    if (nomeTrim.length < 3) {
+        setAlertTitle('Nome inválido');
+        setAlertMessage('O nome deve ter pelo menos 3 caracteres.');
+        setAlertVisible(true);
+        return;
+    }
 
-            await onCreate(alunoData, token);
+    if (!emailRegex.test(emailTrim)) {
+        setAlertTitle('Email inválido');
+        setAlertMessage('O e-mail deve ser do tipo @gmail.com ou @outlook.com.');
+        setAlertVisible(true);
+        return;
+    }
 
+    if (phoneDigits.length !== 11) {
+        setAlertTitle('Telefone inválido');
+        setAlertMessage('O telefone deve conter exatamente 11 dígitos (DDD + número).');
+        setAlertVisible(true);
+        return;
+    }
 
-            setNomeAluno('');
-            setEmailAluno('');
-            setTelefoneAluno('');
-            setDataNascimento('');
-            setSelectedBirthDate(new Date());
-            setProfileImage(null);
-            setImageBase64(null);
-            setTouched({});
+    if (!selectedBirthDate) {
+        setAlertTitle('Data de nascimento');
+        setAlertMessage('Por favor, selecione a data de nascimento.');
+        setAlertVisible(true);
+        return;
+    }
 
-            setAlertTitle('Sucesso');
-            setAlertMessage('Aluno cadastrado com sucesso!');
-            setAlertVisible(true);
+    try {
+        const token = await AsyncStorage.getItem('@user_token');
+        const alunoData = {
+            nomeAluno: nomeTrim,
+            dataNascimentoAluno: dataFormatada,
+            emailAluno: emailTrim,
+            telefoneAluno: phoneDigits,
+            turmaId,
+            imageUrl: imageBase64
+        };
 
-        } catch (error) {
-            let errorMessage = 'Erro ao cadastrar aluno. Tente novamente.';
+        await onCreate(alunoData, token);
 
-            if (error.response) {
-                if (error.response.status === 400) {
-                    errorMessage = 'Dados inválidos. Verifique as informações.';
-                } else if (error.response.status === 409) {
-                    errorMessage = 'Email já cadastrado para outro aluno.';
-                } else if (error.response.status === 401) {
-                    errorMessage = 'Autenticação necessária. Faça login novamente.';
-                }
-            }
+        // Resetar
 
-            setAlertTitle('Erro');
-            setAlertMessage(errorMessage);
-            setAlertVisible(true);
-        }
-    };
+  
+
+    } catch (error) {
+       
+    }
+};
 
     const isFormValid = () => {
         return nomeAluno &&
