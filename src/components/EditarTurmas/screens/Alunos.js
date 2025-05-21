@@ -9,6 +9,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
 import CustomAlert from '../../Gerais/CustomAlert';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 export default function Alunos() {
     const route = useRoute();
@@ -261,7 +262,7 @@ export default function Alunos() {
     return (
         <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }}>
             <ScrollView style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-                <HeaderSimples
+                <HeaderSimplesBack
                     titulo="ALUNOS"
                 />
                 <View style={{ padding: 10, paddingBottom: 20 }}>

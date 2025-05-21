@@ -189,11 +189,15 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
     const validarCampos = () => {
         const nomeTrimado = editTurma.trim();
-        const capacidadeValida = !isNaN(parseInt(editCapacidade)) && parseInt(editCapacidade) >= 20;
-        const salaValida = !isNaN(parseInt(editSala)) && parseInt(editSala) > 0;
+        const capacidadeNum = parseInt(editCapacidade);
+        const salaNum = parseInt(editSala);
+
+        const nomeValido = nomeTrimado !== '' && nomeTrimado.length <= 20;
+        const capacidadeValida = !isNaN(capacidadeNum) && capacidadeNum >= 20 && capacidadeNum <= 50;
+        const salaValida = !isNaN(salaNum) && salaNum > 0 && salaNum < 100;
 
         const novosErros = {
-            nomeTurma: nomeTrimado === '',
+            nomeTurma: !nomeValido,
             capacidade: !capacidadeValida,
             sala: !salaValida,
             professores: selectedProfessores.length === 0,
@@ -202,35 +206,7 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
         setErros(novosErros);
 
-        if (nomeTrimado === '') {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (!capacidadeValida) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (!salaValida) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (novosErros.professores) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (novosErros.disciplinas) {
+        if (!nomeValido || !capacidadeValida || !salaValida || novosErros.professores || novosErros.disciplinas) {
             setAlertTitle('Atenção');
             setAlertMessage('Revise os campos');
             setAlertVisible(true);
@@ -239,7 +215,6 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
 
         return true;
     };
-
 
     const salvarEdicao = async () => {
         if (!validarCampos()) return;

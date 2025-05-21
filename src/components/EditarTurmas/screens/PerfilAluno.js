@@ -28,6 +28,7 @@ import GraficoFeedback from '../../Gerais/GraficoFeedback';
 import CustomAlert from '../../Gerais/CustomAlert';
 import DeleteAlert from '../../Gerais/DeleteAlert';
 import FeedbackModal from '../../Gerais/FeedbackModal';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 const { width } = Dimensions.get('window');
 
@@ -790,7 +791,7 @@ export default function PerfilAluno() {
 
     return (
         <ScrollView style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-            <HeaderSimples titulo={isEditing ? "EDITANDO PERFIL" : "PERFIL DO ALUNO"} />
+            <HeaderSimplesBack titulo={isEditing ? "EDITANDO PERFIL" : "PERFIL DO ALUNO"} />
 
             {isEditing && (
                 <View style={[styles.editingIndicator, { backgroundColor: barraAzulColor }]}>

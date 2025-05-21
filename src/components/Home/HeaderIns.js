@@ -17,6 +17,7 @@ export default function HeaderIns() {
   const [eventColors, setEventColors] = useState({});
   const [institution, setInstitution] = useState(null);
   const navigation = useNavigation();
+  const [showCodeBox, setShowCodeBox] = useState(false);
 
 
   const getRandomColor = () => {
@@ -30,14 +31,13 @@ export default function HeaderIns() {
 
 
 
-
   const fetchData = useCallback(async () => {
     try {
-
+      // Buscar todos os eventos
       const eventsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/event');
       const events = eventsResponse.data;
 
-
+      // Criar cores para eventos
       const colors = {};
       events.forEach(event => {
         colors[event.id] = getRandomColor();
@@ -46,12 +46,23 @@ export default function HeaderIns() {
       setEvents(events);
       setEventColors(colors);
 
-
+      // Pegar o id da instituição armazenado no AsyncStorage
       const institutionId = await AsyncStorage.getItem('@user_id');
-      const institutionResponse = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution/${institutionId}`);
-      setInstitution(institutionResponse.data);
-    } catch (error) {
+      if (!institutionId) {
+        setInstitution(null);
+        return;
+      }
 
+      // Buscar todas as instituições
+      const institutionsResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/institution');
+      const institutions = institutionsResponse.data;
+
+      // Filtrar a instituição pelo id (institutionId pode ser string, fazer parseInt)
+      const institutionFound = institutions.find(inst => inst.id === parseInt(institutionId, 10));
+
+      setInstitution(institutionFound || null);
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
     }
   }, []);
 
@@ -160,16 +171,33 @@ export default function HeaderIns() {
                     : require('../../assets/image/ins.png')}
                 />
                 <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                  {institution?.nome || 'Instituição'}
+                  {institution?.nameInstitution || 'Instituição'}
                 </Text>
               </View>
-              <Image
-                source={isDarkMode
-                  ? require('../../assets/image/OptionWhite.png')
-                  : require('../../assets/image/Option.png')}
-                style={styles.options}
-              />
+
+              <View>
+                <TouchableOpacity onPress={() => setShowCodeBox(!showCodeBox)}>
+                  <Image
+                    source={isDarkMode
+                      ? require('../../assets/image/OptionWhite.png')
+                      : require('../../assets/image/Option.png')}
+                    style={styles.options}
+                  />
+                </TouchableOpacity>
+
+                {showCodeBox && (
+                  <View style={[styles.codeBox, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}>
+                    <Text style={{ color: textColor, fontWeight: 'bold', marginBottom: 5 }}>
+                      Código de Identificação
+                    </Text>
+                    <Text style={{ color: textColor }}>
+                      {institution?.identifierCode || 'Não disponível'}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
+
           </View>
 
           <View style={styles.menuItem}>
@@ -219,6 +247,8 @@ export default function HeaderIns() {
           </View>
         </ScrollView>
       </Animated.View>
+
+
     </>
   );
 }
@@ -236,6 +266,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#fff',
   },
+ codeBox: {
+  marginTop: 5,
+  padding: 10,
+  borderRadius: 8,
+  minWidth: 160,
+  shadowColor: '#000',
+  shadowOpacity: 0.2,
+  shadowRadius: 5,
+  elevation: 5,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  position: 'absolute',
+  alignItems: 'center',
+  top: 30, // ajusta conforme o tamanho da imagem Option para ficar logo abaixo
+  right: -20,
+  zIndex: 30,
+},
+options: {
+  width: 20,
+  height: 10,
+},
 
   contEventos: {
     width: '100%',

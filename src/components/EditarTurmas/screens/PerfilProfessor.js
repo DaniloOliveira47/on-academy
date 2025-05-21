@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import CustomAlert from '../../Gerais/CustomAlert';
 import DeleteAlert from '../../Gerais/DeleteAlert';
 import FeedbackModal from '../../Gerais/FeedbackModal';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 const { width } = Dimensions.get('window');
 
@@ -688,7 +689,7 @@ export default function PerfilProfessor() {
 
     return (
         <ScrollView style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-            <HeaderSimples titulo={isEditing ? "EDITANDO PERFIL" : "PERFIL DO PROFESSOR"} />
+            <HeaderSimplesBack titulo={isEditing ? "EDITANDO PERFIL" : "PERFIL DO PROFESSOR"} />
 
             {isEditing && (
                 <View style={[styles.editingIndicator, { backgroundColor: barraAzulColor }]}>

@@ -4,6 +4,7 @@ import Campo from '../../components/Perfil/Campo';
 import { useTheme } from '../../path/ThemeContext';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HeaderSimplesBack from '../../components/Gerais/HeaderSimplesBack';
 
 export default function Perfil() {
   const { isDarkMode } = useTheme();
@@ -46,7 +47,7 @@ export default function Perfil() {
 
   return (
     <View>
-      <HeaderSimples titulo="PERFIL" />
+      <HeaderSimplesBack titulo="PERFIL" />
       <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
         <View style={styles.conText}>
           <Text style={[styles.titulo, { color: textColor, textAlign: 'center' }]}>Bem-Vindo(a), {dadosAluno ? dadosAluno.nome : 'Carregando...'}</Text>

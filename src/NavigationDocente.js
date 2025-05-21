@@ -1,16 +1,53 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 
 import HomeScreen from './screens/screensDocente/Home';
-
 import EventosScreen from './screens/Eventos';
 import FeedbackStack from './stacks/FeedbackStack';
-import NotasStack from './stacks/NotasStack'
-
+import NotasStack from './stacks/NotasStack';
 import { useTheme } from './path/ThemeContext';
 
+// 🌀 Animação personalizada
+Animatable.initializeRegistryWithDefinitions({
+  slideUpBackground: {
+    from: {
+      transform: [{ scaleY: 0 }],
+      opacity: 0,
+    },
+    to: {
+      transform: [{ scaleY: 1 }],
+      opacity: 1,
+    },
+  },
+});
+
 const Tab = createBottomTabNavigator();
+
+const TabBarButton = ({ children, onPress, accessibilityState }) => {
+  const focused = accessibilityState.selected;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={onPress}
+      style={styles.tabButtonContainer}
+    >
+      <View style={[styles.animatedButton, focused && styles.focusedButton]}>
+        {focused && (
+          <Animatable.View
+            animation="slideUpBackground"
+            duration={400}
+            style={styles.backgroundOverlay}
+          />
+        )}
+        {children}
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default function NavigationDocente() {
   const { isDarkMode } = useTheme();
@@ -18,6 +55,16 @@ export default function NavigationDocente() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: isDarkMode ? '#000' : '#F7F9FC',
+          height: 60,
+          borderTopLeftRadius: 15,
+          borderTopRightRadius: 15,
+          position: 'absolute',
+          borderTopWidth: 0,
+        },
+        tabBarButton: (props) => <TabBarButton {...props} />,
         tabBarIcon: ({ focused }) => {
           let iconName;
           let color = focused ? '#0077FF' : '#A0A0A0';
@@ -39,17 +86,15 @@ export default function NavigationDocente() {
               iconName = 'help-circle';
           }
 
-          return <Icon name={iconName} size={30} color={color} />;
-        },
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          alignItems: 'center',
-          backgroundColor: isDarkMode ? '#000' : '#F7F9FC',
-          height: 50,
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
-          position: 'absolute',
-          borderTopWidth: 0,
+          return (
+            <Animatable.View
+              animation={focused ? 'pulse' : undefined}
+              duration={500}
+              useNativeDriver
+            >
+              <Icon name={iconName} size={26} color={color} />
+            </Animatable.View>
+          );
         },
       })}
     >
@@ -60,3 +105,27 @@ export default function NavigationDocente() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  tabButtonContainer: {
+    flex: 1,
+  },
+  animatedButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  focusedButton: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#0077FF',
+  },
+  backgroundOverlay: {
+    backgroundColor: 'rgba(0, 119, 255, 0.1)', // Fundo azul mais transparente
+    position: 'absolute',
+    bottom: 0,
+    height: '100%',
+    width: '100%',
+  },
+});

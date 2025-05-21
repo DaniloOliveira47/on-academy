@@ -10,6 +10,7 @@ import axios from 'axios';
 import Swiper from 'react-native-swiper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomAlert from '../../Gerais/CustomAlert';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 export default function AlunoPerfil({ route }) {
     const { isDarkMode } = useTheme();
@@ -322,7 +323,7 @@ export default function AlunoPerfil({ route }) {
     return (
         <ScrollView ref={scrollViewRef}>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-                <HeaderSimples titulo="PERFIL" />
+                <HeaderSimplesBack titulo="PERFIL" />
                 <View style={{ padding: 15 }}>
                     <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 0 }]} source={require('../../../assets/image/barraAzul.png')} />
                     <View style={[styles.form, {

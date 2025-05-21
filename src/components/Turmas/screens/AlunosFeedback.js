@@ -20,6 +20,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 export default function AlunosFeedback({ route }) {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
@@ -226,7 +227,7 @@ export default function AlunosFeedback({ route }) {
     return (
         <View style={{ flex: 1 }}>
             <ScrollView>
-                <HeaderSimples />
+                <HeaderSimplesBack />
                 <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', paddingBottom: 40 }]}>
                     <View style={styles.linha}>
                         <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>

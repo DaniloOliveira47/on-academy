@@ -10,6 +10,7 @@ import { useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomAlert from '../../Gerais/CustomAlert';
+import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
 
 export default function NotasTurma() {
     const route = useRoute();
@@ -235,7 +236,7 @@ export default function NotasTurma() {
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderSimples />
+            <HeaderSimplesBack />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>

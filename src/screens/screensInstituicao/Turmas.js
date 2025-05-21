@@ -153,11 +153,15 @@ export default function Turmas() {
 
     const validarCampos = () => {
         const nomeTrimado = novaTurma.trim();
-        const capacidadeValida = !isNaN(novaCapacidade) && parseInt(novaCapacidade) >= 20;
-        const salaValida = !isNaN(novaSala) && parseInt(novaSala) > 0;
+        const capacidadeNum = parseInt(novaCapacidade);
+        const salaNum = parseInt(novaSala);
+
+        const nomeValido = nomeTrimado !== '' && nomeTrimado.length <= 20;
+        const capacidadeValida = !isNaN(capacidadeNum) && capacidadeNum >= 20 && capacidadeNum <= 50;
+        const salaValida = !isNaN(salaNum) && salaNum > 0 && salaNum < 100;
 
         const novosErros = {
-            nomeTurma: nomeTrimado === '',
+            nomeTurma: !nomeValido,
             capacidade: !capacidadeValida,
             sala: !salaValida,
             professores: selectedProfessores.length === 0,
@@ -166,35 +170,7 @@ export default function Turmas() {
 
         setErros(novosErros);
 
-        if (nomeTrimado === '') {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (!capacidadeValida) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (!salaValida) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (novosErros.professores) {
-            setAlertTitle('Atenção');
-            setAlertMessage('Revise os campos');
-            setAlertVisible(true);
-            return false;
-        }
-
-        if (novosErros.disciplinas) {
+        if (!nomeValido || !capacidadeValida || !salaValida || novosErros.professores || novosErros.disciplinas) {
             setAlertTitle('Atenção');
             setAlertMessage('Revise os campos');
             setAlertVisible(true);
@@ -253,9 +229,18 @@ export default function Turmas() {
     };
 
     const registrarNovaDisciplina = async () => {
-        if (!novaDisciplina.trim()) {
+        const disciplinaTrimada = novaDisciplina.trim();
+
+        if (!disciplinaTrimada) {
             setAlertTitle('Erro');
             setAlertMessage('Por favor, insira um nome para a disciplina');
+            setAlertVisible(true);
+            return;
+        }
+
+        if (disciplinaTrimada.length > 20) {
+            setAlertTitle('Erro');
+            setAlertMessage('O nome da disciplina deve ter no máximo 20 caracteres');
             setAlertVisible(true);
             return;
         }
@@ -272,7 +257,7 @@ export default function Turmas() {
 
             await axios.post(
                 'https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/discipline',
-                { nomeDisciplina: novaDisciplina },
+                { nomeDisciplina: disciplinaTrimada },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

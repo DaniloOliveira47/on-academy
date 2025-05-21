@@ -184,6 +184,9 @@ export default function EventosInstitution() {
     } else if (tituloEvento.trim().length < 3) {
       newErrors.tituloEvento = 'Título deve ter pelo menos 3 caracteres';
       valid = false;
+    } else if (tituloEvento.trim().length > 20) {
+      newErrors.tituloEvento = 'Título deve ter no máximo 20 caracteres';
+      valid = false;
     } else if (!textRegex.test(tituloEvento)) {
       newErrors.tituloEvento = 'Título contém caracteres inválidos';
       valid = false;
@@ -196,6 +199,9 @@ export default function EventosInstitution() {
     if (!localEvento.trim()) {
       newErrors.localEvento = 'Local é obrigatório';
       valid = false;
+    } else if (localEvento.trim().length > 30) {
+      newErrors.localEvento = 'Local deve ter no máximo 30 caracteres';
+      valid = false;
     } else if (!textRegex.test(localEvento)) {
       newErrors.localEvento = 'Local contém caracteres inválidos';
       valid = false;
@@ -207,6 +213,9 @@ export default function EventosInstitution() {
     // Validação da descrição
     if (!descricaoEvento.trim()) {
       newErrors.descricaoEvento = 'Descrição é obrigatória';
+      valid = false;
+    } else if (descricaoEvento.trim().length > 100) {
+      newErrors.descricaoEvento = 'Descrição deve ter no máximo 100 caracteres';
       valid = false;
     } else if (!noInjectionRegex.test(descricaoEvento)) {
       newErrors.descricaoEvento = 'Descrição contém caracteres não permitidos';
@@ -224,6 +233,7 @@ export default function EventosInstitution() {
     setErrors(newErrors);
     return valid;
   };
+
 
   const handleAddEvent = async () => {
     try {
@@ -667,6 +677,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 5,
+    height: 50
   },
   inputError: {
     borderColor: '#FF3B30',
