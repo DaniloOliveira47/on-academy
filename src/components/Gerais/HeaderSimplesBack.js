@@ -26,10 +26,7 @@ export default function HeaderSimplesBack({ titulo }) {
           <Icon name="arrow-left" size={22} color={isDarkMode ? '#A1C9FF' : '#0077FF'} />
         </TouchableOpacity>
 
-        <View style={styles.logoContainer}>
-          <Image style={styles.logo} source={require('../../assets/image/logo.png')} />
-          <Text style={[styles.logoText, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>ONA</Text>
-        </View>
+      
       </View>
 
       <Text style={[styles.titulo, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>

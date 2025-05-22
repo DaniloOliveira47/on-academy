@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Modal, TouchableOpacity, Text, ScrollView, Alert, RefreshControl, } from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomAlert from '../../components/Gerais/CustomAlert';
-
+import { Animated } from 'react-native';
 export default function Turmas() {
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
@@ -228,6 +228,54 @@ export default function Turmas() {
         }
     };
 
+
+    const AnimatedCard = ({ turma, index }) => {
+        const fadeAnim = useRef(new Animated.Value(0)).current;
+        const [animStarted, setAnimStarted] = useState(false);
+
+        useEffect(() => {
+            // Avisar que animação iniciou para renderizar o card
+            setAnimStarted(true);
+
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                delay: index * 100,
+                useNativeDriver: true,
+            }).start();
+        }, []);
+
+        // Não renderiza o conteúdo até a animação começar
+        if (!animStarted) return null;
+
+        return (
+            <Animated.View
+                style={{
+                    opacity: fadeAnim,
+                    transform: [
+                        {
+                            scale: fadeAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.85, 1],
+                            }),
+                        },
+                    ],
+                }}
+            >
+                <CardTurmas
+                    key={turma.id}
+                    turma={`${turma.nomeTurma}`}
+                    numero={`Nº${turma.id}`}
+                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
+                    periodo={`Período: ${turma.periodoTurma}`}
+                    turmaId={turma.id}
+                    navegacao="Alunos"
+                    onDelete={handleTurmaExcluida}
+                    onEditSuccess={fetchTurmas}
+                />
+            </Animated.View>
+        );
+    };
     const registrarNovaDisciplina = async () => {
         const disciplinaTrimada = novaDisciplina.trim();
 
@@ -374,18 +422,8 @@ export default function Turmas() {
                             ) : (
                                 <View style={styles.cards}>
                                     {turmasPaginaAtual.length > 0 ? (
-                                        turmasPaginaAtual.map((turma) => (
-                                            <CardTurmas
-                                                key={turma.id}
-                                                turma={`${turma.nomeTurma}`}
-                                                numero={`Nº${turma.id}`}
-                                                alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
-                                                periodo={`Período: ${turma.periodoTurma}`}
-                                                turmaId={turma.id}
-                                                navegacao="Alunos"
-                                                onDelete={handleTurmaExcluida}
-                                                onEditSuccess={fetchTurmas}
-                                            />
+                                        turmasPaginaAtual.map((turma, index) => (
+                                            <AnimatedCard key={turma.id} turma={turma} index={index} />
                                         ))
                                     ) : (
                                         <Text style={{ color: isDarkMode ? 'white' : 'black', textAlign: 'center' }}>

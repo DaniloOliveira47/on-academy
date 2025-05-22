@@ -19,7 +19,8 @@ import PerfilProfessor from './components/EditarTurmas/screens/PerfilProfessor';
 import PerfilInstitution from './screens/screensInstituicao/PerfilInstitution';
 
 import { ThemeProvider, useTheme } from './path/ThemeContext';
-
+import { CardStyleInterpolators } from '@react-navigation/stack';
+import EventosInstitution from './screens/screensInstituicao/EventosInstitution';
 const Stack = createStackNavigator();
 
 function AppNavigation() {
@@ -35,7 +36,25 @@ function AppNavigation() {
             contentStyle: {
               backgroundColor: isDarkMode ? '#121212' : '#F0F7FF',
             },
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
+            transitionSpec: {
+              open: {
+                animation: 'timing',
+                config: {
+                  duration: 300,
+                },
+              },
+              close: {
+                animation: 'timing',
+                config: {
+                  duration: 300,
+                },
+              },
+            },
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
           }}
+
         >
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Main" component={Navigation} />
@@ -50,6 +69,7 @@ function AppNavigation() {
           <Stack.Screen name="ProfessorPerfil" component={ProfessorPerfil} />
           <Stack.Screen name="TurmasInstituicao" component={TurmasInstituicao} />
           <Stack.Screen name="PerfilInstitution" component={PerfilInstitution} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </View>

@@ -124,7 +124,9 @@ export default function HomeInstituicao() {
 
 
     return (
+
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
+
             <HeaderIns isDarkMode={isDarkMode} />
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>

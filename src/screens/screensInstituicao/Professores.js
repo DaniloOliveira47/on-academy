@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfessor';
 import CardProfessorIns from '../../components/Ocorrência/CardProfessoreIns';
 import CustomAlert from '../../components/Gerais/CustomAlert';
-
+import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
 export default function ProfessoresFeedback() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
@@ -185,25 +185,35 @@ export default function ProfessoresFeedback() {
             setIsCreating(false);
         }
     };
-    const renderProfessores = () => {
+  const renderProfessores = () => {
         const professoresPagina = getProfessoresPagina();
         const rows = [];
 
         for (let i = 0; i < professoresPagina.length; i += 2) {
             const rowProfessores = professoresPagina.slice(i, i + 2);
             rows.push(
-                <View key={i} style={styles.row}>
+                <Animated.View 
+                    key={`row-${i}`}
+                    style={styles.row}
+                    entering={FadeInDown.duration(500).delay(i * 100)}
+                    layout={Layout.duration(300)}
+                >
                     {rowProfessores.map((professor, index) => (
-                        <CardProfessorIns
-                            key={index}
-                            nome={"Prof - " + professor.nomeDocente}
-                            imageUrl={professor.imageUrl}
-                            id={professor.id}
-                            onPress={() => selecionarProfessor(professor)}
-                            selecionado={professorSelecionado?.id === professor.id}
-                        />
+                        <Animated.View
+                            key={professor.id}
+                            entering={FadeInUp.duration(500).delay((i + index) * 100)}
+                            layout={Layout.duration(300)}
+                        >
+                            <CardProfessorIns
+                                nome={"Prof - " + professor.nomeDocente}
+                                imageUrl={professor.imageUrl}
+                                id={professor.id}
+                                onPress={() => selecionarProfessor(professor)}
+                                selecionado={professorSelecionado?.id === professor.id}
+                            />
+                        </Animated.View>
                     ))}
-                </View>
+                </Animated.View>
             );
         }
 
@@ -218,6 +228,7 @@ export default function ProfessoresFeedback() {
 
         return rows;
     };
+
 
     const renderPaginacao = () => {
         const paginas = [];
@@ -333,12 +344,12 @@ export default function ProfessoresFeedback() {
                                 {searchTerm ? 'Nenhum professor encontrado' : 'Nenhum professor cadastrado'}
                             </Text>
                         ) : (
-                            <ScrollView
+                             <Animated.ScrollView
                                 contentContainerStyle={styles.scrollContent}
                                 showsVerticalScrollIndicator={false}
                             >
                                 {renderProfessores()}
-                            </ScrollView>
+                            </Animated.ScrollView>
                         )}
                     </View>
 

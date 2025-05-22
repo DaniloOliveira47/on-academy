@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import Turmas from '../screens/screensInstituicao/Turmas';
 import NotasTurma from '../components/Turmas/screens/NotasTurma';
 import ProfessoresFeedback from '../screens/screensInstituicao/Professores';
@@ -19,6 +19,24 @@ export default function ProfessoresStack() {
                     contentStyle: {
                         backgroundColor: isDarkMode ? '#121212' : '#F0F7FF',
                     },
+                    gestureEnabled: true,
+                    gestureDirection: 'horizontal',
+                    transitionSpec: {
+                        open: {
+                            animation: 'timing',
+                            config: {
+                                duration: 300,
+                            },
+                        },
+                        close: {
+                            animation: 'timing',
+                            config: {
+                                duration: 300,
+                            },
+                        },
+                    },
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+
                 }}
             >
                 <Stack.Screen
