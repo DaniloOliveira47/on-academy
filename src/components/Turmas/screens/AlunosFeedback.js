@@ -21,7 +21,8 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GraficoFeedbackTurma from '../../Gerais/GraficoFeedbackTurma';
 import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
-
+import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+ 
 export default function AlunosFeedback({ route }) {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
@@ -34,13 +35,13 @@ export default function AlunosFeedback({ route }) {
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [totalFeedbacks, setTotalFeedbacks] = useState(0);
     const [modalBarraVisible, setModalBarraVisible] = useState(false);
-        const [filtro, setFiltro] = useState('');
+    const [filtro, setFiltro] = useState('');
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const navigation = useNavigation();
-
+ 
     const { turmaId } = route.params;
     const ALUNOS_POR_PAGINA = 10;
-
+ 
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -57,15 +58,15 @@ export default function AlunosFeedback({ route }) {
                 setLoading(false);
             }
         };
-
+ 
         fetchData();
     }, [turmaId]);
-
+ 
     const fetchMediasFeedbacks = async () => {
         try {
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class/feedback/${turmaId}`);
             const { mediaResposta1, mediaResposta2, mediaResposta3, mediaResposta4, mediaResposta5, totalFeedbacks } = response.data;
-
+ 
             setDadosGrafico([
                 mediaResposta1 || 0,
                 mediaResposta2 || 0,
@@ -79,44 +80,42 @@ export default function AlunosFeedback({ route }) {
             setTotalFeedbacks(0);
         }
     };
-
-     const getAlunosFiltrados = () => {
+ 
+    const getAlunosFiltrados = () => {
         if (!turma || !turma.students) return [];
-
+ 
         if (!filtro.trim()) {
             return turma.students;
         }
-
+ 
         const filtroMinusculo = filtro.toLowerCase();
-
-        return turma.students.filter(aluno => 
+ 
+        return turma.students.filter(aluno =>
             aluno.nomeAluno.toLowerCase().includes(filtroMinusculo) ||
             aluno.matricula?.toString().includes(filtroMinusculo)
         );
     };
-
+ 
     const getAlunosPaginaAtual = () => {
         const alunosFiltrados = getAlunosFiltrados();
-
+ 
         const inicio = (paginaSelecionada - 1) * ALUNOS_POR_PAGINA;
         const fim = inicio + ALUNOS_POR_PAGINA;
         const alunosPagina = alunosFiltrados.slice(inicio, fim);
-
+ 
         const metade = Math.ceil(alunosPagina.length / 2);
         const coluna1 = alunosPagina.slice(0, metade);
         const coluna2 = alunosPagina.slice(metade);
-
+ 
         return [coluna1, coluna2];
     };
-
-
+ 
     const totalPaginas = Math.max(1, Math.ceil(getAlunosFiltrados().length / ALUNOS_POR_PAGINA));
-
-
+ 
     const getBotoesPagina = () => {
         const botoes = [];
         const maxBotoes = 3;
-
+ 
         if (totalPaginas <= maxBotoes) {
             for (let i = 1; i <= totalPaginas; i++) {
                 botoes.push(i);
@@ -138,10 +137,10 @@ export default function AlunosFeedback({ route }) {
                 botoes.push('>');
             }
         }
-
+ 
         return botoes;
     };
-
+ 
     const handleMudarPagina = (pagina) => {
         if (pagina === '<') {
             setPaginaSelecionada(prev => Math.max(1, prev - 1));
@@ -151,8 +150,7 @@ export default function AlunosFeedback({ route }) {
             setPaginaSelecionada(pagina);
         }
     };
-
-
+ 
     const handleBarraClick = (categoria, valor) => {
         if (valor > 0) {
             setBarraSelecionada({
@@ -162,19 +160,19 @@ export default function AlunosFeedback({ route }) {
             setModalBarraVisible(true);
         }
     };
-
+ 
     const handleAdicionarFeedback = async () => {
         if (!feedbackConteudo.trim()) {
             alert('Por favor, insira um feedback.');
             return;
         }
-
+ 
         const feedbackData = {
             conteudo: feedbackConteudo,
             createdBy: professorId,
             classSt: turmaId
         };
-
+ 
         try {
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher/student', feedbackData, {
                 headers: {
@@ -182,7 +180,7 @@ export default function AlunosFeedback({ route }) {
                     'Content-Type': 'application/json'
                 }
             });
-
+ 
             if (response.status >= 200 && response.status < 300) {
                 alert('Feedback adicionado com sucesso!');
                 setFeedbackConteudo('');
@@ -193,7 +191,7 @@ export default function AlunosFeedback({ route }) {
             alert('Erro ao enviar feedback. Tente novamente mais tarde.');
         }
     };
-
+ 
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -201,7 +199,7 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
+ 
     if (error) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -209,7 +207,7 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
+ 
     if (!turma) {
         return (
             <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -217,13 +215,11 @@ export default function AlunosFeedback({ route }) {
             </View>
         );
     }
-
-
+ 
     const botoesPagina = getBotoesPagina();
-
     const [coluna1, coluna2] = getAlunosPaginaAtual();
     const apenasUmAluno = coluna1.length + coluna2.length === 1;
-
+ 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView>
@@ -235,72 +231,92 @@ export default function AlunosFeedback({ route }) {
                         </Text>
                         <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº{turma.id}</Text>
                     </View>
-
+ 
                     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
-                             <TextInput
+                            <TextInput
+                                maxLength={30}
                                 style={[styles.input, { color: isDarkMode ? '#FFF' : '#000' }]}
                                 placeholder="Digite o nome ou número da matrícula"
                                 placeholderTextColor="#756262"
                                 value={filtro}
                                 onChangeText={text => {
                                     setFiltro(text);
-                                    setPaginaSelecionada(1); // resetar página ao filtrar
+                                    setPaginaSelecionada(1);
                                 }}
                             />
                             <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                         </View>
-
+ 
                         <View style={styles.contColumn}>
                             {apenasUmAluno ? (
                                 <View style={{ width: '100%', alignItems: 'center' }}>
                                     {coluna1.length > 0 ? (
-                                        <CardAlunos
-                                            key={coluna1[0].id}
-                                            nome={coluna1[0].nomeAluno}
-                                            navegacao="AlunoPerfil"
-                                            alunoId={coluna1[0].id}
-                                            fotoAluno={coluna1[0].imageUrl}
-                                        />
+                                        <Animated.View
+                                            entering={FadeInUp.duration(500).delay(100)}
+                                            layout={Layout.duration(300)}
+                                        >
+                                            <CardAlunos
+                                                key={coluna1[0].id}
+                                                nome={coluna1[0].nomeAluno}
+                                                navegacao="AlunoPerfil"
+                                                alunoId={coluna1[0].id}
+                                                fotoAluno={coluna1[0].imageUrl}
+                                            />
+                                        </Animated.View>
                                     ) : (
-                                        <CardAlunos
-                                            key={coluna2[0].id}
-                                            nome={coluna2[0].nomeAluno}
-                                            navegacao="AlunoPerfil"
-                                            alunoId={coluna2[0].id}
-                                            fotoAluno={coluna2[0].imageUrl}
-                                        />
+                                        <Animated.View
+                                            entering={FadeInUp.duration(500).delay(100)}
+                                            layout={Layout.duration(300)}
+                                        >
+                                            <CardAlunos
+                                                key={coluna2[0].id}
+                                                nome={coluna2[0].nomeAluno}
+                                                navegacao="AlunoPerfil"
+                                                alunoId={coluna2[0].id}
+                                                fotoAluno={coluna2[0].imageUrl}
+                                            />
+                                        </Animated.View>
                                     )}
                                 </View>
                             ) : (
                                 <>
                                     <View style={styles.column}>
-                                        {coluna1.map((aluno) => (
-                                            <CardAlunos
+                                        {coluna1.map((aluno, index) => (
+                                            <Animated.View
                                                 key={aluno.id}
-                                                nome={aluno.nomeAluno}
-                                                navegacao="AlunoPerfil"
-                                                alunoId={aluno.id}
-                                                fotoAluno={aluno.imageUrl}
-                                            />
+                                                entering={FadeInDown.duration(500).delay(index * 100)}
+                                                layout={Layout.duration(300)}
+                                            >
+                                                <CardAlunos
+                                                    nome={aluno.nomeAluno}
+                                                    navegacao="AlunoPerfil"
+                                                    alunoId={aluno.id}
+                                                    fotoAluno={aluno.imageUrl}
+                                                />
+                                            </Animated.View>
                                         ))}
                                     </View>
                                     <View style={styles.column}>
-                                        {coluna2.map((aluno) => (
-                                            <CardAlunos
+                                        {coluna2.map((aluno, index) => (
+                                            <Animated.View
                                                 key={aluno.id}
-                                                nome={aluno.nomeAluno}
-                                                navegacao="AlunoPerfil"
-                                                alunoId={aluno.id}
-                                                fotoAluno={aluno.imageUrl}
-                                            />
+                                                entering={FadeInUp.duration(500).delay(index * 100)}
+                                                layout={Layout.duration(300)}
+                                            >
+                                                <CardAlunos
+                                                    nome={aluno.nomeAluno}
+                                                    navegacao="AlunoPerfil"
+                                                    alunoId={aluno.id}
+                                                    fotoAluno={aluno.imageUrl}
+                                                />
+                                            </Animated.View>
                                         ))}
                                     </View>
                                 </>
                             )}
                         </View>
-
-                        {/* Restante do código permanece igual */}
+ 
                         <View style={styles.selecao}>
                             {botoesPagina.map((numero, index) => (
                                 <CardSelecao
@@ -311,7 +327,7 @@ export default function AlunosFeedback({ route }) {
                                 />
                             ))}
                         </View>
-
+ 
                         <View style={styles.graficoContainer}>
                             {totalFeedbacks === 0 ? (
                                 <View style={styles.semFeedbacksContainer}>
@@ -336,8 +352,7 @@ export default function AlunosFeedback({ route }) {
                     </View>
                 </View>
             </ScrollView>
-
-            {/* Modal permanece igual */}
+ 
             <Modal visible={modalBarraVisible} transparent animationType="slide">
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#1E6BE6' : '#1A85FF' }]}>
@@ -345,7 +360,7 @@ export default function AlunosFeedback({ route }) {
                         <Text style={[styles.modalText, { color: 'white', fontSize: 24 }]}>
                             {barraSelecionada.value.toFixed(1)}
                         </Text>
-
+ 
                         <TouchableOpacity
                             style={[styles.cancelButton, { backgroundColor: 'white', marginTop: 20 }]}
                             onPress={() => setModalBarraVisible(false)}
@@ -358,7 +373,6 @@ export default function AlunosFeedback({ route }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     loadingContainer: {
         flex: 1,
@@ -404,7 +418,7 @@ const styles = StyleSheet.create({
     },
     graficoContainer: {
         marginBottom: 20,
-
+ 
     },
     inputContainer: {
         flexDirection: 'row',

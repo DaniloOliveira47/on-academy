@@ -107,7 +107,8 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
             const turmaDetalhada = response.data;
 
             setEditTurma(turmaDetalhada.nomeTurma || '');
-            setEditAnoLetivo(turmaDetalhada.anoLetivoTurma || '2025');
+            setEditAnoLetivo(turmaDetalhada.anoLetivoTurma?.toString() || '2025');
+
             setEditPeriodo(turmaDetalhada.periodoTurma || periodo || 'Manhã');
             setEditCapacidade(turmaDetalhada.capacidadeMaximaTurma?.toString() || '35');
             setEditSala(turmaDetalhada.salaTurma?.toString() || '01');

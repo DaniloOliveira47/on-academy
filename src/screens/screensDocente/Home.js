@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     subtela: {
         paddingTop: 10,
         alignItems: 'center',
-        padding: 20
+        padding: 15
     },
     infoContainer: {
         flexDirection: 'row',

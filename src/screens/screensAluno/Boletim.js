@@ -166,7 +166,7 @@ export default function Boletim() {
 
                 <HeaderSimples titulo="BOLETIM" />
 
-                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 60 }]}>
+                <View style={[styles.tela, { backgroundColor: BackgroundColor, paddingBottom: 70 }]}>
 
                     <View style={{
                         backgroundColor: container,

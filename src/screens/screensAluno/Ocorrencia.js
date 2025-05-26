@@ -8,7 +8,9 @@ import { useTheme } from '../../path/ThemeContext';
 import CardProfessor from '../../components/Ocorrência/CardProfessor';
 import GraficoFeedback from '../../components/Gerais/GraficoFeedback';
 import CustomAlert from '../../components/Gerais/CustomAlert';
-
+import CardSelecao from '../../components/Turmas/CardSelecao';
+import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+ 
 export default function Ocorrencia() {
     const { isDarkMode } = useTheme();
     const [alertVisible, setAlertVisible] = useState(false);
@@ -26,13 +28,13 @@ export default function Ocorrencia() {
     const [barraSelecionada, setBarraSelecionada] = useState({ label: '', value: 0 });
     const [dadosGrafico, setDadosGrafico] = useState([0, 0, 0, 0, 0]);
     const [semFeedbacks, setSemFeedbacks] = useState(false);
-
+    // Estados para paginação
+    const [paginaAtualProfessores, setPaginaAtualProfessores] = useState(1);
+    const PROFESSORES_POR_PAGINA = 6; // 6 professores por página (2 por linha, 3 linhas)
     const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
-
-
-
+ 
     useEffect(() => {
         axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/teacher')
             .then(response => {
@@ -44,8 +46,7 @@ export default function Ocorrencia() {
                 setAlertVisible(true);
             });
     }, []);
-
-
+ 
     useEffect(() => {
         const fetchUserId = async () => {
             try {
@@ -57,17 +58,16 @@ export default function Ocorrencia() {
                 setAlertVisible(true);
             }
         };
-
+ 
         fetchUserId();
     }, []);
-
-
+ 
     useEffect(() => {
         if (userId) {
             fetchFeedbacks();
         }
     }, [userId, bimestreSelecionado]);
-
+ 
     const fetchFeedbacks = async () => {
         try {
             const response = await axios.get(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/student/feedback/${userId}`);
@@ -79,24 +79,24 @@ export default function Ocorrencia() {
             setAlertVisible(true);
         }
     };
-
+ 
     const handleSelecionarProfessor = (professor) => {
         setProfessorSelecionado(professor);
         setModalProfessorVisible(false);
     };
-
+ 
     const handleLimparFiltroProfessor = () => {
         setProfessorSelecionado(null);
     };
-
+ 
     const atualizarDadosGrafico = (feedbacksData) => {
         let feedbacksFiltrados = feedbacksData.filter(feedback => feedback.bimestre === bimestreSelecionado);
-
+ 
         if (professorSelecionado) {
             feedbacksFiltrados = feedbacksFiltrados.filter(
                 feedback => feedback.createdByDTO && feedback.createdByDTO.id === professorSelecionado.id
             );
-
+ 
             if (feedbacksFiltrados.length > 0) {
                 const feedback = feedbacksFiltrados[0];
                 setDadosGrafico([
@@ -110,15 +110,15 @@ export default function Ocorrencia() {
                 return;
             }
         }
-
+ 
         if (feedbacksFiltrados.length === 0) {
             setSemFeedbacks(true);
             setDadosGrafico([0, 0, 0, 0, 0]);
             return;
         }
-
+ 
         setSemFeedbacks(false);
-
+ 
         const somaRespostas = feedbacksFiltrados.reduce((acc, feedback) => {
             return {
                 resposta1: acc.resposta1 + feedback.resposta1,
@@ -128,7 +128,7 @@ export default function Ocorrencia() {
                 resposta5: acc.resposta5 + feedback.resposta5,
             };
         }, { resposta1: 0, resposta2: 0, resposta3: 0, resposta4: 0, resposta5: 0 });
-
+ 
         const novasMedias = [
             somaRespostas.resposta1 / feedbacksFiltrados.length,
             somaRespostas.resposta2 / feedbacksFiltrados.length,
@@ -136,20 +136,20 @@ export default function Ocorrencia() {
             somaRespostas.resposta4 / feedbacksFiltrados.length,
             somaRespostas.resposta5 / feedbacksFiltrados.length,
         ];
-
+ 
         setDadosGrafico(novasMedias);
     };
-
+ 
     useEffect(() => {
         if (feedbacks.length > 0) {
             atualizarDadosGrafico(feedbacks);
         }
     }, [bimestreSelecionado, professorSelecionado]);
-
+ 
     const selecionarProfessor = (professor) => {
         setProfessorSelecionado(professor);
     };
-
+ 
     const enviarFeedback = async () => {
         if (!professorSelecionado || !conteudo) {
             setAlertTitle('Erro');
@@ -157,30 +157,30 @@ export default function Ocorrencia() {
             setAlertVisible(true);
             return;
         }
-
+ 
         try {
             const user_id = await AsyncStorage.getItem('@user_id');
-
+ 
             if (!user_id) {
                 setAlertTitle('Erro');
                 setAlertMessage('Usuário não autenticado.');
                 setAlertVisible(true);
                 return;
             }
-
+ 
             const feedback = {
                 conteudo: conteudo,
                 createdBy: { id: parseInt(user_id, 10) },
                 recipientTeacher: { id: professorSelecionado.id }
             };
-
+ 
             const response = await axios.post('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/feedbackStudent', feedback);
-
+ 
             if (response.status === 200 || response.status === 201) {
                 setAlertTitle('Sucesso');
                 setAlertMessage('Feedback enviado com sucesso!');
                 setAlertVisible(true);
-
+ 
                 setConteudo('');
                 setProfessorSelecionado(null);
                 fetchFeedbacks();
@@ -195,19 +195,22 @@ export default function Ocorrencia() {
             setAlertVisible(true);
         }
     };
-
+ 
     const handleBarraClick = (label, value) => {
         if (value === 0) return;
         setBarraSelecionada({ label, value });
         setModalBarraVisible(true);
     };
-
-
+ 
+    const indiceInicialProfessor = (paginaAtualProfessores - 1) * PROFESSORES_POR_PAGINA;
+    const professoresPaginaAtual = professores.slice(indiceInicialProfessor, indiceInicialProfessor + PROFESSORES_POR_PAGINA);
+    const totalPaginasProfessores = Math.ceil(professores.length / PROFESSORES_POR_PAGINA);
+ 
     return (
         <ScrollView style={{ backgroundColor: perfilBackgroundColor }}>
             <HeaderSimples titulo="FEEDBACK" />
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
-
+ 
                 <GraficoFeedback
                     dadosGrafico={dadosGrafico}
                     bimestreSelecionado={bimestreSelecionado}
@@ -219,7 +222,7 @@ export default function Ocorrencia() {
                     onBarraClick={handleBarraClick}
                     isDarkMode={isDarkMode}
                 />
-
+ 
                 <Modal visible={modalBimestreVisible} transparent animationType="fade">
                     <TouchableOpacity
                         style={styles.modalOverlay}
@@ -227,7 +230,7 @@ export default function Ocorrencia() {
                         activeOpacity={1}
                     >
                         <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-
+ 
                             <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
                                 <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
                                     <Image
@@ -236,13 +239,13 @@ export default function Ocorrencia() {
                                         resizeMode="contain"
                                     />
                                 </View>
-
+ 
                             </View>
-
+ 
                             <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                 Selecione o Bimestre
                             </Text>
-
+ 
                             {[1, 2, 3, 4].map((bimestre) => (
                                 <TouchableOpacity
                                     key={bimestre}
@@ -255,13 +258,13 @@ export default function Ocorrencia() {
                                     <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                         {bimestre}º Bimestre
                                     </Text>
-
+ 
                                 </TouchableOpacity>
                             ))}
                         </View>
                     </TouchableOpacity>
                 </Modal>
-
+ 
                 <Modal visible={modalProfessorVisible} transparent animationType="fade">
                     <TouchableOpacity
                         style={styles.modalOverlay}
@@ -269,7 +272,7 @@ export default function Ocorrencia() {
                         activeOpacity={1}
                     >
                         <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#141414' : '#FFF' }]}>
-
+ 
                             <View style={[styles.modalHeader, { backgroundColor: '#0077FF' }]}>
                                 <View style={[styles.logoSquare, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
                                     <Image
@@ -278,13 +281,13 @@ export default function Ocorrencia() {
                                         resizeMode="contain"
                                     />
                                 </View>
-
+ 
                             </View>
-
+ 
                             <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                 Selecione o Professor
                             </Text>
-
+ 
                             <TouchableOpacity
                                 style={[styles.modalItem, { borderBottomColor: isDarkMode ? '#444' : '#EEE' }]}
                                 onPress={() => handleSelecionarProfessor(null)}
@@ -292,9 +295,9 @@ export default function Ocorrencia() {
                                 <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                     Todos Professores
                                 </Text>
-
+ 
                             </TouchableOpacity>
-
+ 
                             {feedbacks
                                 .filter((feedback, index, self) =>
                                     feedback.createdByDTO &&
@@ -309,13 +312,13 @@ export default function Ocorrencia() {
                                         <Text style={[styles.modalText, { color: isDarkMode ? '#FFF' : '#333' }]}>
                                             {feedback.createdByDTO.nomeDocente}
                                         </Text>
-
+ 
                                     </TouchableOpacity>
                                 ))}
                         </View>
                     </TouchableOpacity>
                 </Modal>
-
+ 
                 <Modal visible={modalBarraVisible} transparent animationType="slide">
                     <View style={styles.modalBackdrop2}>
                         <View style={[styles.modalContainer2, { backgroundColor: '#1E6BE6' }]}>
@@ -332,7 +335,7 @@ export default function Ocorrencia() {
                         </View>
                     </View>
                 </Modal>
-
+ 
                 <View style={[styles.container2, { backgroundColor: formBackgroundColor }]}>
                     <Text style={{ marginTop: 5, fontSize: 18, color: '#0077FF', fontWeight: 'bold' }}>
                         A importância do seu Feedback
@@ -345,44 +348,92 @@ export default function Ocorrencia() {
                             Seus comentários ajudam os professores a ajustar métodos de ensino, tornando as aulas mais dinâmicas e eficazes. Seja claro e respeitoso em suas respostas, pois sua opinião contribui para um ambiente de aprendizado cada vez melhor para todos!
                         </Text>
                     </View>
-
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        {professores.slice(0, 2).map((professor, index) => (
-                            <CardProfessor
-                                key={index}
-                                nome={"Prof - " + professor.nomeDocente}
-                                imageUrl={professor.imageUrl}
-                                id={professor.id}
-                                onPress={() => selecionarProfessor(professor)}
-                                selecionado={professorSelecionado?.id === professor.id}
+ 
+                    <View style={{ marginTop: 30 }}>
+                        {/* Linha 1 */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30 }}>
+                            {professoresPaginaAtual.slice(0, 2).map((professor, index) => (
+                                <Animated.View
+                                    key={professor.id}
+                                    entering={FadeInDown.duration(500).delay(index * 100)}
+                                    layout={Layout.duration(300)}
+                                >
+                                    <CardProfessor
+                                        nome={"Prof - " + professor.nomeDocente}
+                                        imageUrl={professor.imageUrl}
+                                        id={professor.id}
+                                        onPress={() => selecionarProfessor(professor)}
+                                        selecionado={professorSelecionado?.id === professor.id}
+                                    />
+                                </Animated.View>
+                            ))}
+                        </View>
+ 
+                        {/* Linha 2 */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30 }}>
+                            {professoresPaginaAtual.slice(2, 4).map((professor, index) => (
+                                <Animated.View
+                                    key={professor.id}
+                                    entering={FadeInUp.duration(500).delay(index * 100)}
+                                    layout={Layout.duration(300)}
+                                >
+                                    <CardProfessor
+                                        nome={"Prof - " + professor.nomeDocente}
+                                        id={professor.id}
+                                        onPress={() => selecionarProfessor(professor)}
+                                        selecionado={professorSelecionado?.id === professor.id}
+                                    />
+                                </Animated.View>
+                            ))}
+                        </View>
+ 
+                        {/* Linha 3 */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                            {professoresPaginaAtual.slice(4, 6).map((professor, index) => (
+                                <Animated.View
+                                    key={professor.id}
+                                    entering={FadeInDown.duration(500).delay(index * 100)}
+                                    layout={Layout.duration(300)}
+                                >
+                                    <CardProfessor
+                                        nome={"Prof - " + professor.nomeDocente}
+                                        id={professor.id}
+                                        onPress={() => selecionarProfessor(professor)}
+                                        selecionado={professorSelecionado?.id === professor.id}
+                                    />
+                                </Animated.View>
+                            ))}
+                        </View>
+                    </View>
+ 
+                    {/* Controles de paginação usando CardSelecao */}
+                    <View style={styles.selecaoContainer}>
+                        {paginaAtualProfessores > 1 && (
+                            <CardSelecao
+                                numero="<"
+                                selecionado={false}
+                                onPress={() => setPaginaAtualProfessores(paginaAtualProfessores - 1)}
+                            />
+                        )}
+ 
+                        {Array.from({ length: totalPaginasProfessores }, (_, i) => i + 1).map((numero) => (
+                            <CardSelecao
+                                key={numero}
+                                numero={numero}
+                                selecionado={paginaAtualProfessores === numero}
+                                onPress={() => setPaginaAtualProfessores(numero)}
                             />
                         ))}
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        {professores.slice(2, 4).map((professor, index) => (
-                            <CardProfessor
-                                key={index}
-                                nome={"Prof - " + professor.nomeDocente}
-                                id={professor.id}
-                                onPress={() => selecionarProfessor(professor)}
-                                selecionado={professorSelecionado?.id === professor.id}
+ 
+                        {paginaAtualProfessores < totalPaginasProfessores && (
+                            <CardSelecao
+                                numero=">"
+                                selecionado={false}
+                                onPress={() => setPaginaAtualProfessores(paginaAtualProfessores + 1)}
                             />
-                        ))}
+                        )}
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
-                        {professores.slice(4, 6).map((professor, index) => (
-                            <CardProfessor
-                                key={index}
-                                nome={"Prof - " + professor.nomeDocente}
-                                id={professor.id}
-                                onPress={() => selecionarProfessor(professor)}
-                                selecionado={professorSelecionado?.id === professor.id}
-                            />
-                        ))}
-                    </View>
-
-
+ 
                     {professorSelecionado && (
                         <>
                             <TextInput
@@ -399,7 +450,7 @@ export default function Ocorrencia() {
                                 value={conteudo}
                                 onChangeText={setConteudo}
                             />
-
+ 
                             <TouchableOpacity
                                 style={[styles.botaoEnviar, { backgroundColor: '#1E6BE6' }]}
                                 onPress={enviarFeedback}
@@ -421,11 +472,11 @@ export default function Ocorrencia() {
         </ScrollView>
     );
 }
-
+ 
 const styles = StyleSheet.create({
     tela: {
         padding: 15,
-        marginBottom: 30,
+        marginBottom: 60,
     },
     container2: {
         padding: 10,
@@ -438,6 +489,14 @@ const styles = StyleSheet.create({
         marginTop: 20,
         width: '100%',
         textAlignVertical: 'top',
+    },
+    selecaoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 10,
+        flexWrap: 'wrap',
     },
     botaoEnviar: {
         padding: 12,

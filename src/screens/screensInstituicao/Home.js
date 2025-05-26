@@ -140,7 +140,7 @@ export default function HomeInstituicao() {
                     }]}>
                         <View style={styles.textContainer}>
                             <Text style={[styles.titulo, { color: '#FFF' }]}>
-                                Seja bem-vindo, Instituição 👋
+                                Seja bem-vinda, Instituição 👋
                             </Text>
                             <Text style={[styles.subtitulo, { color: '#FFF' }]}>
                                 O sucesso é a soma de pequenos esforços repetidos dia após dia.
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     subtela: {
         paddingTop: 10,
         alignItems: 'center',
-        padding: 20
+        padding: 15
     },
     infoContainer: {
         flexDirection: 'row',
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     },
     infoImage: {
         position: 'absolute',
-        right: -25,
+        right: -17,
         bottom: -7,
         width: 200,
         height: 150,

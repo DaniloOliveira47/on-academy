@@ -1,4 +1,4 @@
-package com.danilo_47.nomedoprojeto
+package com.danilo_47.onacademy
 
 import android.app.Application
 import android.content.res.Configuration

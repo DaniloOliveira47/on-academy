@@ -327,7 +327,7 @@ options: {
   linha: {
     marginTop: 5,
     flexDirection: 'row',
-    padding: 25,
+    padding: 15,
     justifyContent: 'space-between',
     alignItems: 'center',
   },

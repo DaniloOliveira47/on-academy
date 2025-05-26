@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.danilo_47.nomedoprojeto'
+    namespace 'com.danilo_47.onacademy'
     defaultConfig {
-        applicationId 'com.danilo_47.nomedoprojeto'
+        applicationId 'com.danilo_47.onacademy'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,5 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+    StyleSheet,
+    View,
+    Text,
+    ActivityIndicator,
+    ScrollView,
+    RefreshControl,
+    Animated,
+    Easing
+} from 'react-native';
 import HeaderSimples from '../../components/Gerais/HeaderSimples';
 import { TextInput } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
@@ -8,8 +17,8 @@ import { useTheme } from '../../path/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import CardSelecao from '../../components/Turmas/CardSelecao';
-import { useNavigation } from '@react-navigation/native';
-
+import { useFocusEffect } from '@react-navigation/native';
+ 
 export default function Turmas() {
     const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
@@ -19,102 +28,201 @@ export default function Turmas() {
     const [error, setError] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const [filtro, setFiltro] = useState('');
-    const navigation = useNavigation();
-
+    const [shouldAnimate, setShouldAnimate] = useState(false);
+    const animationRefs = useRef(new Map()).current;
+ 
     const itensPorPagina = 3;
     const totalPaginas = Math.ceil(turmas.length / itensPorPagina);
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await fetchTurmas();
-        setRefreshing(false);
-    };
-
-    useEffect(() => {
-        fetchTurmas();
-    }, []);
-
-    const fetchTurmas = async () => {
+ 
+    const fetchTurmas = useCallback(async () => {
         try {
+            setLoading(true);
+            setError(null);
             const professorId = await AsyncStorage.getItem('@user_id');
+           
             if (!professorId) {
-                setError('ID do professor não encontrado.');
-                setLoading(false);
-                return;
+                throw new Error('ID do professor não encontrado.');
             }
-
+ 
             const response = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
             const turmasDoProfessor = response.data.filter(turma =>
                 turma.teachers.some(teacher => teacher.id === parseInt(professorId))
             );
-
-            if (turmasDoProfessor.length > 0) {
-                setTurmas(turmasDoProfessor);
-                atualizarTurmasPagina(turmasDoProfessor, 1);
-            } else {
-                setError('Nenhuma turma encontrada para o professor.');
+ 
+            if (turmasDoProfessor.length === 0) {
+                throw new Error('Nenhuma turma encontrada para o professor.');
             }
-        } catch (error) {
-            setError('Erro ao buscar turmas. Tente novamente mais tarde.');
+ 
+            setTurmas(turmasDoProfessor);
+            atualizarTurmasPagina(turmasDoProfessor, 1);
+            setShouldAnimate(true);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    };
-
-    const filtrarTurmas = (texto) => {
+    }, []);
+ 
+    useFocusEffect(
+        useCallback(() => {
+            let isActive = true;
+            const timer = setTimeout(() => {
+                if (isActive) {
+                    fetchTurmas();
+                }
+            }, 300);
+ 
+            return () => {
+                isActive = false;
+                clearTimeout(timer);
+                setShouldAnimate(false);
+                animationRefs.clear();
+            };
+        }, [fetchTurmas])
+    );
+ 
+    const AnimatedCard = React.memo(({ turma, index }) => {
+        const fadeAnim = useRef(new Animated.Value(0)).current;
+        const slideAnim = useRef(new Animated.Value(20)).current;
+ 
+        useEffect(() => {
+            animationRefs.set(turma.id, { fadeAnim, slideAnim });
+           
+            if (shouldAnimate) {
+                fadeAnim.setValue(0);
+                slideAnim.setValue(20);
+ 
+                Animated.parallel([
+                    Animated.timing(fadeAnim, {
+                        toValue: 1,
+                        duration: 500,
+                        delay: index * 100,
+                        useNativeDriver: true,
+                        easing: Easing.out(Easing.quad)
+                    }),
+                    Animated.timing(slideAnim, {
+                        toValue: 0,
+                        duration: 500,
+                        delay: index * 100,
+                        useNativeDriver: true,
+                        easing: Easing.out(Easing.quad)
+                    })
+                ]).start();
+            }
+ 
+            return () => {
+                animationRefs.delete(turma.id);
+            };
+        }, [shouldAnimate]);
+ 
+        return (
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                <CardTurmas
+                    key={turma.id}
+                    turma={turma.nomeTurma}
+                    numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`}
+                    alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
+                    periodo={`Período: ${turma.periodoTurma}`}
+                    navegacao="AlunosFeedback"
+                    turmaId={turma.id}
+                />
+            </Animated.View>
+        );
+    });
+ 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchTurmas();
+    }, [fetchTurmas]);
+ 
+    const filtrarTurmas = useCallback((texto) => {
         setFiltro(texto);
         if (texto === '') {
             atualizarTurmasPagina(turmas, 1);
             setPaginaSelecionada(1);
             return;
         }
-
+ 
         const turmasFiltradas = turmas.filter(turma =>
             turma.nomeTurma.toLowerCase().includes(texto.toLowerCase()) ||
             turma.id.toString().includes(texto)
         );
-
+ 
         atualizarTurmasPagina(turmasFiltradas, 1);
         setPaginaSelecionada(1);
-    };
-
-    const atualizarTurmasPagina = (todasTurmas, pagina) => {
+    }, [turmas]);
+ 
+    const atualizarTurmasPagina = useCallback((todasTurmas, pagina) => {
         const inicio = (pagina - 1) * itensPorPagina;
         const fim = inicio + itensPorPagina;
-        const turmasDaPagina = todasTurmas.slice(inicio, fim);
-        setTurmasPagina(turmasDaPagina);
-    };
-
-    const mudarPagina = (pagina) => {
+        setTurmasPagina(todasTurmas.slice(inicio, fim));
+    }, []);
+ 
+    const mudarPagina = useCallback((pagina) => {
         if (pagina < 1 || pagina > totalPaginas) return;
         setPaginaSelecionada(pagina);
         atualizarTurmasPagina(turmas, pagina);
-    };
-
-    if (loading && !refreshing) {
+    }, [turmas, totalPaginas, atualizarTurmasPagina]);
+ 
+    const renderPagination = useCallback(() => {
+        if (loading || turmas.length === 0) return null;
+ 
+        let paginas = [];
+        const maxVisiblePages = 3;
+ 
+        if (totalPaginas <= maxVisiblePages) {
+            paginas = Array.from({ length: totalPaginas }, (_, i) => i + 1);
+        } else {
+            const startPage = Math.max(1, Math.min(
+                paginaSelecionada - Math.floor(maxVisiblePages / 2),
+                totalPaginas - maxVisiblePages + 1
+            ));
+           
+            paginas = Array.from({ length: maxVisiblePages }, (_, i) => startPage + i);
+        }
+ 
         return (
-            <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-                <ActivityIndicator size="large" color="#1A85FF" />
+            <View style={styles.paginationContainer}>
+                <View style={styles.selecao}>
+                    {paginaSelecionada > 1 && (
+                        <CardSelecao
+                            numero="<"
+                            selecionado={false}
+                            onPress={() => mudarPagina(paginaSelecionada - 1)}
+                        />
+                    )}
+ 
+                    {paginas.map(pagina => (
+                        <CardSelecao
+                            key={pagina}
+                            numero={pagina}
+                            selecionado={paginaSelecionada === pagina}
+                            onPress={() => mudarPagina(pagina)}
+                        />
+                    ))}
+ 
+                    {paginaSelecionada < totalPaginas && (
+                        <CardSelecao
+                            numero=">"
+                            selecionado={false}
+                            onPress={() => mudarPagina(paginaSelecionada + 1)}
+                        />
+                    )}
+                </View>
             </View>
         );
-    }
-
-    if (error) {
-        return (
-            <View style={[styles.errorContainer, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-                <Text style={{ color: isDarkMode ? '#FFF' : '#000', textAlign: 'center' }}>{error}</Text>
-            </View>
-        );
-    }
-
+    }, [loading, turmas.length, totalPaginas, paginaSelecionada, mudarPagina]);
+ 
     return (
         <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }}>
             <HeaderSimples titulo="FEEDBACK" />
-
+ 
             <View style={styles.subTela}>
                 <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : 'white' }]}>
                     <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#000000' : 'white' }]}>
                         <TextInput
+                            maxLength={30}
                             style={[styles.input, { color: isDarkMode ? 'white' : '#333' }]}
                             placeholder="Digite o nome ou código da turma"
                             placeholderTextColor="#756262"
@@ -123,7 +231,7 @@ export default function Turmas() {
                         />
                         <Icon name="search" size={20} color="#1A85FF" style={styles.icon} />
                     </View>
-
+ 
                     <View style={styles.scrollContainer}>
                         <ScrollView
                             contentContainerStyle={styles.scrollContent}
@@ -137,77 +245,35 @@ export default function Turmas() {
                             }
                             showsVerticalScrollIndicator={false}
                         >
-                            {turmasPagina.length > 0 ? (
+                            {loading && !refreshing ? (
+                                <ActivityIndicator size="large" color="#1A85FF" style={styles.loadingIndicator} />
+                            ) : error ? (
+                                <Text style={[styles.errorText, { color: isDarkMode ? '#FFF' : '#000' }]}>
+                                    {error}
+                                </Text>
+                            ) : turmasPagina.length > 0 ? (
                                 turmasPagina.map((turma, index) => (
-                                    <CardTurmas
-                                        key={turma.id}
-                                        turma={turma.nomeTurma}
-                                        numero={`Nº${(paginaSelecionada - 1) * itensPorPagina + index + 1}`}
-                                        alunos={`${turma.alunosAtivos || 0} Alunos ativos`}
-                                        periodo={`Período: ${turma.periodoTurma}`}
-                                        navegacao="AlunosFeedback"
-                                        turmaId={turma.id}
+                                    <AnimatedCard
+                                        key={`${turma.id}-${paginaSelecionada}`}
+                                        turma={turma}
+                                        index={index}
                                     />
                                 ))
                             ) : (
-                                <Text style={{
-                                    color: isDarkMode ? '#FFF' : '#000',
-                                    textAlign: 'center',
-                                    marginTop: 20
-                                }}>
+                                <Text style={[styles.emptyText, { color: isDarkMode ? '#FFF' : '#000' }]}>
                                     Nenhuma turma encontrada.
                                 </Text>
                             )}
                         </ScrollView>
                     </View>
-
-                    <View style={styles.paginationContainer}>
-                        <View style={styles.selecao}>
-                            {paginaSelecionada > 1 && (
-                                <CardSelecao
-                                    numero="<"
-                                    selecionado={false}
-                                    onPress={() => mudarPagina(paginaSelecionada - 1)}
-                                />
-                            )}
-
-                            {Array.from({ length: Math.min(3, totalPaginas) }, (_, i) => {
-                                let pagina;
-                                if (totalPaginas <= 3) {
-                                    pagina = i + 1;
-                                } else if (paginaSelecionada === 1) {
-                                    pagina = i + 1;
-                                } else if (paginaSelecionada === totalPaginas) {
-                                    pagina = totalPaginas - 2 + i;
-                                } else {
-                                    pagina = paginaSelecionada - 1 + i;
-                                }
-
-                                return (
-                                    <CardSelecao
-                                        key={pagina}
-                                        numero={pagina}
-                                        selecionado={paginaSelecionada === pagina}
-                                        onPress={() => mudarPagina(pagina)}
-                                    />
-                                );
-                            })}
-
-                            {paginaSelecionada < totalPaginas && (
-                                <CardSelecao
-                                    numero=">"
-                                    selecionado={false}
-                                    onPress={() => mudarPagina(paginaSelecionada + 1)}
-                                />
-                            )}
-                        </View>
-                    </View>
+ 
+                    {renderPagination()}
                 </View>
             </View>
         </View>
     );
 }
-
+ 
 const styles = StyleSheet.create({
     loadingContainer: {
         flex: 1,

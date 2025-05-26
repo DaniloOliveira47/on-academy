@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DeleteAlert from './DeleteAlert'; // ajuste o caminho conforme necessário
 
 const LogoutButton = ({
   iconColor = '#e74c3c',
@@ -14,10 +14,12 @@ const LogoutButton = ({
   onLogoutError
 }) => {
   const navigation = useNavigation();
+  const [showModal, setShowModal] = useState(false);
 
-  const handleLogout = async () => {
+  const handleConfirmLogout = async () => {
     try {
       await AsyncStorage.clear();
+      setShowModal(false);
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
@@ -30,15 +32,27 @@ const LogoutButton = ({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.logoutButton}
-      onPress={handleLogout}
-    >
-      <Icon name="log-out" size={iconSize} color={iconColor} style={styles.logoutIcon} />
-      <Text style={[styles.logoutText, { color: textColor, fontSize: textSize }]}>
-        Sair
-      </Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => setShowModal(true)}
+      >
+        <Icon name="log-out" size={iconSize} color={iconColor} style={styles.logoutIcon} />
+        <Text style={[styles.logoutText, { color: textColor, fontSize: textSize }]}>
+          Sair
+        </Text>
+      </TouchableOpacity>
+
+      <DeleteAlert
+        visible={showModal}
+        title="Confirmar Logout"
+        message="Tem certeza que deseja sair da sua conta?"
+        confirmText="SAIR"
+        cancelText="CANCELAR"
+        onDismiss={() => setShowModal(false)}
+        onConfirm={handleConfirmLogout}
+      />
+    </>
   );
 };
 
