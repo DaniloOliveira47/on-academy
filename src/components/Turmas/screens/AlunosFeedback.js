@@ -40,7 +40,7 @@ export default function AlunosFeedback({ route }) {
     const navigation = useNavigation();
  
     const { turmaId } = route.params;
-    const ALUNOS_POR_PAGINA = 10;
+    const ALUNOS_POR_PAGINA = 6;
  
     useEffect(() => {
         const fetchData = async () => {
@@ -221,15 +221,15 @@ export default function AlunosFeedback({ route }) {
     const apenasUmAluno = coluna1.length + coluna2.length === 1;
  
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'  }}>
             <ScrollView>
-                <HeaderSimplesBack />
-                <View style={[styles.tela, { backgroundColor: isDarkMode ? '#141414' : '#F0F7FF', paddingBottom: 40 }]}>
+                <HeaderSimplesBack titulo= "ALUNOS" />
+                <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', paddingBottom: 40 }]}>
                     <View style={styles.linha}>
                         <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
                             {turma.nomeTurma} - {turma.periodoTurma}
                         </Text>
-                        <Text style={{ color: '#8A8A8A', fontWeight: 'bold', fontSize: 16, marginTop: 3 }}>Nº{turma.id}</Text>
+
                     </View>
  
                     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>

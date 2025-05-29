@@ -11,7 +11,7 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomAlert from '../../Gerais/CustomAlert';
 import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
-
+import { Dropdown } from 'react-native-element-dropdown';
 export default function NotasTurma() {
     const route = useRoute();
     const { turmaId } = route.params || {};
@@ -33,6 +33,8 @@ export default function NotasTurma() {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
+    const [carregandoNota, setCarregandoNota] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -133,7 +135,6 @@ export default function NotasTurma() {
     };
 
     const adicionarNota = async () => {
-        // Validações iniciais
         if (!notaInput || !alunoSelecionado || !disciplinaSelecionada) {
             setAlertTitle('Campos obrigatórios');
             setAlertMessage('Preencha todos os campos e selecione uma disciplina.');
@@ -169,6 +170,8 @@ export default function NotasTurma() {
             return;
         }
 
+        setCarregandoNota(true); // 👈 Ativa o loading
+
         try {
             const disciplina = disciplinas.find(d => d.id === disciplinaSelecionada);
 
@@ -195,7 +198,6 @@ export default function NotasTurma() {
             setAlertTitle('Sucesso');
             setAlertMessage('Nota adicionada com sucesso!');
             setAlertVisible(true);
-
         } catch (error) {
             const mensagemServidor = error.response?.data?.message || error.message;
 
@@ -209,9 +211,10 @@ export default function NotasTurma() {
 
             setAlertVisible(true);
             console.log('Erro ao adicionar nota:', mensagemServidor);
+        } finally {
+            setCarregandoNota(false); // 👈 Desativa o loading
         }
     };
-
 
 
     const notasPorBimestreEDisciplina = () => {
@@ -236,7 +239,7 @@ export default function NotasTurma() {
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-            <HeaderSimplesBack />
+            <HeaderSimplesBack titulo="NOTAS DA TURMA" />
             <View style={{ padding: 10 }}>
                 <View style={styles.linha}>
                     <Text style={{ fontWeight: 'bold', fontSize: 20, color: isDarkMode ? 'white' : 'black' }}>
@@ -396,27 +399,36 @@ export default function NotasTurma() {
                                             <Text style={[styles.pickerLabel, { color: isDarkMode ? 'white' : 'black' }]}>
                                                 Disciplina:
                                             </Text>
-                                            <Picker
-                                                selectedValue={disciplinaSelecionada}
-                                                onValueChange={setDisciplinaSelecionada}
-                                                style={[styles.picker, { color: isDarkMode ? 'white' : 'black' }]}
-                                                dropdownIconColor={isDarkMode ? 'white' : '#1A85FF'}
-                                            >
-                                                {disciplinasProfessor
+                                            <Dropdown
+                                                style={[styles.dropdown, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}
+                                                placeholderStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                selectedTextStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                iconColor={isDarkMode ? 'white' : '#1A85FF'}
+                                                data={disciplinasProfessor
                                                     .filter(disciplinaProf =>
                                                         disciplinas.some(disciplinaTurma =>
                                                             disciplinaTurma.id === disciplinaProf.discipline_id
                                                         )
                                                     )
-                                                    .map((disciplina) => (
-                                                        <Picker.Item
-                                                            key={disciplina.discipline_id}
-                                                            label={disciplina.nomeDisciplina}
-                                                            value={disciplina.discipline_id}
-                                                        />
-                                                    ))
+                                                    .map((disciplina) => ({
+                                                        label: disciplina.nomeDisciplina,
+                                                        value: disciplina.discipline_id
+                                                    }))
                                                 }
-                                            </Picker>
+                                                maxHeight={300}
+                                                labelField="label"
+                                                valueField="value"
+                                                placeholder="Selecione a disciplina"
+                                                value={disciplinaSelecionada}
+                                                onChange={item => setDisciplinaSelecionada(item.value)}
+                                                itemContainerStyle={{
+                                                    backgroundColor: isDarkMode ? '#444' : '#F0F7FF'
+                                                }}
+                                                itemTextStyle={{
+                                                    color: isDarkMode ? 'white' : 'black'
+                                                }}
+                                                activeColor={isDarkMode ? '#555' : '#D9E9FF'}
+                                            />
                                         </View>
 
                                         <TextInput
@@ -431,21 +443,25 @@ export default function NotasTurma() {
                                             keyboardType="numeric"
                                         />
                                     </View>
+                                    {carregandoNota ? (
+                                        <ActivityIndicator size="large" color="#1A85FF" style={{ marginVertical: 20 }} />
+                                    ) : (
+                                        <View style={styles.actionButtonsContainer}>
+                                            <TouchableOpacity
+                                                style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
+                                                onPress={adicionarNota}
+                                            >
+                                                <Text style={styles.actionButtonText}>Salvar Nota</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.actionButton, { backgroundColor: '#F44336' }]}
+                                                onPress={() => setMostrarCamposNota(false)}
+                                            >
+                                                <Text style={styles.actionButtonText}>Cancelar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
 
-                                    <View style={styles.actionButtonsContainer}>
-                                        <TouchableOpacity
-                                            style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
-                                            onPress={adicionarNota}
-                                        >
-                                            <Text style={styles.actionButtonText}>Salvar Nota</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[styles.actionButton, { backgroundColor: '#F44336' }]}
-                                            onPress={() => setMostrarCamposNota(false)}
-                                        >
-                                            <Text style={styles.actionButtonText}>Cancelar</Text>
-                                        </TouchableOpacity>
-                                    </View>
                                 </>
                             ) : (
                                 <TouchableOpacity
@@ -602,6 +618,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
         borderRadius: 8,
+        padding: 20,
         marginBottom: 15,
         overflow: 'hidden',
     },
@@ -691,5 +708,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 5,
         fontWeight: 'bold',
+    },
+    dropdown: {
+        height: 50,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginTop: 5,
     },
 });

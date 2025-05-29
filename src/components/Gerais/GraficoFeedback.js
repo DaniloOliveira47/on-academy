@@ -29,7 +29,7 @@ const GraficoFeedback = ({
 
     return (
         <View style={[styles.grafico, { backgroundColor: formBackgroundColor }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, width: '100%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0, width: '100%' }}>
                 <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -120,9 +120,9 @@ const GraficoFeedback = ({
 
 const styles = StyleSheet.create({
     grafico: {
-        padding: 10,
+        padding: 0,
         width: '100%',
-        marginTop: 20,
+        marginTop: 0,
         borderRadius: 10,
     },
     graficoTitulo: {

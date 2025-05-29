@@ -40,7 +40,7 @@ export default function Perfil() {
     fetchUserData();
   }, []);
 
-  const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+  const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
   const textColor = isDarkMode ? '#FFF' : '#000';
   const barraAzulColor = '#1E6BE6';
   const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
@@ -56,7 +56,7 @@ export default function Perfil() {
           <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor }]} source={require('../../assets/image/barraAzul.png')} />
           <View style={[styles.form, {
             backgroundColor: formBackgroundColor,
-            shadowColor: isDarkMode ? '#FFF' : '#000',
+            shadowColor: '#000',
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 3,
@@ -125,6 +125,9 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 25,
+    paddingBottom: 50,
+    borderBottomRightRadius: 20,
+     borderBottomLeftRadius: 20
   },
   linhaUser: {
     flexDirection: 'row',

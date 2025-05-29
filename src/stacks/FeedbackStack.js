@@ -51,7 +51,7 @@ export default function FeedbackStack() {
                 <Stack.Screen
                     name="AlunoPerfil"
                     component={AlunoPerfil}
-                    options={{ headerShown: false }}
+                    options={{ headerShown: false,  gestureEnabled: false }}
                 />
             </Stack.Navigator>
         </View>

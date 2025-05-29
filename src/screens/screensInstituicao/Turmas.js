@@ -13,6 +13,7 @@ import { Checkbox } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomAlert from '../../components/Gerais/CustomAlert';
 import { Animated } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
 export default function Turmas() {
     const { isDarkMode } = useTheme();
     const [modalCriarVisible, setModalCriarVisible] = useState(false);
@@ -385,6 +386,15 @@ export default function Turmas() {
     const indiceFinal = indiceInicial + CARDS_POR_PAGINA;
     const turmasPaginaAtual = turmasFiltradas.slice(indiceInicial, indiceFinal);
     const totalPaginas = Math.ceil(turmasFiltradas.length / CARDS_POR_PAGINA);
+    const MAX_BOTOES_VISIVEIS = 3;
+    const paginaInicial = Math.max(1, paginaSelecionada - 1);
+    const paginaFinal = Math.min(totalPaginas, paginaInicial + MAX_BOTOES_VISIVEIS - 1);
+    const paginasVisiveis = [];
+
+    for (let i = paginaInicial; i <= paginaFinal; i++) {
+        paginasVisiveis.push(i);
+    }
+
 
     return (
         <View style={{ backgroundColor: isDarkMode ? '#121212' : '#F0F7FF', flex: 1 }}>
@@ -444,7 +454,16 @@ export default function Turmas() {
                             <Icon name="plus" size={24} color="white" />
                         </TouchableOpacity>
                         <View style={styles.selecao}>
-                            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numero) => (
+                            {paginaInicial > 1 && (
+                                <CardSelecao
+                                    numero="<"
+                                    selecionado={false}
+                                    onPress={() => setPaginaSelecionada(paginaInicial - 1)}
+                                    disabled={carregando}
+                                />
+                            )}
+
+                            {paginasVisiveis.map((numero) => (
                                 <CardSelecao
                                     key={numero}
                                     numero={numero}
@@ -453,14 +472,7 @@ export default function Turmas() {
                                     disabled={carregando}
                                 />
                             ))}
-                            {totalPaginas > paginaSelecionada && (
-                                <CardSelecao
-                                    numero=">"
-                                    selecionado={false}
-                                    onPress={() => setPaginaSelecionada(paginaSelecionada + 1)}
-                                    disabled={carregando}
-                                />
-                            )}
+
                         </View>
                     </View>
                 </View>
@@ -518,38 +530,61 @@ export default function Turmas() {
                                 <View style={styles.row}>
                                     <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                                         <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Ano Letivo</Text>
-                                        <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
-                                            <Picker
-                                                selectedValue={novoAno}
-                                                onValueChange={(itemValue) => setNovoAno(itemValue)}
-                                                style={{ color: isDarkMode ? 'white' : 'black' }}
-                                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                            >
-                                                <Picker.Item label="2024" value="2024" />
-                                                <Picker.Item label="2025" value="2025" />
-                                                <Picker.Item label="2026" value="2026" />
-                                            </Picker>
-                                        </View>
+                                        <Dropdown
+                                            style={[styles.dropdown, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}
+                                            placeholderStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                            selectedTextStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                            iconColor={isDarkMode ? 'white' : 'black'}
+                                            data={[
+                                                { label: '2024', value: '2024' },
+                                                { label: '2025', value: '2025' },
+                                                { label: '2026', value: '2026' },
+                                            ]}
+                                            maxHeight={300}
+                                            labelField="label"
+                                            valueField="value"
+                                            placeholder="Selecione o ano"
+                                            value={novoAno}
+                                            onChange={item => setNovoAno(item.value)}
+                                            itemContainerStyle={{
+                                                backgroundColor: isDarkMode ? '#444' : '#F0F7FF'
+                                            }}
+                                            itemTextStyle={{
+                                                color: isDarkMode ? 'white' : 'black'
+                                            }}
+                                            activeColor={isDarkMode ? '#555' : '#D9E9FF'}
+                                        />
                                     </View>
 
                                     <View style={[styles.inputGroup, { flex: 1 }]}>
                                         <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Período</Text>
-                                        <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
-                                            <Picker
-                                                selectedValue={novoPeriodo}
-                                                onValueChange={(itemValue) => setNovoPeriodo(itemValue)}
-                                                style={{ color: isDarkMode ? 'white' : 'black' }}
-                                                dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                            >
-                                                <Picker.Item label="Matutino" value="Matutino" />
-                                                <Picker.Item label="Vespertino" value="Vespertino" />
-                                                <Picker.Item label="Noturno" value="Noturno" />
-                                                <Picker.Item label="Integral" value="Integral" />
-                                            </Picker>
-                                        </View>
+                                        <Dropdown
+                                            style={[styles.dropdown, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}
+                                            placeholderStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                            selectedTextStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                            iconColor={isDarkMode ? 'white' : 'black'}
+                                            data={[
+                                                { label: 'Matutino', value: 'Matutino' },
+                                                { label: 'Vespertino', value: 'Vespertino' },
+                                                { label: 'Noturno', value: 'Noturno' },
+                                                { label: 'Integral', value: 'Integral' },
+                                            ]}
+                                            maxHeight={300}
+                                            labelField="label"
+                                            valueField="value"
+                                            placeholder="Selecione o período"
+                                            value={novoPeriodo}
+                                            onChange={item => setNovoPeriodo(item.value)}
+                                            itemContainerStyle={{
+                                                backgroundColor: isDarkMode ? '#444' : '#F0F7FF'
+                                            }}
+                                            itemTextStyle={{
+                                                color: isDarkMode ? 'white' : 'black'
+                                            }}
+                                            activeColor={isDarkMode ? '#555' : '#D9E9FF'}
+                                        />
                                     </View>
                                 </View>
-
 
                                 <View style={styles.row}>
                                     <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
@@ -761,6 +796,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 0,
+        paddingRight: 300
     },
     container: {
         width: '100%',
@@ -877,6 +913,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '48%',
         marginBottom: 12,
+    },
+    dropdown: {
+        height: 50,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginTop: 5,
     },
     checkboxLabel: {
         marginLeft: 8,

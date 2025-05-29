@@ -4,6 +4,7 @@ import { useTheme } from '../../path/ThemeContext';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import CustomAlert from '../Gerais/CustomAlert';
+import { ActivityIndicator } from 'react-native';
 
 export default function CardNota({
     nota: initialNota,
@@ -15,6 +16,7 @@ export default function CardNota({
     onNotaUpdated
 }) {
     const { isDarkMode } = useTheme();
+    const [carregandoNota, setCarregandoNota] = useState(false);
     const [editing, setEditing] = useState(false);
     const [nota, setNota] = useState(initialNota);
     const [tempNota, setTempNota] = useState(initialNota);
@@ -79,6 +81,8 @@ export default function CardNota({
             return;
         }
 
+        setCarregandoNota(true); // 🌀 Ativa o loading
+
         try {
             await axios.put(`https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/note/${notaId}`, {
                 nota: novaNota,
@@ -103,8 +107,11 @@ export default function CardNota({
             setAlertTitle('Erro');
             setAlertMessage('Não foi possível atualizar a nota. Tente novamente.');
             setAlertVisible(true);
+        } finally {
+            setCarregandoNota(false); // ✅ Desativa o loading
         }
     };
+
 
     const handleCancel = () => {
         setTempNota(nota);
@@ -138,14 +145,21 @@ export default function CardNota({
                         autoFocus
                         editable={editable}
                     />
-                    <View style={styles.editButtons}>
-                        <TouchableOpacity onPress={handleSave} disabled={!editable}>
-                            <Icon name="check" size={20} color={editable ? "#4CAF50" : "#888"} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleCancel}>
-                            <Icon name="x" size={20} color="#F44336" />
-                        </TouchableOpacity>
-                    </View>
+                    {carregandoNota ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#1A85FF" />
+                        </View>
+                    ) : (
+                        <View style={styles.editButtons}>
+                            <TouchableOpacity onPress={handleSave} disabled={!editable}>
+                                <Icon name="check" size={20} color={editable ? "#4CAF50" : "#888"} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleCancel}>
+                                <Icon name="x" size={20} color="#F44336" />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
                 </View>
             ) : (
                 <View style={styles.notaContainer}>
@@ -214,4 +228,10 @@ const styles = StyleSheet.create({
     editIcon: {
         marginLeft: 5,
     },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+    },
+
 });

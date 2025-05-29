@@ -1,21 +1,24 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../../path/ThemeContext';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-const DeleteAlert = ({
+const PhotoPickerModal = ({
     visible,
-    title = "Confirmar Exclusão",
-    message = "Tem certeza que deseja excluir este item?",
+    title = "Alterar Foto",
+    message = "Escolha uma opção",
     onDismiss,
-    onConfirm,
-    confirmText = "EXCLUIR",
+    onPickImage,
+    onTakePhoto,
+    pickImageText = "GALERIA",
+    takePhotoText = "CÂMERA",
     cancelText = "CANCELAR"
 }) => {
     const { isDarkMode } = useTheme();
 
     const headerBackgroundColor = '#0077FF';
     const modalBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
-       const textColor = isDarkMode ? '#000' : '#FFF';
+    const textColor = isDarkMode ? '#000' : '#FFF';
     const contentTextColor = isDarkMode ? '#FFF' : '#555';
     const logoSquareBackground = isDarkMode ? '#333' : '#FFF';
     const logoTextColor = '#FFF';
@@ -32,13 +35,9 @@ const DeleteAlert = ({
                     {/* Header com logo */}
                     <View style={[styles.logoHeader, { backgroundColor: headerBackgroundColor }]}>
                         <View style={[styles.logoSquare, { backgroundColor: logoSquareBackground }]}>
-                            <Image
-                                source={require('../../assets/image/logo.png')}
-                                style={styles.logo}
-                                resizeMode="contain"
-                            />
+                            <Icon name="camera" size={40} color="#0077FF" />
                         </View>
-                        <Text style={[styles.logoText, { color: logoTextColor }]}>OnAcademy</Text>
+                        <Text style={[styles.logoText, { color: logoTextColor }]}>{title}</Text>
                     </View>
 
                     {/* Conteúdo */}
@@ -46,21 +45,31 @@ const DeleteAlert = ({
                         <Text style={[styles.modalText, { color: contentTextColor }]}>{message}</Text>
 
                         {/* Botões */}
-                        <View style={styles.doubleButtonContainer}>
+                        <View style={styles.tripleButtonContainer}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.pickImageButton]}
+                                activeOpacity={0.8}
+                                onPress={onPickImage}
+                            >
+                                <Icon name="photo" size={20} color="white" style={styles.buttonIcon} />
+                                <Text style={styles.modalButtonText}>{pickImageText}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.takePhotoButton]}
+                                activeOpacity={0.8}
+                                onPress={onTakePhoto}
+                            >
+                                <Icon name="camera" size={20} color="white" style={styles.buttonIcon} />
+                                <Text style={styles.modalButtonText}>{takePhotoText}</Text>
+                            </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.cancelButton, { backgroundColor: textColor }]}
                                 activeOpacity={0.8}
                                 onPress={onDismiss}
                             >
                                 <Text style={[styles.modalButtonText, { color: '#0077FF'}]}>{cancelText}</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.confirmButton]}
-                                activeOpacity={0.8}
-                                onPress={onConfirm}
-                            >
-                                <Text style={styles.modalButtonText}>{confirmText}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -108,10 +117,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
     },
-    logo: {
-        width: 60,
-        height: 60,
-    },
     logoText: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -131,10 +136,8 @@ const styles = StyleSheet.create({
         marginBottom: 25,
         paddingHorizontal: 10,
     },
-    doubleButtonContainer: {
-        flexDirection: 'row',
+    tripleButtonContainer: {
         width: '100%',
-        justifyContent: 'space-between',
     },
     modalButton: {
         paddingVertical: 14,
@@ -142,23 +145,31 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         alignItems: 'center',
         elevation: 3,
-        flex: 1,
-        marginHorizontal: 5,
+        marginVertical: 5,
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    pickImageButton: {
+        backgroundColor: '#4CAF50',
+    },
+    takePhotoButton: {
+        backgroundColor: '#2196F3',
     },
     cancelButton: {
         backgroundColor: 'white',
         borderWidth: 1,
         borderColor: '#0077FF',
     },
-    confirmButton: {
-        backgroundColor: '#0077FF',
-    },
     modalButtonText: {
         color: '#FFF',
         fontSize: 13,
         fontWeight: 'bold',
         letterSpacing: 0.5,
+        marginLeft: 10,
+    },
+    buttonIcon: {
+        marginRight: 5,
     },
 });
 
-export default DeleteAlert;
+export default PhotoPickerModal;

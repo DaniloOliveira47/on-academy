@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   subtela: {
     paddingTop: 20,
-    padding: 15,
+    padding: 12,
     alignItems: 'center'
   },
   infoContainer: {
@@ -415,6 +415,7 @@ const styles = StyleSheet.create({
   avisosScrollView: {
     maxHeight: Dimensions.get('window').height * 0.4,
     paddingHorizontal: 10,
+    paddingRight: 20
   },
   avisosScrollContent: {
     paddingBottom: 20,

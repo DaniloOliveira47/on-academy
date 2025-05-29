@@ -18,6 +18,7 @@ export default function HeaderIns() {
   const [institution, setInstitution] = useState(null);
   const navigation = useNavigation();
   const [showCodeBox, setShowCodeBox] = useState(false);
+  const [rotateAnim] = useState(new Animated.Value(0));
 
 
   const getRandomColor = () => {
@@ -88,6 +89,20 @@ export default function HeaderIns() {
     setMenuVisible(!menuVisible);
   };
 
+  const toggleCodeBox = () => {
+    Animated.timing(rotateAnim, {
+      toValue: showCodeBox ? 0 : 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    setShowCodeBox(!showCodeBox);
+  };
+
+  const rotation = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
@@ -157,9 +172,7 @@ export default function HeaderIns() {
         style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#141414' : '#1E6BE6' }]}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
-            <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
-          </TouchableOpacity>
+
 
           <View style={styles.menuItem}>
             <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
@@ -175,14 +188,24 @@ export default function HeaderIns() {
                 </Text>
               </View>
 
-              <View>
-                <TouchableOpacity onPress={() => setShowCodeBox(!showCodeBox)}>
-                  <Image
-                    source={isDarkMode
-                      ? require('../../assets/image/OptionWhite.png')
-                      : require('../../assets/image/Option.png')}
-                    style={styles.options}
-                  />
+              <View style={{ alignItems: 'center' }}>
+                <TouchableOpacity onPress={toggleCodeBox}>
+                  <Animated.View
+                    style={[
+                      {
+                        transform: [{ rotate: rotation }],
+                        backgroundColor: showCodeBox ? '#0077FF' : 'transparent',
+                        padding: 1,
+                        borderRadius: 20,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name="chevron-down"
+                      size={30}
+                      color={showCodeBox ? '#FFF' : isDarkMode ? '#FFF' : '#000'}
+                    />
+                  </Animated.View>
                 </TouchableOpacity>
 
                 {showCodeBox && (
@@ -266,27 +289,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#fff',
   },
- codeBox: {
-  marginTop: 5,
-  padding: 10,
-  borderRadius: 8,
-  minWidth: 160,
-  shadowColor: '#000',
-  shadowOpacity: 0.2,
-  shadowRadius: 5,
-  elevation: 5,
-  borderWidth: 1,
-  borderColor: '#ccc',
-  position: 'absolute',
-  alignItems: 'center',
-  top: 30, // ajusta conforme o tamanho da imagem Option para ficar logo abaixo
-  right: -20,
-  zIndex: 30,
-},
-options: {
-  width: 20,
-  height: 10,
-},
+  codeBox: {
+    position: 'absolute',
+    top: 35,
+    right: -10,
+    zIndex: 100,
+    minWidth: 140,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#ffffffee',
+    borderWidth: 1.5,
+    borderColor: '#0077FF',
+    shadowColor: '#0077FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    alignItems: 'flex-start',
+  },
+
+  options: {
+    width: 20,
+    height: 10,
+  },
 
   contEventos: {
     width: '100%',
