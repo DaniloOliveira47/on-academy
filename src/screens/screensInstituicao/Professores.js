@@ -11,8 +11,8 @@ import CadastroProfessorModal from '../../components/EditarTurmas/ModalCadProfes
 import CardProfessorIns from '../../components/Ocorrência/CardProfessoreIns';
 import CustomAlert from '../../components/Gerais/CustomAlert';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+
 export default function ProfessoresFeedback() {
-    const [paginaSelecionada, setPaginaSelecionada] = useState(1);
     const { isDarkMode } = useTheme();
     const [professores, setProfessores] = useState([]);
     const [professoresFiltrados, setProfessoresFiltrados] = useState([]);
@@ -24,8 +24,12 @@ export default function ProfessoresFeedback() {
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
-    const professoresPorPagina = 6;
-    const totalPaginas = Math.ceil(professoresFiltrados.length / professoresPorPagina);
+    
+    // Pagination variables
+    const CARDS_POR_PAGINA = 6;
+    const [paginaSelecionada, setPaginaSelecionada] = useState(1);
+    const totalPaginas = Math.ceil(professoresFiltrados.length / CARDS_POR_PAGINA);
+    const MAX_BOTOES_VISIVEIS = 3;
 
     const fetchProfessores = useCallback(async () => {
         let isActive = true;
@@ -40,7 +44,6 @@ export default function ProfessoresFeedback() {
                 setPaginaSelecionada(1);
             }
         } catch {
-
             if (isActive) {
                 setProfessores([]);
                 setProfessoresFiltrados([]);
@@ -76,25 +79,19 @@ export default function ProfessoresFeedback() {
         setProfessorSelecionado(professor);
     };
 
-    const handlePaginaChange = (pagina) => {
-        if (pagina === '>') {
-            if (paginaSelecionada < totalPaginas) {
-                setPaginaSelecionada(paginaSelecionada + 1);
-            }
-        } else if (pagina === '<') {
-            if (paginaSelecionada > 1) {
-                setPaginaSelecionada(paginaSelecionada - 1);
-            }
-        } else {
-            setPaginaSelecionada(pagina);
-        }
-    };
+    // Calculate visible pages for pagination
+    const paginaInicial = Math.max(1, paginaSelecionada - 1);
+    const paginaFinal = Math.min(totalPaginas, paginaInicial + MAX_BOTOES_VISIVEIS - 1);
+    const paginasVisiveis = [];
 
-    const getProfessoresPagina = () => {
-        const inicio = (paginaSelecionada - 1) * professoresPorPagina;
-        const fim = inicio + professoresPorPagina;
-        return professoresFiltrados.slice(inicio, fim);
-    };
+    for (let i = paginaInicial; i <= paginaFinal; i++) {
+        paginasVisiveis.push(i);
+    }
+
+    // Get professors for current page
+    const indiceInicial = (paginaSelecionada - 1) * CARDS_POR_PAGINA;
+    const indiceFinal = indiceInicial + CARDS_POR_PAGINA;
+    const professoresPaginaAtual = professoresFiltrados.slice(indiceInicial, indiceFinal);
 
     const handleCriarProfessor = async (dadosProfessor) => {
         try {
@@ -103,12 +100,9 @@ export default function ProfessoresFeedback() {
             const phoneDigits = dadosProfessor.telefoneDocente?.replace(/\D/g, '') || '';
             const dataNascimento = dadosProfessor.dataNascimentoDocente;
 
-            // Regex para validar nome (somente letras e espaços)
             const nomeRegex = /^[A-Za-zÀ-ÿ\s]{3,}$/;
-            // Regex para validar e-mails somente do gmail e outlook (sem nada após .com)
             const emailRegex = /^[a-z0-9._%+-]+@(gmail\.com|outlook\.com)$/i;
 
-            // Validações
             if (!nomeRegex.test(nomeTrim)) {
                 setAlertTitle('Erro');
                 setAlertMessage('O nome deve conter apenas letras e no mínimo 3 caracteres.');
@@ -147,7 +141,6 @@ export default function ProfessoresFeedback() {
                 return;
             }
 
-            // Substitui o telefone formatado com apenas dígitos
             const professorParaEnviar = {
                 ...dadosProfessor,
                 nomeDocente: nomeTrim,
@@ -185,12 +178,12 @@ export default function ProfessoresFeedback() {
             setIsCreating(false);
         }
     };
-  const renderProfessores = () => {
-        const professoresPagina = getProfessoresPagina();
+
+    const renderProfessores = () => {
         const rows = [];
 
-        for (let i = 0; i < professoresPagina.length; i += 2) {
-            const rowProfessores = professoresPagina.slice(i, i + 2);
+        for (let i = 0; i < professoresPaginaAtual.length; i += 2) {
+            const rowProfessores = professoresPaginaAtual.slice(i, i + 2);
             rows.push(
                 <Animated.View 
                     key={`row-${i}`}
@@ -229,96 +222,6 @@ export default function ProfessoresFeedback() {
         return rows;
     };
 
-
-    const renderPaginacao = () => {
-        const paginas = [];
-        const maxPaginas = 5;
-
-
-        if (totalPaginas <= maxPaginas) {
-            for (let i = 1; i <= totalPaginas; i++) {
-                paginas.push(
-                    <CardSelecao
-                        key={i}
-                        numero={i}
-                        selecionado={paginaSelecionada === i}
-                        onPress={() => handlePaginaChange(i)}
-                    />
-                );
-            }
-        } else {
-            let inicio = Math.max(1, paginaSelecionada - 2);
-            let fim = Math.min(totalPaginas, paginaSelecionada + 2);
-
-            if (paginaSelecionada <= 3) {
-                fim = Math.min(maxPaginas, totalPaginas);
-            } else if (paginaSelecionada >= totalPaginas - 2) {
-                inicio = totalPaginas - maxPaginas + 1;
-            }
-
-            if (inicio > 1) {
-                paginas.push(
-                    <CardSelecao
-                        key={1}
-                        numero={1}
-                        selecionado={false}
-                        onPress={() => handlePaginaChange(1)}
-                    />
-                );
-                if (inicio > 2) {
-                    paginas.push(
-                        <Text key="left-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>
-                            ...
-                        </Text>
-                    );
-                }
-            }
-
-            for (let i = inicio; i <= fim; i++) {
-                paginas.push(
-                    <CardSelecao
-                        key={i}
-                        numero={i}
-                        selecionado={paginaSelecionada === i}
-                        onPress={() => handlePaginaChange(i)}
-                    />
-                );
-            }
-
-            if (fim < totalPaginas) {
-                if (fim < totalPaginas - 1) {
-                    paginas.push(
-                        <Text key="right-ellipsis" style={[styles.ellipsis, { color: isDarkMode ? 'white' : 'black' }]}>
-                            ...
-                        </Text>
-                    );
-                }
-                paginas.push(
-                    <CardSelecao
-                        key={totalPaginas}
-                        numero={totalPaginas}
-                        selecionado={false}
-                        onPress={() => handlePaginaChange(totalPaginas)}
-                    />
-                );
-            }
-        }
-
-        if (totalPaginas > 1) {
-            paginas.push(
-                <CardSelecao
-                    key="next"
-                    numero=">"
-                    selecionado={false}
-                    onPress={() => handlePaginaChange('>')}
-                    disabled={paginaSelecionada >= totalPaginas}
-                />
-            );
-        }
-
-        return paginas;
-    };
-
     return (
         <View style={styles.mainContainer}>
             <HeaderSimples titulo="PROFESSORES" />
@@ -344,7 +247,7 @@ export default function ProfessoresFeedback() {
                                 {searchTerm ? 'Nenhum professor encontrado' : 'Nenhum professor cadastrado'}
                             </Text>
                         ) : (
-                             <Animated.ScrollView
+                            <Animated.ScrollView
                                 contentContainerStyle={styles.scrollContent}
                                 showsVerticalScrollIndicator={false}
                             >
@@ -368,7 +271,33 @@ export default function ProfessoresFeedback() {
 
                         <View style={styles.paginacaoContainer}>
                             <View style={styles.paginacao}>
-                                {renderPaginacao()}
+                                {paginaInicial > 1 && (
+                                    <CardSelecao
+                                        numero="<"
+                                        selecionado={false}
+                                        onPress={() => setPaginaSelecionada(paginaInicial - 1)}
+                                        disabled={loading}
+                                    />
+                                )}
+
+                                {paginasVisiveis.map((numero) => (
+                                    <CardSelecao
+                                        key={numero}
+                                        numero={numero}
+                                        selecionado={paginaSelecionada === numero}
+                                        onPress={() => setPaginaSelecionada(numero)}
+                                        disabled={loading}
+                                    />
+                                ))}
+
+                                {paginaFinal < totalPaginas && (
+                                    <CardSelecao
+                                        numero=">"
+                                        selecionado={false}
+                                        onPress={() => setPaginaSelecionada(paginaFinal + 1)}
+                                        disabled={loading || paginaSelecionada >= totalPaginas}
+                                    />
+                                )}
                             </View>
                         </View>
                     </View>
@@ -387,7 +316,6 @@ export default function ProfessoresFeedback() {
                 message={alertMessage}
                 onDismiss={() => setAlertVisible(false)}
             />
-
         </View>
     );
 }

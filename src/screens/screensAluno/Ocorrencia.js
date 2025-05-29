@@ -31,7 +31,7 @@ export default function Ocorrencia() {
     // Estados para paginação
     const [paginaAtualProfessores, setPaginaAtualProfessores] = useState(1);
     const PROFESSORES_POR_PAGINA = 6; // 6 professores por página (2 por linha, 3 linhas)
-    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
  
@@ -475,7 +475,7 @@ export default function Ocorrencia() {
  
 const styles = StyleSheet.create({
     tela: {
-        padding: 15,
+      padding: 10,
         marginBottom: 60,
     },
     container2: {

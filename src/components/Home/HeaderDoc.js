@@ -16,6 +16,8 @@ export default function HeaderDoc() {
   const [events, setEvents] = useState([]);
   const [eventColors, setEventColors] = useState({});
   const [aluno, setAluno] = useState(null);
+  const [showProfileHighlight, setShowProfileHighlight] = useState(false);
+
   const navigation = useNavigation();
 
   const getRandomColor = () => {
@@ -132,29 +134,32 @@ export default function HeaderDoc() {
       <Animated.View
         style={[styles.menuOverlay, { transform: [{ translateX: menuTranslateX }], backgroundColor: isDarkMode ? '#141414' : '#1E6BE6' }]}
       >
-        <TouchableOpacity style={styles.closeButton} onPress={toggleMenu}>
-          <Text style={[styles.closeText, { color: closeButtonColor }]}>x</Text>
-        </TouchableOpacity>
+
 
         <ScrollView showsVerticalScrollIndicator={false} style={styles.menuScrollView} contentContainerStyle={styles.menuContent}>
           <View style={styles.menuItem}>
-            <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
-              <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
-                <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
-                  <View style={{ backgroundColor: 'white', borderRadius: 16 }}>
-                    <Image
-                      style={styles.imgPerfil}
-                      source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
-                    />
-                  </View>
-                  <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
-                    {aluno ? aluno.nomeDocente.split(' ').slice(0, 2).join(' ') : 'Carregando...'}
-                  </Text>
-                </View>
 
-                <Image source={isDarkMode ? require('../../assets/image/OptionWhite.png') : require('../../assets/image/Option.png')} style={styles.options} />
+            <View style={[styles.perfil, { backgroundColor: profileBackgroundColor }]}>
+              <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
+                <View style={{ backgroundColor: 'white', borderRadius: 16 }}>
+                  <Image
+                    style={styles.imgPerfil}
+                    source={aluno?.imageUrl ? { uri: aluno.imageUrl } : require('../../assets/image/Professor.png')}
+                  />
+                </View>
+                <Text style={{ fontSize: 20, marginTop: 15, fontWeight: 'bold', color: textColor }}>
+                  {aluno ? aluno.nomeDocente.split(' ').slice(0, 2).join(' ') : 'Carregando...'}
+                </Text>
               </View>
-            </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => navigation.navigate('PerfilDocente')}>
+                <View style={[styles.profileIconWrapper]}>
+                  <Icon name="user" size={22} color={'#fff'} />
+                </View>
+              </TouchableOpacity>
+
+            </View>
+
           </View>
 
           <View style={styles.menuItem}>
@@ -231,6 +236,38 @@ const styles = StyleSheet.create({
   logoutIcon: {
     marginRight: 10,
   },
+  perfil: {
+    width: '100%',
+    padding: 12,
+    borderRadius: 12, // Mais quadrado
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff10', // leve transparência
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  profileIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12, // Mais quadrado
+    backgroundColor: '#0077FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    transform: [{ rotate: '0deg' }],
+  },
+
+
   logoutText: {
     color: '#FFF',
     fontWeight: 'bold',
@@ -250,9 +287,12 @@ const styles = StyleSheet.create({
   },
   imgPerfil: {
     width: 60,
-    height: 50,
-    borderRadius: 13,
+    height: 60,
+    borderRadius: 12, // Mais quadrado
+    borderWidth: 2,
+    borderColor: '#0077FF',
   },
+
   perfil: {
     width: '100%',
     height: 'auto',

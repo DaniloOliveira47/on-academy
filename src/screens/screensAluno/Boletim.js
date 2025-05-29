@@ -23,7 +23,7 @@ export default function Boletim() {
     const [downloading, setDownloading] = useState(false);
     const bimestres = ["1º Bim.", "2º Bim.", "3º Bim.", "4º Bim."];
     const { isDarkMode } = useTheme();
-    const BackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const BackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const container = isDarkMode ? '#000' : '#FFF';
     const text = isDarkMode ? '#FFF' : '#000';
 
@@ -171,7 +171,7 @@ export default function Boletim() {
                     <View style={{
                         backgroundColor: container,
                         marginTop: 10,
-                        padding: 20,
+                        padding: 15,
                         borderRadius: 20,
                         paddingTop: 30,
                         shadowColor: '#000',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     tela: {
-        padding: 15,
+        padding: 10,
         paddingTop: 0,
         backgroundColor: '#F0F7FF',
         width: '100%',

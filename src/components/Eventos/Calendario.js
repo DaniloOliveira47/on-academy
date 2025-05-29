@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 
 const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
   const [markedDates, setMarkedDates] = useState({});
   const [eventColors, setEventColors] = useState({});
   const [minDate, setMinDate] = useState('');
   const [maxDate, setMaxDate] = useState('');
+  const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
 
   LocaleConfig.locales.fr = {
     monthNames: [
@@ -49,23 +50,20 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
     dayNamesShort: ["Dom.", "Seg.", "Ter.", "Qua.", "Qui.", "Sex.", "Sáb."]
   };
 
-  LocaleConfig.defaultLocale = "fr"
-
+  LocaleConfig.defaultLocale = "fr";
 
   useEffect(() => {
     const today = new Date();
-    const firstDayOfYear = new Date(today.getFullYear(), 0, 1); // Janeiro = 0
-    const lastDayOfYear = new Date(today.getFullYear(), 11, 31); // Dezembro = 11
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+    const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
 
     setMinDate(firstDayOfYear.toISOString().split('T')[0]);
     setMaxDate(lastDayOfYear.toISOString().split('T')[0]);
   }, []);
 
-
   const getRandomColor = () => {
     return '#0077FF';
   };
-
 
   const validateDate = (date) => {
     const selectedDate = new Date(date);
@@ -88,29 +86,31 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
     return true;
   };
 
-
   useEffect(() => {
-    if (events && events.length > 0) {
+    if (events) { // Verifica se events existe (pode ser null ou undefined inicialmente)
       const formattedDates = {};
       const colors = {};
 
-      events.forEach((event) => {
-        const date = new Date(event.dataEvento).toISOString().split('T')[0];
-        const color = getRandomColor();
+      if (events.length > 0) {
+        events.forEach((event) => {
+          const date = new Date(event.dataEvento).toISOString().split('T')[0];
+          const color = getRandomColor();
 
-        if (validateDate(date)) {
-          formattedDates[date] = {
-            selected: true,
-            selectedColor: color,
-            id: event.id,
-            dotColor: color,
-          };
-          colors[event.id] = color;
-        }
-      });
+          if (validateDate(date)) {
+            formattedDates[date] = {
+              selected: true,
+              selectedColor: color,
+              id: event.id,
+              dotColor: color,
+            };
+            colors[event.id] = color;
+          }
+        });
+      }
 
       setMarkedDates(formattedDates);
       setEventColors(colors);
+      setLoading(false); // Desativa o carregamento quando os dados estão prontos
     }
   }, [events]);
 
@@ -123,9 +123,8 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
       onDateSelect(day.dateString);
     }
 
-
     if (onDayPress) {
-      const event = events.find((event) => {
+      const event = events?.find((event) => {
         const eventDate = new Date(event.dataEvento).toISOString().split('T')[0];
         return eventDate === day.dateString;
       });
@@ -135,6 +134,14 @@ const CustomCalendar = ({ onDayPress, events, onDateSelect }) => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.calendar, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#0077FF" />
+      </View>
+    );
+  }
 
   return (
     <View>
@@ -163,6 +170,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     height: 'auto',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 360, // Altura aproximada do calendário
   },
 });
 

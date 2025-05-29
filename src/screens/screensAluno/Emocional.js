@@ -7,7 +7,7 @@ import { useTheme } from '../../path/ThemeContext';
 
 export default function Emocional() {
     const { isDarkMode } = useTheme();
-    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const cont = isDarkMode ? '#000' : '#FFF';
     const text = isDarkMode ? '#FFF' : '#000';
 
@@ -70,7 +70,7 @@ export default function Emocional() {
 
 const styles = StyleSheet.create({
     tela: {
-        padding: 15,
+        padding: 10,
         paddingTop: 0,
         paddingBottom: 30
     },

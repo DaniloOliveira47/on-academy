@@ -30,7 +30,7 @@ export default function CardProfessorIns({ nome, id, imageUrl }) {
                 {nome}
             </Text>
             <TouchableOpacity
-                onPress={() => navigation.navigate('PerfilProfessor', { professorId: id })}
+                onPress={() => navigation.navigate('PerfilInsProfessor', { professorId: id })}
                 style={styles.botao}
             >
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>

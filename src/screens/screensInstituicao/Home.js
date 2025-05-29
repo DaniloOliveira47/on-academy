@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Dimensions, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,10 +20,16 @@ export default function HomeInstituicao() {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
+    const [loadingTurmas, setLoadingTurmas] = useState(true);
+    const [loadingAvisos, setLoadingAvisos] = useState(true);
+    const [sendingAviso, setSendingAviso] = useState(false);
+
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
                 try {
+                    setLoadingTurmas(true);
+                    setLoadingAvisos(true);
 
                     const turmasResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/class');
                     if (turmasResponse.data && Array.isArray(turmasResponse.data)) {
@@ -31,17 +37,19 @@ export default function HomeInstituicao() {
                     } else {
                         setTurmas([]);
                     }
-
+                    setLoadingTurmas(false);
 
                     const avisosResponse = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
                     const avisosOrdenados = avisosResponse.data.sort((a, b) =>
                         new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
                     );
                     setAvisos(avisosOrdenados);
+                    setLoadingAvisos(false);
                 } catch {
-
                     setTurmas([]);
                     setAvisos([]);
+                    setLoadingTurmas(false);
+                    setLoadingAvisos(false);
                 }
             };
 
@@ -54,14 +62,26 @@ export default function HomeInstituicao() {
     };
 
     const gerarCorAleatoria = () => {
-        return '#0077FF';
-    };
+    const letrasHex = '0123456789ABCDEF';
+    let cor = '#';
+    
+    // Gera os 6 dígitos da cor hexadecimal
+    for (let i = 0; i < 6; i++) {
+        cor += letrasHex[Math.floor(Math.random() * 16)];
+    }
+    
+    return cor;
+};
+
     const enviarAviso = async () => {
         try {
+            setSendingAviso(true);
+
             if (!turmaSelecionada) {
                 setAlertTitle('Aviso');
                 setAlertMessage('Por favor, selecione uma turma para postar o aviso');
                 setAlertVisible(true);
+                setSendingAviso(false);
                 return;
             }
 
@@ -72,6 +92,7 @@ export default function HomeInstituicao() {
                 setAlertTitle('Erro');
                 setAlertMessage('Sessão expirada. Faça login novamente.');
                 setAlertVisible(true);
+                setSendingAviso(false);
                 return;
             }
 
@@ -81,6 +102,7 @@ export default function HomeInstituicao() {
                 setAlertTitle('Aviso');
                 setAlertMessage('Por favor, digite um aviso ou lembrete para a turma antes de enviar.');
                 setAlertVisible(true);
+                setSendingAviso(false);
                 return;
             }
 
@@ -88,6 +110,7 @@ export default function HomeInstituicao() {
                 setAlertTitle('Aviso muito longo');
                 setAlertMessage('O aviso não pode ultrapassar 100 caracteres.');
                 setAlertVisible(true);
+                setSendingAviso(false);
                 return;
             }
 
@@ -114,19 +137,17 @@ export default function HomeInstituicao() {
             setAlertMessage('Aviso enviado com sucesso!');
             setAlertVisible(true);
             setConteudoAviso('');
+            setSendingAviso(false);
         } catch (error) {
             setAlertTitle('Erro');
             setAlertMessage(error.response?.data?.message || 'Falha ao enviar o aviso.');
             setAlertVisible(true);
+            setSendingAviso(false);
         }
     };
 
-
-
     return (
-
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
-
             <HeaderIns isDarkMode={isDarkMode} />
 
             <ScrollView style={styles.scrollTela} showsVerticalScrollIndicator={false}>
@@ -149,34 +170,41 @@ export default function HomeInstituicao() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-
+                    {/* Container de Turmas */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
-                        <ScrollView
-                            style={styles.turmasScrollView}
-                            contentContainerStyle={styles.turmasScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
-                            {turmas.length > 0 ? (
-                                turmas.map((turma, index) => (
-                                    <CardTurmas
-                                        key={turma.id}
-                                        titulo={`${turma.nomeTurma}`}
-                                        subTitulo={`Sala ${index + 1}`}
-                                        isSelected={turmaSelecionada === turma.id}
-                                        onPress={() => handleSelecionarTurma(turma.id)}
-                                    />
-                                ))
-                            ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                    Nenhuma turma disponível
-                                </Text>
-                            )}
-                        </ScrollView>
+                        {loadingTurmas ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={isDarkMode ? '#A1C9FF' : '#0077FF'} />
+                            </View>
+                        ) : (
+                            <ScrollView
+                                style={styles.turmasScrollView}
+                                contentContainerStyle={styles.turmasScrollContent}
+                                showsVerticalScrollIndicator={false}
+                                nestedScrollEnabled={true}
+                            >
+                                {turmas.length > 0 ? (
+                                    turmas.map((turma, index) => (
+                                        <CardTurmas
+                                            key={turma.id}
+                                            titulo={`${turma.nomeTurma}`}
+                                            subTitulo={`Sala ${turma.id}`}
+                                            isSelected={turmaSelecionada === turma.id}
+                                            onPress={() => handleSelecionarTurma(turma.id)}
+                                        />
+
+                                    ))
+                                ) : (
+                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                        Nenhuma turma disponível
+                                    </Text>
+                                )}
+                            </ScrollView>
+                        )}
                     </View>
 
-
+                    {/* Container de Aviso */}
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
                         <TextInput
@@ -196,62 +224,73 @@ export default function HomeInstituicao() {
                             onChangeText={setConteudoAviso}
                         />
                         <View style={{ alignItems: 'center' }}>
-                            <TouchableOpacity style={styles.enviarButton} onPress={enviarAviso}>
-                                <Text style={styles.enviarText}>
-                                    Enviar
-                                </Text>
+                            <TouchableOpacity
+                                style={[styles.enviarButton, sendingAviso && styles.disabledButton]}
+                                onPress={enviarAviso}
+                                disabled={sendingAviso}
+                            >
+                                {sendingAviso ? (
+                                    <ActivityIndicator size="small" color="#FFF" />
+                                ) : (
+                                    <Text style={styles.enviarText}>Enviar</Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
 
-
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    {/* Container de Avisos */}
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF', marginBottom: 10 }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos
                         </Text>
-                        <ScrollView
-                            style={styles.avisosScrollView}
-                            contentContainerStyle={styles.avisosScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
-                            {avisos.length > 0 ? (
-                                avisos
-                                    .filter(aviso => {
-                                        const agora = new Date();
-                                        const dataAviso = new Date(aviso.horarioSistema);
-                                        const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
-                                        return diferencaEmDias <= 7;
-                                    })
-                                    .map((aviso) => {
-                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
-                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
-                                            'Instituição';
+                        {loadingAvisos ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={isDarkMode ? '#A1C9FF' : '#0077FF'} />
+                            </View>
+                        ) : (
+                            <ScrollView
+                                style={styles.avisosScrollView}
+                                contentContainerStyle={styles.avisosScrollContent}
+                                showsVerticalScrollIndicator={false}
+                                nestedScrollEnabled={true}
+                            >
+                                {avisos.length > 0 ? (
+                                    avisos
+                                        .filter(aviso => {
+                                            const agora = new Date();
+                                            const dataAviso = new Date(aviso.horarioSistema);
+                                            const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
+                                            return diferencaEmDias <= 7;
+                                        })
+                                        .map((aviso) => {
+                                            const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                                aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                                'Instituição';
 
-                                        return (
-                                            <Avisos
-                                                key={aviso.id}
-                                                abreviacao={aviso.initials}
-                                                nome={doisPrimeirosNomes}
-                                                horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                                texto={aviso.conteudo}
-                                                aleatorio={gerarCorAleatoria()}
-                                            />
-                                        );
-                                    })
-
-                            ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                    Nenhum aviso disponível.
-                                </Text>
-                            )}
-                        </ScrollView>
+                                            return (
+                                                <Avisos
+                                                    key={aviso.id}
+                                                    abreviacao={aviso.initials}
+                                                    nome={doisPrimeirosNomes}
+                                                    horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                    texto={aviso.conteudo}
+                                                    aleatorio={gerarCorAleatoria()}
+                                                />
+                                            );
+                                        })
+                                ) : (
+                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                        Nenhum aviso disponível.
+                                    </Text>
+                                )}
+                            </ScrollView>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -338,6 +377,9 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginTop: 10
     },
+    disabledButton: {
+        backgroundColor: '#8FBFFF',
+    },
     enviarText: {
         color: 'white',
         fontWeight: 'bold',
@@ -354,5 +396,11 @@ const styles = StyleSheet.create({
     },
     avisosScrollContent: {
         paddingRight: 10,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 100,
     },
 });

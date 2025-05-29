@@ -34,7 +34,7 @@ export default function AlunoPerfil({ route }) {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
-    const perfilBackgroundColor = isDarkMode ? '#141414' : '#F0F7FF';
+    const perfilBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const textColor = isDarkMode ? '#FFF' : '#000';
     const barraAzulColor = isDarkMode ? '#1E6BE6' : '#1E6BE6';
     const formBackgroundColor = isDarkMode ? '#000' : '#FFFFFF';
@@ -321,17 +321,19 @@ export default function AlunoPerfil({ route }) {
     }
 
     return (
-        <ScrollView ref={scrollViewRef}>
+        <ScrollView style={{ backgroundColor: perfilBackgroundColor }} ref={scrollViewRef}>
             <View style={[styles.tela, { backgroundColor: perfilBackgroundColor }]}>
                 <HeaderSimplesBack titulo="PERFIL" />
                 <View style={{ padding: 15 }}>
                     <Image style={[styles.barraAzul, { backgroundColor: barraAzulColor, marginTop: 0 }]} source={require('../../../assets/image/barraAzul.png')} />
                     <View style={[styles.form, {
                         backgroundColor: formBackgroundColor,
-                        shadowColor: isDarkMode ? '#FFF' : '#000',
+                        shadowColor:  '#000',
                         shadowOpacity: 0.1,
                         shadowRadius: 4,
                         elevation: 3,
+                        borderBottomRightRadius: 20,
+                           borderBottomLeftRadius: 20
                     }]}>
                         <View style={styles.linhaUser}>
                             <View style={{ backgroundColor: 'white', borderRadius: 40 }}>
@@ -375,7 +377,7 @@ export default function AlunoPerfil({ route }) {
                     </View>
 
                     <View style={[styles.grafico, {
-                        shadowColor: sombra,
+                        shadowColor: '#000',
                         shadowOffset: { width: 0, height: 4 },
                         shadowOpacity: 0.2,
                         shadowRadius: 4,
@@ -399,7 +401,7 @@ export default function AlunoPerfil({ route }) {
                                 Dê seu feedback sobre o aluno(a)!
                             </Text>
                             <Text style={{ fontSize: 13, fontWeight: 'bold', color: textColor }}>
-                                Avalie os seguintes aspectos de 1 a 10 para nos ajudar a melhorar a experiência das aulas.
+                                Avalie os seguintes aspectos de 1 a 5 para nos ajudar a melhorar a experiência das aulas.
                             </Text>
                             <Swiper
                                 loop={false}
@@ -407,6 +409,8 @@ export default function AlunoPerfil({ route }) {
                                 dotColor="#CCC"
                                 activeDotColor="#1E6BE6"
                                 style={styles.swiper}
+                                removeClippedSubviews={false} // pode ajudar em alguns casos
+                                bounces={true} // efeito de bounce
                             >
                                 {perguntas.map((pergunta, index) => renderPergunta(pergunta, index))}
                             </Swiper>

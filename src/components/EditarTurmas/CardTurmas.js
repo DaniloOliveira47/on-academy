@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'react-native-paper';
 import CustomAlert from '../Gerais/CustomAlert';
 import DeleteAlert from '../Gerais/DeleteAlert';
+import { Dropdown } from 'react-native-element-dropdown';
 
 export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, turmaId, onDelete, onEditSuccess }) {
     const formatarNomeProfessor = (nomeCompleto) => {
@@ -404,38 +405,61 @@ export default function CardTurmas({ turma, alunos, periodo, numero, navegacao, 
                                     <View style={styles.row}>
                                         <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                                             <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Ano Letivo</Text>
-                                            <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
-                                                <Picker
-                                                    selectedValue={editAnoLetivo}
-                                                    onValueChange={(itemValue) => setEditAnoLetivo(itemValue)}
-                                                    style={{ color: isDarkMode ? 'white' : 'black' }}
-                                                    dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                                >
-                                                    <Picker.Item label="2024" value="2024" />
-                                                    <Picker.Item label="2025" value="2025" />
-                                                    <Picker.Item label="2026" value="2026" />
-                                                </Picker>
-                                            </View>
+                                            <Dropdown
+                                                style={[styles.dropdown, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}
+                                                placeholderStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                selectedTextStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                iconColor={isDarkMode ? 'white' : 'black'}
+                                                data={[
+                                                    { label: '2024', value: '2024' },
+                                                    { label: '2025', value: '2025' },
+                                                    { label: '2026', value: '2026' },
+                                                ]}
+                                                maxHeight={300}
+                                                labelField="label"
+                                                valueField="value"
+                                                placeholder="Selecione o ano"
+                                                value={editAnoLetivo}
+                                                onChange={item => setEditAnoLetivo(item.value)}
+                                                itemContainerStyle={{
+                                                    backgroundColor: isDarkMode ? '#444' : '#F0F7FF'
+                                                }}
+                                                itemTextStyle={{
+                                                    color: isDarkMode ? 'white' : 'black'
+                                                }}
+                                                activeColor={isDarkMode ? '#555' : '#D9E9FF'} // Cor quando um item está selecionado/pressionado
+                                            />
                                         </View>
 
                                         <View style={[styles.inputGroup, { flex: 1 }]}>
                                             <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Período</Text>
-                                            <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}>
-                                                <Picker
-                                                    selectedValue={editPeriodo}
-                                                    onValueChange={(itemValue) => setEditPeriodo(itemValue)}
-                                                    style={{ color: isDarkMode ? 'white' : 'black' }}
-                                                    dropdownIconColor={isDarkMode ? 'white' : 'black'}
-                                                >
-                                                    <Picker.Item label="Matutino" value="Matutino" />
-                                                    <Picker.Item label="Vespertino" value="Vespertino" />
-                                                    <Picker.Item label="Noturno" value="Noturno" />
-                                                    <Picker.Item label="Integral" value="Integral" />
-                                                </Picker>
-                                            </View>
+                                            <Dropdown
+                                                style={[styles.dropdown, { backgroundColor: isDarkMode ? '#333' : '#F0F7FF' }]}
+                                                placeholderStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                selectedTextStyle={{ color: isDarkMode ? 'white' : 'black' }}
+                                                iconColor={isDarkMode ? 'white' : 'black'}
+                                                data={[
+                                                    { label: 'Matutino', value: 'Matutino' },
+                                                    { label: 'Vespertino', value: 'Vespertino' },
+                                                    { label: 'Noturno', value: 'Noturno' },
+                                                    { label: 'Integral', value: 'Integral' },
+                                                ]}
+                                                maxHeight={300}
+                                                labelField="label"
+                                                valueField="value"
+                                                placeholder="Selecione o período"
+                                                value={editPeriodo}
+                                                onChange={item => setEditPeriodo(item.value)}
+                                                itemContainerStyle={{
+                                                    backgroundColor: isDarkMode ? '#444' : '#F0F7FF'
+                                                }}
+                                                itemTextStyle={{
+                                                    color: isDarkMode ? 'white' : 'black'
+                                                }}
+                                                activeColor={isDarkMode ? '#555' : '#D9E9FF'} // Cor quando um item está selecionado/pressionado
+                                            />
                                         </View>
                                     </View>
-
                                     <View style={styles.row}>
                                         <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                                             <Text style={[styles.inputLabel, { color: isDarkMode ? 'white' : 'black' }]}>Capacidade *</Text>
@@ -668,6 +692,14 @@ const styles = StyleSheet.create({
     iconeBotao: {
         padding: 6,
         marginLeft: 10
+    },
+    dropdown: {
+        height: 50,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginTop: 5,
     },
     subTexto: {
         fontWeight: 'bold'

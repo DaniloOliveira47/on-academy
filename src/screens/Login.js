@@ -126,12 +126,13 @@ export default function Login() {
         await AsyncStorage.setItem('@user_id', userId.toString());
 
         if (firstChar === 'a') {
-          navigation.navigate('Main');
+           navigation.replace('Main');
         } else if (firstChar === 'p') {
-          navigation.navigate('MainDoc');
+           navigation.replace('MainDoc');
         } else {
           await fetchInstitutionData(userId);
-          navigation.navigate('MainIns');
+          navigation.replace('MainIns');
+
         }
       }
     } catch (error) {

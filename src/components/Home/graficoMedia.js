@@ -91,7 +91,7 @@ export default function GraficoMedia({ isDarkMode }) {
   return (
     <Animated.View style={[styles.card, {
       backgroundColor: isDarkMode ? '#000' : '#FFFFFF',
-      shadowColor: isDarkMode ? '#FFF' : '#000',
+      shadowColor: '#000',
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 5,

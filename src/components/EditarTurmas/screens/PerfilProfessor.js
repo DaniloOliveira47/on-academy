@@ -15,6 +15,7 @@ import CustomAlert from '../../Gerais/CustomAlert';
 import DeleteAlert from '../../Gerais/DeleteAlert';
 import FeedbackModal from '../../Gerais/FeedbackModal';
 import HeaderSimplesBack from '../../Gerais/HeaderSimplesBack';
+import PhotoPickerModal from '../../Gerais/PhotoPickerModal';
 
 const { width } = Dimensions.get('window');
 
@@ -141,6 +142,7 @@ export default function PerfilProfessor() {
     const [selectedFeedback, setSelectedFeedback] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [isPhotoPickerVisible, setIsPhotoPickerVisible] = useState(false);
     const [validationErrors, setValidationErrors] = useState({
         nome: '',
         email: '',
@@ -599,41 +601,94 @@ export default function PerfilProfessor() {
 
         return (
             <>
-                <View style={[styles.feedbackOuterContainer, { backgroundColor: formBackgroundColor }]}>
-                    <Text style={[styles.sectionTitle, { color: textColor }]}>
+                <View
+                    style={[
+                        styles.feedbackOuterContainer,
+                        {
+                            backgroundColor: formBackgroundColor,
+                        },
+                    ]}
+                >
+                    <Text
+                        style={[
+                            styles.sectionTitle,
+                            {
+                                color: textColor,
+                            },
+                        ]}
+                    >
                         Feedbacks Recebidos ({feedbacks.length})
                     </Text>
 
                     {feedbacks.length > 0 ? (
-                        <View style={styles.feedbackContainer}>
-                            <View style={[styles.feedbackHeader, { backgroundColor: isDarkMode ? '#333' : '#E1F0FF' }]}>
+                        <View
+                            style={[
+                                styles.feedbackContainer,
+                                {
+                                    borderColor: isDarkMode ? '#444' : '#DDD',
+                                    backgroundColor: isDarkMode ? '#2C2C2E' : '#FFF',
+                                },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.feedbackHeader,
+                                    {
+                                        backgroundColor: isDarkMode ? '#333' : '#E1F0FF',
+                                        borderBottomColor: isDarkMode ? '#555' : '#DDD',
+                                    },
+                                ]}
+                            >
                                 <View style={styles.feedbackHeaderCell}>
-                                    <Text style={[styles.feedbackHeaderText, { color: textColor }]}>Criado por</Text>
+                                    <Text
+                                        style={[
+                                            styles.feedbackHeaderText,
+                                            { color: isDarkMode ? '#FFF' : textColor },
+                                        ]}
+                                    >
+                                        Criado por
+                                    </Text>
                                 </View>
                                 <View style={styles.feedbackHeaderCell}>
-                                    <Text style={[styles.feedbackHeaderText, { color: textColor }]}>Feedback</Text>
+                                    <Text
+                                        style={[
+                                            styles.feedbackHeaderText,
+                                            { color: isDarkMode ? '#FFF' : textColor },
+                                        ]}
+                                    >
+                                        Feedback
+                                    </Text>
                                 </View>
                             </View>
 
-                            <ScrollView style={styles.feedbackBody}>
+                            <ScrollView
+                                style={{ height: 250 }}
+                                nestedScrollEnabled={true}
+                                showsVerticalScrollIndicator={true}
+                            >
                                 {feedbacks.map((item, index) => (
                                     <FeedbackItem
                                         key={index}
                                         item={item}
                                         onPress={openFeedbackModal}
-                                        textColor={textColor}
+                                        textColor={isDarkMode ? '#FFF' : textColor}
                                     />
                                 ))}
                             </ScrollView>
                         </View>
                     ) : (
-                        <View style={[styles.noFeedbackContainer,]}>
+                        <View style={[styles.noFeedbackContainer, {backgroundColor: isDarkMode ? '#121212' : '#F0F7FF'}]}>
                             <MaterialIcons
                                 name="feedback"
                                 size={40}
                                 color={isDarkMode ? '#666' : '#999'}
                             />
-                            <Text style={[styles.noFeedbackText, { color: isDarkMode ? '#AAA' : '#888' }]}>
+                            <Text
+                                style={[
+                                    styles.noFeedbackText,
+                                    { color: isDarkMode ? '#AAA' : '#888' },
+                                ]}
+                            >
                                 Nenhum feedback recebido ainda
                             </Text>
                         </View>
@@ -645,16 +700,17 @@ export default function PerfilProfessor() {
                     onDismiss={() => setModalVisible(false)}
                     studentName={selectedFeedback?.createdBy.nomeAluno}
                     feedbackContent={selectedFeedback?.conteudo}
-                    formBackgroundColor={formBackgroundColor}
-                    textColor={textColor}
+                    formBackgroundColor={isDarkMode ? '#1C1C1E' : formBackgroundColor}
+                    textColor={isDarkMode ? '#FFF' : textColor}
                 />
             </>
+
         );
     };
 
     const FeedbackItem = ({ item, onPress, textColor }) => {
         return (
-            <View style={styles.feedbackRow}>
+            <View style={[styles.feedbackRow, { backgroundColor: perfilBackgroundColor }]}>
                 <View style={styles.feedbackCell}>
                     <Text style={[styles.feedbackText, { color: textColor }]}>
                         {item.createdBy.nomeAluno}
@@ -697,7 +753,7 @@ export default function PerfilProfessor() {
                 </View>
             )}
 
-            <View style={{ padding: 15 }}>
+            <View style={{ padding: 15, paddingBottom: 70 }}>
                 <Image
                     style={[styles.barraAzul, { backgroundColor: barraAzulColor }]}
                     source={require('../../../assets/image/barraAzul.png')}
@@ -707,24 +763,7 @@ export default function PerfilProfessor() {
                         <TouchableOpacity onPress={() => {
                             if (!isEditing) return;
 
-                            Alert.alert(
-                                "Alterar Foto",
-                                "Escolha uma opção",
-                                [
-                                    {
-                                        text: "Galeria",
-                                        onPress: pickImage,
-                                    },
-                                    {
-                                        text: "Câmera",
-                                        onPress: takePhoto,
-                                    },
-                                    {
-                                        text: "Cancelar",
-                                        style: "cancel",
-                                    },
-                                ]
-                            );
+                            setIsPhotoPickerVisible(true);
                         }}>
                             <Image
                                 source={isEditing && perfilEdit.foto ?
@@ -734,7 +773,12 @@ export default function PerfilProfessor() {
                                         require('../../../assets/image/icon_add_user.png')}
                                 style={styles.profileImage}
                             />
-
+                            <PhotoPickerModal
+                                visible={isPhotoPickerVisible}
+                                onDismiss={() => setIsPhotoPickerVisible(false)}
+                                onPickImage={pickImage}
+                                onTakePhoto={takePhoto}
+                            />
                         </TouchableOpacity>
                         <View style={styles.name}>
                             {isEditing ? (
@@ -1255,85 +1299,98 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
         color: '#666',
     },
-    feedbackOuterContainer: {
-        marginTop: 20,
-        borderRadius: 10,
-        padding: 20,
+    feedbackContainer: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: '#FAFAFA',
+        borderWidth: 1,
+        borderColor: '#DDD',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
     },
-    feedbackContainer: {
-        borderWidth: 1,
-        borderColor: '#DDD',
-        borderRadius: 8,
-        overflow: 'hidden',
-    },
+
     feedbackHeader: {
         flexDirection: 'row',
-        paddingVertical: 12,
+        paddingVertical: 14,
+        backgroundColor: '#EAF3FF',
         borderBottomWidth: 1,
-        borderBottomColor: '#DDD',
+        borderBottomColor: '#CCC',
     },
+
     feedbackHeaderCell: {
         flex: 1,
-        paddingHorizontal: 8,
+        paddingHorizontal: 12,
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     feedbackHeaderText: {
-        fontWeight: 'bold',
+        fontWeight: '700',
         fontSize: 14,
+        color: '#007BFF',
+        textTransform: 'uppercase',
     },
+
     feedbackBody: {
         maxHeight: 300,
     },
+    feedbackOuterContainer: {
+        marginTop: 30,
+        borderRadius: 16,
+        padding: 20,
+        backgroundColor: '#F0F7FF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+
     feedbackRow: {
         flexDirection: 'row',
         minHeight: 60,
         borderBottomWidth: 1,
         borderBottomColor: '#EEE',
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        marginRight: 65,
-        gap: 60
+        paddingRight: 65,
+        gap: 70
     },
+
     feedbackCell: {
         flex: 1,
-        padding: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 12,
         justifyContent: 'center',
     },
-    feedbackCellIcon: {
-        width: 40,
-        alignItems: 'center',
-    },
+
     feedbackText: {
         fontSize: 14,
+        color: '#333',
         textAlign: 'center',
     },
-    feedbackModalContainer: {
-        backgroundColor: '#FFF',
+
+    noFeedbackContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+        backgroundColor: '#F9F9F9',
         borderRadius: 12,
-        width: '90%',
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 10,
+        borderWidth: 1,
+        borderColor: '#EEE',
     },
-    feedbackModalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    feedbackModalText: {
+
+    noFeedbackText: {
+        marginTop: 10,
         fontSize: 16,
-        marginBottom: 20,
         textAlign: 'center',
+        color: '#888',
     },
+
+
     closeFeedbackButton: {
         backgroundColor: '#1E6BE6',
         padding: 12,
@@ -1352,14 +1409,5 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
-    noFeedbackContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    noFeedbackText: {
-        marginTop: 10,
-        fontSize: 16,
-        textAlign: 'center',
-    },
+
 });

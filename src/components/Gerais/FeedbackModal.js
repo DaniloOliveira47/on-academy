@@ -13,7 +13,7 @@ const FeedbackModal = ({
     const { isDarkMode } = useTheme();
 
     const headerBackgroundColor = '#0077FF';
-    const modalBackgroundColor = isDarkMode ? '#000' : '#FFF';
+     const modalBackgroundColor = isDarkMode ? '#121212' : '#F0F7FF';
     const logoSquareBackground = isDarkMode ? '#333' : '#FFF';
     const logoTextColor = '#FFF';
     const barraAzulColor = '#0077FF';

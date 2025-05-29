@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, Animated, TouchableOpacity, TextInput, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +20,9 @@ export default function HomeDocente() {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
+    const [loadingTurmas, setLoadingTurmas] = useState(false);
+    const [loadingAvisos, setLoadingAvisos] = useState(false);
+    const [sendingAviso, setSendingAviso] = useState(false);
 
     const handleSelecionarTurma = (id) => {
         setTurmaSelecionada(id);
@@ -27,13 +30,19 @@ export default function HomeDocente() {
     };
 
     const gerarCorAleatoria = () => {
-        let cor = '#0077FF';
+        const letrasHex = '0123456789ABCDEF';
+        let cor = '#';
+
+        // Gera os 6 dígitos da cor hexadecimal
+        for (let i = 0; i < 6; i++) {
+            cor += letrasHex[Math.floor(Math.random() * 16)];
+        }
         return cor;
     };
 
-
     const fetchMessages = async () => {
         try {
+            setLoadingAvisos(true);
             const { data } = await axios.get('https://backendona-amfeefbna8ebfmbj.eastus2-01.azurewebsites.net/api/reminder');
             data.sort((a, b) =>
                 new Date(b.horarioSistema).getTime() - new Date(a.horarioSistema).getTime()
@@ -41,11 +50,14 @@ export default function HomeDocente() {
             setAvisos(data);
         } catch (error) {
             console.error('Erro ao carregar avisos:', error);
+        } finally {
+            setLoadingAvisos(false);
         }
     };
 
     const fetchTurmas = async () => {
         try {
+            setLoadingTurmas(true);
             const professorId = await AsyncStorage.getItem('@user_id');
             if (!professorId) {
                 setTurmas([]);
@@ -61,9 +73,10 @@ export default function HomeDocente() {
         } catch (error) {
             console.error('Erro ao carregar turmas:', error);
             setTurmas([]);
+        } finally {
+            setLoadingTurmas(false);
         }
     };
-
 
     useFocusEffect(
         useCallback(() => {
@@ -71,8 +84,10 @@ export default function HomeDocente() {
             fetchMessages();
         }, [])
     );
+
     const enviarAviso = async () => {
         try {
+            setSendingAviso(true);
             const isConnected = true; // Substitua por NetInfo se necessário
             if (!isConnected) {
                 setAlertTitle('Erro de Conexão');
@@ -146,10 +161,10 @@ export default function HomeDocente() {
             setAlertTitle('Erro');
             setAlertMessage('Erro ao enviar aviso. Tente novamente mais tarde.');
             setAlertVisible(true);
+        } finally {
+            setSendingAviso(false);
         }
     };
-
-
 
     return (
         <View style={[styles.tela, { backgroundColor: isDarkMode ? '#121212' : '#F0F7FF' }]}>
@@ -176,33 +191,39 @@ export default function HomeDocente() {
                         <Image source={require('../../assets/image/mulher.png')} style={styles.infoImage} />
                     </View>
 
-
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Turmas</Text>
-                        <ScrollView
-                            style={styles.turmasScrollView}
-                            contentContainerStyle={styles.turmasScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
-                            {turmas.length > 0 ? (
-                                turmas.map((turma, index) => (
-                                    <CardTurmas
-                                        key={turma.id}
-                                        titulo={`${turma.nomeTurma}`}
-                                        subTitulo={`Sala ${index + 1}`}
-                                        isSelected={turmaSelecionada === turma.id}
-                                        onPress={() => handleSelecionarTurma(turma.id)}
-                                    />
-                                ))
-                            ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                    Nenhuma turma disponível
-                                </Text>
-                            )}
-                        </ScrollView>
+                        {loadingTurmas ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={isDarkMode ? '#A1C9FF' : '#0077FF'} />
+                            </View>
+                        ) : (
+                            <ScrollView
+                                style={styles.turmasScrollView}
+                                contentContainerStyle={styles.turmasScrollContent}
+                                showsVerticalScrollIndicator={false}
+                                nestedScrollEnabled={true}
+                            >
+                                {turmas.length > 0 ? (
+                                    [...turmas] // Cria uma cópia do array para não modificar o original
+                                        .sort((a, b) => a.id - b.id) // Ordena por ID crescente
+                                        .map((turma) => (
+                                            <CardTurmas
+                                                key={turma.id}
+                                                titulo={`${turma.nomeTurma}`}
+                                                subTitulo={`Sala ${turma.id}`}
+                                                isSelected={turmaSelecionada === turma.id}
+                                                onPress={() => handleSelecionarTurma(turma.id)}
+                                            />
+                                        ))
+                                ) : (
+                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                        Nenhuma turma disponível
+                                    </Text>
+                                )}
+                            </ScrollView>
+                        )}
                     </View>
-
 
                     <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>Aviso</Text>
@@ -223,62 +244,74 @@ export default function HomeDocente() {
                             onChangeText={setConteudoAviso}
                         />
                         <View style={{ alignItems: 'center' }}>
-                            <TouchableOpacity style={styles.enviarButton} onPress={enviarAviso}>
-                                <Text style={styles.enviarText}>
-                                    Enviar
-                                </Text>
+                            <TouchableOpacity
+                                style={styles.enviarButton}
+                                onPress={enviarAviso}
+                                disabled={sendingAviso}
+                            >
+                                {sendingAviso ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text style={styles.enviarText}>
+                                        Enviar
+                                    </Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
 
-
-                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF' }]}>
+                    <View style={[styles.contTurmas, { backgroundColor: isDarkMode ? '#000' : '#FFF', marginBottom: 10 }]}>
                         <Text style={[styles.title, { color: isDarkMode ? '#A1C9FF' : '#0077FF' }]}>
                             Avisos
                         </Text>
-                        <ScrollView
-                            style={styles.avisosScrollView}
-                            contentContainerStyle={styles.avisosScrollContent}
-                            showsVerticalScrollIndicator={false}
-                            nestedScrollEnabled={true}
-                        >
-                            {avisos.length > 0 ? (
-                                avisos
-                                    .filter(aviso => {
-                                        const agora = new Date();
-                                        const dataAviso = new Date(aviso.horarioSistema);
-                                        const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
-                                        return diferencaEmDias <= 7;
-                                    })
-                                    .map((aviso) => {
-                                        const doisPrimeirosNomes = aviso.criadoPorNome ?
-                                            aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
-                                            'Instituição';
+                        {loadingAvisos ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={isDarkMode ? '#A1C9FF' : '#0077FF'} />
+                            </View>
+                        ) : (
+                            <ScrollView
+                                style={styles.avisosScrollView}
+                                contentContainerStyle={styles.avisosScrollContent}
+                                showsVerticalScrollIndicator={false}
+                                nestedScrollEnabled={true}
+                            >
+                                {avisos.length > 0 ? (
+                                    avisos
+                                        .filter(aviso => {
+                                            const agora = new Date();
+                                            const dataAviso = new Date(aviso.horarioSistema);
+                                            const diferencaEmDias = (agora - dataAviso) / (1000 * 60 * 60 * 24);
+                                            return diferencaEmDias <= 7;
+                                        })
+                                        .map((aviso) => {
+                                            const doisPrimeirosNomes = aviso.criadoPorNome ?
+                                                aviso.criadoPorNome.split(' ').slice(0, 2).join(' ') :
+                                                'Instituição';
 
-                                        return (
-                                            <Avisos
-                                                key={aviso.id}
-                                                abreviacao={aviso.initials}
-                                                nome={doisPrimeirosNomes}
-                                                horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                                texto={aviso.conteudo}
-                                                aleatorio={gerarCorAleatoria()}
-                                            />
-                                        );
-                                    })
-
-                            ) : (
-                                <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
-                                    Nenhum aviso disponível.
-                                </Text>
-                            )}
-                        </ScrollView>
+                                            return (
+                                                <Avisos
+                                                    key={aviso.id}
+                                                    abreviacao={aviso.initials}
+                                                    nome={doisPrimeirosNomes}
+                                                    horario={new Date(new Date(aviso.horarioSistema).getTime() - 3 * 60 * 60 * 1000).toLocaleString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                    texto={aviso.conteudo}
+                                                    aleatorio={gerarCorAleatoria()}
+                                                />
+                                            );
+                                        })
+                                ) : (
+                                    <Text style={[styles.emptyMessage, { color: isDarkMode ? '#AAA' : '#555' }]}>
+                                        Nenhum aviso disponível.
+                                    </Text>
+                                )}
+                            </ScrollView>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -306,7 +339,8 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 20,
         padding: 15,
-        marginTop: 20
+        marginTop: 20,
+
     },
     title: {
         fontSize: 20,
@@ -355,7 +389,7 @@ const styles = StyleSheet.create({
     contAviso: {
         padding: 10,
         borderRadius: 18,
-        marginTop: 8
+        marginTop: 8,
     },
     enviarButton: {
         backgroundColor: '#1A85FF',
@@ -381,5 +415,11 @@ const styles = StyleSheet.create({
     },
     avisosScrollContent: {
         paddingRight: 10,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 100,
     },
 });
