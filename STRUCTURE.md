@@ -12,23 +12,32 @@
 
 2. Instale as dependências necessárias:
 ```
-npm i --force
-npm i dotenv --force
-npm install lucide-react --force
-npm install react-circular-progressbar --force
-npm install -D tailwind-scrollbar --force
-npm install @headlessui/react --force
-npm i react-icons --force
-npm install recharts react-select --force
-npm install @fullcalendar/react @fullcalendar/daygrid @fullcalendar/interaction @fullcalendar/timegrid @headlessui/react @heroicons/react --force
-npm install jsonwebtoken --force
-npm install js-cookie --force
-npm i --save-dev @types/js-cookie --force
-npm install @radix-ui/react-toast --force
-npm install @radix-ui/react-label --force
-npm install @radix-ui/react-dialog --force
-npm install react-toastify --force
-npm install react-loading-skeleton --force
+npm i 
+npm i jwt-decode
+npm install react
+npm install react-native
+npm install react-native-calendars
+npm install react-native-chart-kit
+npm install react-native-elements
+npm install react-native-paper
+npm install react-native-snap-carousel
+npm install react-native-swiper
+npm install react-native-vector-icons
+npm install react-native-gesture-handler
+npm install react-native-reanimated
+npm install react-native-fs
+npm install react-native-safe-area-context
+npm install react-native-screens
+npm install react-native-pdf
+npm install react-native-svg
+npm install react-native-share
+npm install react-native-scroll-indicator
+npm install npm install react-native-scroll-indicato
+npm install @react-native-async-storage/async-storage
+npm install @react-native-community/checkbox
+npm install @react-native-masked-view/masked-view
+npm install @react-native-picker/picker
+npm install axios
 ```
 Ou você pode instalar todas as dependências principais com o comando:
 ```
